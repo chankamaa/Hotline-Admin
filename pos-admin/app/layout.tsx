@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { AdminLayout } from "../components/admin-layout";
+import { AdminLayout } from "./app/(admin)/admin-layout";
 
 
 export const metadata: Metadata = {
