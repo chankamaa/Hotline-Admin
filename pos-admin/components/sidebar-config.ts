@@ -20,6 +20,7 @@ import {
   Settings,
   Database,
   HardDrive,
+  icons,
 } from "lucide-react";
 
 export const adminNav = [

@@ -28,6 +28,7 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const normalizedPath = useMemo(() => {
@@ -51,6 +52,14 @@ export function AdminSidebar({
     { label: "Reports", onClick: () => console.log("Reports") },
     { label: "Settings", onClick: () => console.log("Settings") },
   ];
+
+  const toggleSection = (sectionLabel: string) => {
+    setExpandedSections((prev) =>
+      prev.includes(sectionLabel)
+        ? prev.filter((label) => label !== sectionLabel)
+        : [...prev, sectionLabel]
+    );
+  };
 
   return (
     <aside
@@ -115,52 +124,76 @@ export function AdminSidebar({
 
       {/* ================= NAVIGATION ================= */}
       <nav className="px-2 py-3 overflow-y-auto h-[calc(100dvh-56px)]">
-        {adminNav.map((section) => (
-          <div key={section.label} className="mb-4">
-            {!collapsed && (
-              <div className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                {section.label}
-              </div>
-            )}
+        {adminNav.map((section) => {
+          const isExpanded = expandedSections.includes(section.label);
+          const hasMultipleItems = section.items.length > 1;
 
-            <ul className="space-y-1">
-              {section.items.map((item) => {
-                const isActive =
-                  normalizedPath === item.href ||
-                  normalizedPath.startsWith(item.href + "/");
+          return (
+            <div key={section.label} className="mb-2">
+              {!collapsed && hasMultipleItems && (
+                <button
+                  onClick={() => toggleSection(section.label)}
+                  className="w-full px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center justify-between hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <span>{section.label}</span>
+                  <ChevronDown
+                    size={14}
+                    className={cx(
+                      "transition-transform duration-200",
+                      isExpanded ? "rotate-180" : ""
+                    )}
+                  />
+                </button>
+              )}
 
-                const badge = (item as { badge?: string }).badge;
-                const Icon = item.icon;
+              {!collapsed && !hasMultipleItems && (
+                <div className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  {section.label}
+                </div>
+              )}
 
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className={cx(
-                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm",
-                        "hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black/10",
-                        isActive ? "bg-gray-100 font-medium" : "text-gray-700"
-                      )}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <Icon size={18} className="shrink-0" />
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1">{item.title}</span>
-                          {badge && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-black text-white">
-                              {badge}
-                            </span>
+              {/* Show items only if single item OR expanded */}
+              {(!hasMultipleItems || isExpanded) && (
+                <ul className="space-y-1 mt-2">
+                  {section.items.map((item) => {
+                    const isActive =
+                      normalizedPath === item.href ||
+                      normalizedPath.startsWith(item.href + "/");
+
+                    const badge = (item as { badge?: string }).badge;
+                    const Icon = item.icon;
+
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className={cx(
+                            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm",
+                            "hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black/10",
+                            isActive ? "bg-gray-100 font-medium" : "text-gray-700"
                           )}
-                        </>
-                      )}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <Icon size={18} className="shrink-0" />
+                          {!collapsed && (
+                            <>
+                              <span className="flex-1">{item.title}</span>
+                              {badge && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-black text-white">
+                                  {badge}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          );
+        })}
       </nav>
     </aside>
   );
