@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AdminSidebar } from "../../../components/sidebar";
-import { AdminNavbar } from "../../../components/navbar";
+import { AdminSidebar } from "../../components/sidebar";
+import { AdminNavbar } from "../../components/navbar";
 
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +10,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen flex">
+    <div className="bg-white h-screen flex">
       {/* Desktop Sidebar - Fixed */}
       <div className="hidden md:block">
         <AdminSidebar
