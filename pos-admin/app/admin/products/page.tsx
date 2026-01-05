@@ -10,6 +10,14 @@ import { Product } from "@/lib/types";
 import { Edit, Trash2, Eye, Package, AlertTriangle } from "lucide-react";
 
 export default function ProductsPage() {
+  const categoryOptions = [
+    "Buns",
+    "Soft Drinks",
+    "Cold Beverages",
+    "Cakes",
+    "Sandwiches",
+  ];
+
   const [products, setProducts] = useState<Product[]>([
     {
       id: "1",
@@ -369,9 +377,11 @@ export default function ProductsPage() {
             <Input
               label="Category"
               name="category"
+              type="select"
               value={formData.category}
               onChange={handleInputChange}
-              placeholder="e.g., Smartphones, Accessories"
+              options={categoryOptions.map((c) => ({ value: c, label: c }))}
+              required
             />
             <Input
               label="Brand"

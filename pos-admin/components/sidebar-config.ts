@@ -20,6 +20,7 @@ import {
   Settings,
   Database,
   HardDrive,
+  Plus,
   icons,
 } from "lucide-react";
 
@@ -83,7 +84,14 @@ export const adminNav = [
     label: "Suppliers & Purchasing",
     items: [
       { title: "Supplier Directory", href: "/admin/suppliers", icon: Truck },
-      { title: "Purchase Orders", href: "/admin/purchase-orders", icon: ClipboardList },
+    ],
+  },
+
+  {
+    label: "Purchase Order",
+    items: [
+      { title: "Create PO", href: "/admin/purchase-orders/create", icon: Plus },
+      { title: "All PO", href: "/admin/purchase-orders", icon: ClipboardList },
     ],
   },
 

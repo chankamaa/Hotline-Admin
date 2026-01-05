@@ -92,18 +92,23 @@ export interface RepairJob {
   jobNumber: string;
   customer: Customer;
   device: string;
+  deviceType?: string;
+  brand?: string;
+  model?: string;
   imei?: string;
   issue: string;
   diagnosis?: string;
   estimatedCost: number;
   finalCost?: number;
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled' | 'waiting-parts' | 'ready';
+  status: 'pending' | 'in-progress' | 'completed' | 'cancelled' | 'waiting-parts' | 'ready' | 'received' | 'delivered';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   technicianId?: string;
   technicianName?: string;
   parts: RepairPart[];
+  laborCost?: number;
   notes?: string;
   createdAt: Date;
+  expectedCompletionDate?: Date;
   completedAt?: Date;
 }
 
