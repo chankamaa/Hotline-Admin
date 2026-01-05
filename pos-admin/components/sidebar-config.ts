@@ -22,6 +22,7 @@ import {
   HardDrive,
   Plus,
   icons,
+  Building,
 } from "lucide-react";
 
 export const adminNav = [
@@ -119,6 +120,14 @@ export const adminNav = [
       { title: "Attendance & Sessions", href: "/admin/attendance", icon: ClipboardList },
       { title: "Performance", href: "/admin/performance", icon: BarChart3 },
       { title: "Audit Logs", href: "/admin/audit-logs", icon: ShieldCheck },
+    ],
+  },
+
+  {
+    label: "Permissions",
+    items: [
+      { title: "Branches", href: "/admin/permissions/branches", icon: Building },
+      { title: "Users", href: "/admin/permissions/users", icon: ShieldCheck },
     ],
   },
 
