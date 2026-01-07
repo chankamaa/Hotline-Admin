@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsCard } from "@/components/ui/stats-card";
 import {
@@ -12,6 +13,7 @@ import {
   Wrench,
   Clock,
 } from "lucide-react";
+import SalesTrendChart from "@/components/ui/sales-trend";
 
 export default function DashboardPage() {
   // Mock data - replace with real data from API
@@ -43,7 +45,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="bg-white p-6 max-w-7xl mx-auto">
+    <div className="bg-gray-100 p-6 w-full">
       <PageHeader
         title="Dashboard"
         description="Welcome back! Here's what's happening in your store today."
@@ -81,17 +83,27 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Sales Trend Chart */}
+      <div className="mb-6 " >
+        {/* Lazy-load client component */}
+        {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
+        <React.Suspense fallback={<div className="p-4">Loading chart…</div>}>
+          {/* @ts-ignore */}
+          <SalesTrendChart />
+        </React.Suspense>
+      </div>
+
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
         {/* Recent Sales */}
-        <div className="bg-white rounded-xl border">
-          <div className="p-4 border-b">
+        <div className="bg-white rounded-xl border ">
+          <div className="p-4 border-b ">
             <h3 className="font-semibold text-gray-900">Recent Sales</h3>
           </div>
           <div className="divide-y">
             {recentSales.map((sale) => (
-              <div key={sale.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-center justify-between mb-1">
+              <div key={sale.id} className="p-4 hover:bg-gray-50 ">
+                <div className="flex items-center justify-between mb-1  text-black">
                   <div className="font-medium text-sm">{sale.customer}</div>
                   <div className="font-semibold text-sm">{sale.amount}</div>
                 </div>
@@ -111,22 +123,22 @@ export default function DashboardPage() {
             ))}
           </div>
           <div className="p-4 border-t">
-            <button className="text-sm text-blue-600 hover:text-blue-700">
+            <a href="/admin/sales" className="text-sm text-blue-600 hover:text-blue-700">
               View all sales →
-            </button>
+            </a>
           </div>
         </div>
 
         {/* Low Stock Alerts */}
         <div className="bg-white rounded-xl border">
-          <div className="p-4 border-b flex items-center gap-2">
-            <AlertTriangle size={18} className="text-orange-500" />
+          <div className="p-4 border-b flex items-center gap-2 ">
+            <AlertTriangle size={18} className="text-orange-500  " />
             <h3 className="font-semibold text-gray-900">Low Stock Alerts</h3>
           </div>
-          <div className="divide-y">
+          <div className="divide-y ">
             {lowStockItems.map((item, index) => (
-              <div key={index} className="p-4 hover:bg-gray-50">
-                <div className="flex items-center justify-between mb-2">
+              <div key={index} className="p-4 hover:bg-gray-50 ">
+                <div className="flex items-center justify-between mb-2  text-black">
                   <div className="font-medium text-sm">{item.name}</div>
                   <span className="text-xs font-medium text-red-600">
                     {item.stock} left
@@ -145,9 +157,9 @@ export default function DashboardPage() {
             ))}
           </div>
           <div className="p-4 border-t">
-            <button className="text-sm text-blue-600 hover:text-blue-700">
+            <a href="/admin/stock/low" className="text-sm text-blue-600 hover:text-blue-700">
               View all stock alerts →
-            </button>
+            </a>
           </div>
         </div>
 

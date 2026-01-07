@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { authConfig } from "./authconfig";
 
 export function middleware(req: NextRequest) {
   const accessToken = req.cookies.get("accessToken")?.value;

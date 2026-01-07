@@ -3,11 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminNav } from "./sidebar-config";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-} from "lucide-react";
+import {ChevronDown} from "lucide-react";
 import { useMemo, useState, useRef, useEffect } from "react";
 
 function cx(...classes: Array<string | false | undefined>) {
@@ -35,23 +31,7 @@ export function AdminSidebar({
     return pathname.replace(/^\/admin/, "") || "/";
   }, [pathname]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   // Sidebar title dropdown options (EXTEND LATER)
-  const titleOptions: SidebarTitleOption[] = [
-    { label: "Dashboard Home", onClick: () => console.log("Dashboard Home") },
-    { label: "Reports", onClick: () => console.log("Reports") },
-    { label: "Settings", onClick: () => console.log("Settings") },
-  ];
 
   const toggleSection = (sectionLabel: string) => {
     setExpandedSections((prev) =>
@@ -74,8 +54,8 @@ export function AdminSidebar({
       {/* ================= TITLE / BRAND AREA ================= */}
       <div className="h-14 px-3 flex items-center justify-between border-b">
         <div className="flex items-center gap-2 relative" ref={dropdownRef}>
-          <div className="h-9 w-9 rounded-xl bg-black text-white flex items-center justify-center font-semibold">
-            POS
+          <div className="h-9 w-20 rounded-xl bg-black text-white flex items-center justify-center font-semibold">
+            Hotline
           </div>
 
           {!collapsed && (
@@ -85,41 +65,14 @@ export function AdminSidebar({
                 className="flex items-center gap-1 text-left hover:bg-gray-100 px-2 py-1 rounded-lg"
               >
                 <div className="leading-tight">
-                  <div className="font-semibold">Admin</div>
+                  <div className="text-sky-600">Admin</div>
                   <div className="text-xs text-gray-500">Control panel</div>
                 </div>
-                <ChevronDown size={14} className="text-gray-500" />
+                
               </button>
-
-              {/* Dropdown */}
-              {open && (
-                <div className="absolute left-0 top-full mt-2 w-56 rounded-xl border bg-white shadow-lg overflow-hidden z-50">
-                  {titleOptions.map((option) => (
-                    <button
-                      key={option.label}
-                      onClick={() => {
-                        option.onClick();
-                        setOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           )}
-        </div>
-
-        {/* Collapse toggle */}
-        <button
-          onClick={onToggle}
-          className="p-2 rounded-lg hover:bg-gray-100"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
+        </div>  
       </div>
 
       {/* ================= NAVIGATION ================= */}
@@ -133,9 +86,19 @@ export function AdminSidebar({
               {!collapsed && hasMultipleItems && (
                 <button
                   onClick={() => toggleSection(section.label)}
-                  className="w-full px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center justify-between hover:bg-gray-50 rounded-lg transition-colors"
+                  className="w-full px-2 py-2 text-xs font-semibold text-gray-900 uppercase tracking-wide flex items-center justify-between hover:bg-sky-300 rounded-lg transition-colors"
                 >
-                  <span>{section.label}</span>
+                  <div className="flex items-center gap-2">
+                    {/** Render section-level icon if provided */}
+                    {(
+                      (section as any).icon &&
+                      (() => {
+                        const SectionIcon = (section as any).icon as any;
+                        return <SectionIcon size={14} className="shrink-0" />;
+                      })()
+                    )}
+                    <span>{section.label}</span>
+                  </div>
                   <ChevronDown
                     size={14}
                     className={cx(
@@ -145,13 +108,6 @@ export function AdminSidebar({
                   />
                 </button>
               )}
-
-              {!collapsed && !hasMultipleItems && (
-                <div className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                  {section.label}
-                </div>
-              )}
-
               {/* Show items only if single item OR expanded */}
               {(!hasMultipleItems || isExpanded) && (
                 <ul className="space-y-1 mt-2">
@@ -162,6 +118,7 @@ export function AdminSidebar({
 
                     const badge = (item as { badge?: string }).badge;
                     const Icon = item.icon;
+                    
 
                     return (
                       <li key={item.href}>

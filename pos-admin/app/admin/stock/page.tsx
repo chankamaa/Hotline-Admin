@@ -127,7 +127,7 @@ export default function StockPage() {
       key: "productName",
       label: "Product",
       render: (movement) => (
-        <div className="font-medium">{movement.productName}</div>
+        <div className="font-medium text-black">{movement.productName}</div>
       ),
     },
     {
@@ -143,7 +143,7 @@ export default function StockPage() {
       key: "location",
       label: "Location",
       render: (movement) => (
-        <div className="text-sm">
+        <div className="text-sm text-black">
           {movement.fromLocation && <div>From: {movement.fromLocation}</div>}
           {movement.toLocation && <div>To: {movement.toLocation}</div>}
         </div>
@@ -153,7 +153,7 @@ export default function StockPage() {
       key: "reason",
       label: "Reason",
       render: (movement) => (
-        <div className="text-sm max-w-xs truncate" title={movement.reason}>
+        <div className="text-sm max-w-xs truncate text-black" title={movement.reason}>
           {movement.reason}
         </div>
       ),
@@ -162,25 +162,41 @@ export default function StockPage() {
       key: "reference",
       label: "Reference",
       render: (movement) => (
-        <div className="text-sm text-blue-600">{movement.reference || "-"}</div>
+        <div className="text-sm text-blue-600 ">{movement.reference || "-"}</div>
       ),
     },
     {
       key: "employeeName",
       label: "By",
       render: (movement) => (
-        <div className="text-sm">{movement.employeeName}</div>
+        <div className="text-sm text-black">{movement.employeeName}</div>
       ),
     },
     {
       key: "createdAt",
       label: "Date",
       render: (movement) => (
-        <div className="text-sm">{new Date(movement.createdAt).toLocaleString()}</div>
+        <div className="text-sm text-black">{new Date(movement.createdAt).toLocaleString()}</div>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (movement) => (
+        <Button size="sm" variant="outline" onClick={() => handleEdit(movement)}>
+          Edit
+        </Button>
       ),
     },
   ];
 
+  // Add edit modal logic (to be implemented)
+  const handleEdit = (movement: StockMovement) => {
+    // You can set formData to movement and open the modal for editing
+    // setFormData({ ...movement, ... });
+    // setIsModalOpen(true);
+    alert(`Edit function for movement ID: ${movement.id}`);
+  };
   const filteredMovements = movements.filter(
     (movement) =>
       movement.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -38,56 +38,8 @@ const mockUsers: PermissionUser[] = [
     status: "active",
     lastLogin: "Jan 4, 2026, 11:13 PM",
   },
-  {
-    id: "2",
-    username: "eee",
-    name: "Eesha Dilshan",
-    mobile: "0713749528",
-    role: "Admin",
-    branch: "No Branch",
-    status: "active",
-    lastLogin: "Never",
-  },
-  {
-    id: "3",
-    username: "admin1",
-    name: "Tezlaa Super Admin",
-    mobile: "N/A",
-    role: "Admin",
-    branch: "No Branch",
-    status: "active",
-    lastLogin: "Jan 2, 2026, 09:40 AM",
-  },
-  {
-    id: "4",
-    username: "barista",
-    name: "Barista User",
-    mobile: "0700001122",
-    role: "Barista",
-    branch: "Tezlaa Cafe",
-    status: "active",
-    lastLogin: "Jan 4, 2026, 05:22 PM",
-  },
-  {
-    id: "5",
-    username: "cashier",
-    name: "Cashier A",
-    mobile: "0700001133",
-    role: "Cashier",
-    branch: "Tezlaa Colombo",
-    status: "inactive",
-    lastLogin: "Dec 28, 2025, 02:05 PM",
-  },
-  {
-    id: "6",
-    username: "ops",
-    name: "Operations",
-    mobile: "0700001144",
-    role: "Operations",
-    branch: "Tezlaa Warehouse",
-    status: "active",
-    lastLogin: "Jan 3, 2026, 08:15 AM",
-  },
+
+ 
 ];
 
 const metricsBackgrounds = [

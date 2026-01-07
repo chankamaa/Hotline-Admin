@@ -21,7 +21,6 @@ import {
   Database,
   HardDrive,
   Plus,
-  icons,
   Building,
 } from "lucide-react";
 
@@ -35,6 +34,7 @@ export const adminNav = [
 
   {
     label: "Sales",
+    icon: ShoppingCart,
     items: [
       { title: "Sales", href: "/admin/sales", icon: ShoppingCart },
       { title: "Returns & Refunds", href: "/admin/returns", icon: RotateCcw },
@@ -44,6 +44,7 @@ export const adminNav = [
 
   {
     label: "Inventory",
+    icon: Package,
     items: [
       { title: "Products", href: "/admin/products", icon: Package },
       { title: "Categories & Brands", href: "/admin/categories", icon: Tags },
@@ -57,6 +58,7 @@ export const adminNav = [
 
   {
     label: "Repairs & Service",
+    icon: Wrench,
     items: [
       { title: "Repair Jobs", href: "/admin/repairs", icon: Wrench },
       { title: "Technician Workload", href: "/admin/repairs/workload", icon: Users },
@@ -66,6 +68,7 @@ export const adminNav = [
 
   {
     label: "Warranty",
+    icon: ShieldCheck,
     items: [
       { title: "Warranty Setup", href: "/admin/warranty/setup", icon: ShieldCheck },
       { title: "Registrations", href: "/admin/warranty/registrations", icon: ClipboardList },
@@ -75,29 +78,27 @@ export const adminNav = [
 
   {
     label: "Customers",
+    icon: Users,
     items: [
       { title: "Customers", href: "/admin/customers", icon: Users },
       { title: "Communications", href: "/admin/communications", icon: Bell },
     ],
   },
 
-  {
-    label: "Suppliers & Purchasing",
-    items: [
-      { title: "Supplier Directory", href: "/admin/suppliers", icon: Truck },
-    ],
-  },
 
   {
     label: "Purchase Order",
+    icon: Plus,
     items: [
       { title: "Create PO", href: "/admin/purchase-orders/create", icon: Plus },
       { title: "All PO", href: "/admin/purchase-orders", icon: ClipboardList },
+       { title: "Supplier Directory", href: "/admin/suppliers", icon: Truck },
     ],
   },
 
   {
     label: "Pricing & Discounts",
+    icon: Percent,
     items: [
       { title: "Price History", href: "/admin/pricing/history", icon: Tags },
       { title: "Bulk Price Updates", href: "/admin/pricing/bulk", icon: Percent },
@@ -107,6 +108,7 @@ export const adminNav = [
 
   {
     label: "Reports",
+    icon: BarChart3,
     items: [
       { title: "Reports", href: "/admin/reports", icon: BarChart3 },
       { title: "Custom Report Builder", href: "/admin/reports/builder", icon: Database },
@@ -115,6 +117,7 @@ export const adminNav = [
 
   {
     label: "Employees",
+    icon: UserCog,
     items: [
       { title: "Employees", href: "/admin/employees", icon: UserCog },
       { title: "Attendance & Sessions", href: "/admin/attendance", icon: ClipboardList },
@@ -125,6 +128,7 @@ export const adminNav = [
 
   {
     label: "Permissions",
+    icon: Building,
     items: [
       { title: "Branches", href: "/admin/permissions/branches", icon: Building },
       { title: "Users", href: "/admin/permissions/users", icon: ShieldCheck },
@@ -133,6 +137,7 @@ export const adminNav = [
 
   {
     label: "Settings",
+    icon: Settings,
     items: [
       { title: "Company & Tax", href: "/admin/settings/company", icon: Settings },
       { title: "Notifications", href: "/admin/settings/notifications", icon: Bell },

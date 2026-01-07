@@ -10,7 +10,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="bg-white h-screen flex">
+    <div className="bg-gray-100 h-screen flex">
       {/* Desktop Sidebar - Fixed */}
       <div className="hidden md:block">
         <AdminSidebar
