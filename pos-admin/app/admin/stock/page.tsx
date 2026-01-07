@@ -2,356 +2,256 @@
 
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
-import { DataTable, DataTableColumn } from "@/components/ui/data-table";
-import { Modal } from "@/components/ui/modal";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { StockMovement } from "@/lib/types";
-import { ArrowUpCircle, ArrowDownCircle, RefreshCw, ArrowRightLeft } from "lucide-react";
+import Link from "next/link";
+import { 
+  Package,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  ArrowRightLeft,
+  Plus,
+  FileText,
+  BarChart3,
+  Calendar,
+  MapPin
+} from "lucide-react";
+
+interface StockSummary {
+  totalProducts: number;
+  totalValue: number;
+  lowStockItems: number;
+  outOfStock: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: "Entry" | "Adjustment" | "Transfer";
+  description: string;
+  date: Date;
+  status: string;
+}
 
 export default function StockPage() {
-  const [movements, setMovements] = useState<StockMovement[]>([
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
+
+  // Mock summary data
+  const summary: StockSummary = {
+    totalProducts: 458,
+    totalValue: 1245780,
+    lowStockItems: 23,
+    outOfStock: 5
+  };
+
+  // Mock recent activities
+  const recentActivities: RecentActivity[] = [
     {
       id: "1",
-      productId: "p1",
-      productName: "iPhone 15 Pro 256GB",
-      type: "in",
-      quantity: 10,
-      toLocation: "Main Store",
-      reason: "New stock received",
-      reference: "PO-001",
-      employeeId: "e1",
-      employeeName: "Milan",
-      createdAt: new Date("2024-01-04T10:00:00"),
+      type: "Entry",
+      description: "50 units of iPhone 15 Pro received from Apple Distributor",
+      date: new Date("2026-01-05T10:30:00"),
+      status: "Verified"
     },
     {
       id: "2",
-      productId: "p2",
-      productName: "Samsung Galaxy S24",
-      type: "out",
-      quantity: 2,
-      fromLocation: "Main Store",
-      reason: "Sales",
-      reference: "INV-001",
-      employeeId: "e1",
-      employeeName: "Milan",
-      createdAt: new Date("2024-01-04T11:30:00"),
-    },
-  ]);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const [formData, setFormData] = useState({
-    productName: "",
-    type: "in" as "in" | "out" | "adjustment" | "transfer",
-    quantity: 0,
-    fromLocation: "",
-    toLocation: "",
-    reason: "",
-    reference: "",
-  });
-
-  const resetForm = () => {
-    setFormData({
-      productName: "",
-      type: "in",
-      quantity: 0,
-      fromLocation: "",
-      toLocation: "",
-      reason: "",
-      reference: "",
-    });
-  };
-
-  const handleAdd = () => {
-    resetForm();
-    setIsModalOpen(true);
-  };
-
-  const handleSave = () => {
-    const movement: StockMovement = {
-      id: String(movements.length + 1),
-      productId: `p${movements.length + 1}`,
-      productName: formData.productName,
-      type: formData.type,
-      quantity: formData.quantity,
-      fromLocation: formData.fromLocation,
-      toLocation: formData.toLocation,
-      reason: formData.reason,
-      reference: formData.reference,
-      employeeId: "e1",
-      employeeName: "Milan",
-      createdAt: new Date(),
-    };
-
-    setMovements([movement, ...movements]);
-    setIsModalOpen(false);
-    resetForm();
-  };
-
-  const getTypeIcon = (type: StockMovement["type"]) => {
-    const icons = {
-      in: <ArrowDownCircle size={16} className="text-green-600" />,
-      out: <ArrowUpCircle size={16} className="text-red-600" />,
-      adjustment: <RefreshCw size={16} className="text-blue-600" />,
-      transfer: <ArrowRightLeft size={16} className="text-purple-600" />,
-    };
-    return icons[type];
-  };
-
-  const getTypeColor = (type: StockMovement["type"]) => {
-    const colors = {
-      in: "bg-green-100 text-green-700",
-      out: "bg-red-100 text-red-700",
-      adjustment: "bg-blue-100 text-blue-700",
-      transfer: "bg-purple-100 text-purple-700",
-    };
-    return colors[type];
-  };
-
-  const columns: DataTableColumn<StockMovement>[] = [
-    {
-      key: "type",
-      label: "Type",
-      render: (movement) => (
-        <div className="flex items-center gap-2">
-          {getTypeIcon(movement.type)}
-          <span className={`px-2 py-1 rounded-full text-xs capitalize ${getTypeColor(movement.type)}`}>
-            {movement.type}
-          </span>
-        </div>
-      ),
+      type: "Adjustment",
+      description: "2 units of iPhone 15 Pro decreased due to Damage",
+      date: new Date("2026-01-05T10:30:00"),
+      status: "Completed"
     },
     {
-      key: "productName",
-      label: "Product",
-      render: (movement) => (
-        <div className="font-medium text-black">{movement.productName}</div>
-      ),
+      id: "3",
+      type: "Transfer",
+      description: "10 units transferred from Main Warehouse to Branch 1",
+      date: new Date("2026-01-05T09:00:00"),
+      status: "Completed"
     },
     {
-      key: "quantity",
-      label: "Quantity",
-      render: (movement) => (
-        <div className={`font-semibold ${movement.type === 'in' ? 'text-green-600' : movement.type === 'out' ? 'text-red-600' : 'text-blue-600'}`}>
-          {movement.type === 'out' ? '-' : '+'}{movement.quantity}
-        </div>
-      ),
+      id: "4",
+      type: "Entry",
+      description: "30 units of Samsung Galaxy S24 received",
+      date: new Date("2026-01-06T10:30:00"),
+      status: "Received"
     },
     {
-      key: "location",
-      label: "Location",
-      render: (movement) => (
-        <div className="text-sm text-black">
-          {movement.fromLocation && <div>From: {movement.fromLocation}</div>}
-          {movement.toLocation && <div>To: {movement.toLocation}</div>}
-        </div>
-      ),
-    },
-    {
-      key: "reason",
-      label: "Reason",
-      render: (movement) => (
-        <div className="text-sm max-w-xs truncate text-black" title={movement.reason}>
-          {movement.reason}
-        </div>
-      ),
-    },
-    {
-      key: "reference",
-      label: "Reference",
-      render: (movement) => (
-        <div className="text-sm text-blue-600 ">{movement.reference || "-"}</div>
-      ),
-    },
-    {
-      key: "employeeName",
-      label: "By",
-      render: (movement) => (
-        <div className="text-sm text-black">{movement.employeeName}</div>
-      ),
-    },
-    {
-      key: "createdAt",
-      label: "Date",
-      render: (movement) => (
-        <div className="text-sm text-black">{new Date(movement.createdAt).toLocaleString()}</div>
-      ),
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (movement) => (
-        <Button size="sm" variant="outline" onClick={() => handleEdit(movement)}>
-          Edit
-        </Button>
-      ),
-    },
+      id: "5",
+      type: "Transfer",
+      description: "5 units transfer request pending approval",
+      date: new Date("2026-01-07T08:00:00"),
+      status: "Pending"
+    }
   ];
 
-  // Add edit modal logic (to be implemented)
-  const handleEdit = (movement: StockMovement) => {
-    // You can set formData to movement and open the modal for editing
-    // setFormData({ ...movement, ... });
-    // setIsModalOpen(true);
-    alert(`Edit function for movement ID: ${movement.id}`);
+  const getActivityIcon = (type: string) => {
+    switch(type) {
+      case "Entry": return <Package size={16} className="text-blue-600" />;
+      case "Adjustment": return <TrendingDown size={16} className="text-orange-600" />;
+      case "Transfer": return <ArrowRightLeft size={16} className="text-purple-600" />;
+      default: return <FileText size={16} className="text-gray-600" />;
+    }
   };
-  const filteredMovements = movements.filter(
-    (movement) =>
-      movement.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      movement.reason.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      movement.reference?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
-  const stats = {
-    totalIn: movements.filter((m) => m.type === "in").reduce((sum, m) => sum + m.quantity, 0),
-    totalOut: movements.filter((m) => m.type === "out").reduce((sum, m) => sum + m.quantity, 0),
-    adjustments: movements.filter((m) => m.type === "adjustment").length,
-    transfers: movements.filter((m) => m.type === "transfer").length,
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case "Completed":
+      case "Verified":
+        return "bg-green-100 text-green-700";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-700";
+      case "Received":
+        return "bg-blue-100 text-blue-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 min-h-screen">
       <PageHeader
         title="Stock Management"
-        description="Track inventory movements and adjustments"
+        description="Comprehensive stock management with entry, adjustment, and transfer workflows"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border p-4">
-          <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-            <ArrowDownCircle size={16} className="text-green-600" />
-            Stock In
+      {/* Summary Stats */}
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-xl border">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Package className="text-blue-600" size={24} />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-black">{summary.totalProducts}</div>
+              <div className="text-sm text-gray-500">Total Products</div>
+            </div>
           </div>
-          <div className="text-2xl font-bold text-green-600">{stats.totalIn}</div>
         </div>
-        <div className="bg-white rounded-xl border p-4">
-          <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-            <ArrowUpCircle size={16} className="text-red-600" />
-            Stock Out
+
+        <div className="bg-white p-4 rounded-xl border">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <BarChart3 className="text-green-600" size={24} />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-black">${(summary.totalValue / 1000).toFixed(0)}k</div>
+              <div className="text-sm text-gray-500">Total Value</div>
+            </div>
           </div>
-          <div className="text-2xl font-bold text-red-600">{stats.totalOut}</div>
         </div>
-        <div className="bg-white rounded-xl border p-4">
-          <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-            <RefreshCw size={16} className="text-blue-600" />
-            Adjustments
+
+        <div className="bg-white p-4 rounded-xl border">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="text-yellow-600" size={24} />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-black">{summary.lowStockItems}</div>
+              <div className="text-sm text-gray-500">Low Stock Items</div>
+            </div>
           </div>
-          <div className="text-2xl font-bold text-blue-600">{stats.adjustments}</div>
         </div>
-        <div className="bg-white rounded-xl border p-4">
-          <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-            <ArrowRightLeft size={16} className="text-purple-600" />
-            Transfers
+
+        <div className="bg-white p-4 rounded-xl border">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="text-red-600" size={24} />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-black">{summary.outOfStock}</div>
+              <div className="text-sm text-gray-500">Out of Stock</div>
+            </div>
           </div>
-          <div className="text-2xl font-bold text-purple-600">{stats.transfers}</div>
         </div>
       </div>
 
-      <DataTable
-        data={filteredMovements}
-        columns={columns}
-        searchPlaceholder="Search by product, reason, reference..."
-        onSearch={setSearchQuery}
-        onAdd={handleAdd}
-        onExport={() => alert("Export functionality")}
-        addButtonLabel="Record Movement"
-      />
-
-      {/* Add Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Record Stock Movement"
-        size="md"
-        footer={
-          <div className="flex gap-2 justify-end">
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Record Movement</Button>
+      <div className="grid grid-cols-3 gap-6">
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl border p-6">
+          <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+            <FileText size={20} />
+            Quick Actions
+          </h3>
+          <div className="space-y-3">
+            <Link href="/admin/stock/entry">
+              <Button className="w-full justify-start" variant="outline">
+                <Plus size={18} className="mr-2" />
+                Record Stock Entry
+              </Button>
+            </Link>
+            <Link href="/admin/stock/adjustment">
+              <Button className="w-full justify-start" variant="outline">
+                <TrendingUp size={18} className="mr-2" />
+                Stock Adjustment
+              </Button>
+            </Link>
+            <Link href="/admin/stock/transfer">
+              <Button className="w-full justify-start" variant="outline">
+                <ArrowRightLeft size={18} className="mr-2" />
+                Stock Transfer
+              </Button>
+            </Link>
+            <Link href="/admin/stock/low">
+              <Button className="w-full justify-start" variant="outline">
+                <AlertTriangle size={18} className="mr-2" />
+                Low Stock Alerts
+              </Button>
+            </Link>
           </div>
-        }
-      >
-        <div className="space-y-4">
-          <Input
-            label="Product Name"
-            name="productName"
-            value={formData.productName}
-            onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-            required
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Movement Type"
-              name="type"
-              type="select"
-              value={formData.type}
-              onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value as any })
-              }
-              options={[
-                { value: "in", label: "Stock In" },
-                { value: "out", label: "Stock Out" },
-                { value: "adjustment", label: "Adjustment" },
-                { value: "transfer", label: "Transfer" },
-              ]}
-            />
-            <Input
-              label="Quantity"
-              name="quantity"
-              type="number"
-              value={formData.quantity}
-              onChange={(e) =>
-                setFormData({ ...formData, quantity: Number(e.target.value) })
-              }
-              required
-            />
-          </div>
-
-          {(formData.type === "out" || formData.type === "transfer") && (
-            <Input
-              label="From Location"
-              name="fromLocation"
-              value={formData.fromLocation}
-              onChange={(e) =>
-                setFormData({ ...formData, fromLocation: e.target.value })
-              }
-            />
-          )}
-
-          {(formData.type === "in" || formData.type === "transfer") && (
-            <Input
-              label="To Location"
-              name="toLocation"
-              value={formData.toLocation}
-              onChange={(e) =>
-                setFormData({ ...formData, toLocation: e.target.value })
-              }
-            />
-          )}
-
-          <Input
-            label="Reason"
-            name="reason"
-            type="textarea"
-            value={formData.reason}
-            onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-            required
-            rows={2}
-          />
-
-          <Input
-            label="Reference"
-            name="reference"
-            value={formData.reference}
-            onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
-            placeholder="e.g., PO-001, INV-123"
-          />
         </div>
-      </Modal>
+
+        {/* Recent Activities */}
+        <div className="col-span-2 bg-white rounded-xl border p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-black flex items-center gap-2">
+              <Calendar size={20} />
+              Recent Activities
+            </h3>
+            <Button size="sm" variant="outline">View All</Button>
+          </div>
+          <div className="space-y-3">
+            {recentActivities.map(activity => (
+              <div key={activity.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg border">
+                <div className="mt-1">{getActivityIcon(activity.type)}</div>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-medium text-black">{activity.description}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(activity.date).toLocaleString()}
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusColor(activity.status)}`}>
+                      {activity.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Stock Locations */}
+      <div className="mt-6 bg-white rounded-xl border p-6">
+        <h3 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
+          <MapPin size={20} />
+          Stock by Location
+        </h3>
+        <div className="grid grid-cols-5 gap-4">
+          {[
+            { name: "Main Warehouse", count: 245, value: 675000 },
+            { name: "Branch 1 - Downtown", count: 89, value: 245000 },
+            { name: "Branch 2 - Uptown", count: 67, value: 178000 },
+            { name: "Branch 3 - Suburbs", count: 45, value: 98000 },
+            { name: "Service Center", count: 12, value: 49780 }
+          ].map(location => (
+            <div key={location.name} className="p-4 border rounded-lg">
+              <div className="text-sm text-gray-500 mb-2">{location.name}</div>
+              <div className="text-xl font-bold text-black">{location.count}</div>
+              <div className="text-xs text-gray-500">${(location.value / 1000).toFixed(0)}k value</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

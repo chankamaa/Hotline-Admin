@@ -22,6 +22,8 @@ import {
   HardDrive,
   Plus,
   Building,
+  RefreshCw,
+  ArrowRightLeft,
 } from "lucide-react";
 
 export const adminNav = [
@@ -48,11 +50,29 @@ export const adminNav = [
     items: [
       { title: "Products", href: "/admin/products", icon: Package },
       { title: "Categories & Brands", href: "/admin/categories", icon: Tags },
-      { title: "Stock Management", href: "/admin/stock", icon: Boxes },
-      { title: "Stock Movements", href: "/admin/stock/movements", icon: ClipboardList },
-      { title: "Low Stock Alerts", href: "/admin/stock/low", icon: AlertTriangle },
       { title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode },
-      { title: "Suppliers (Inventory)", href: "/admin/inventory-suppliers", icon: Truck },
+    ],
+  },
+
+  {
+    label: "Stock Management",
+    icon: Boxes,
+    items: [
+      { title: "Stock Overview", href: "/admin/stock", icon: LayoutDashboard },
+      { title: "Stock Entry", href: "/admin/stock/entry", icon: Plus },
+      { title: "Stock Adjustment", href: "/admin/stock/adjustment", icon: RefreshCw },
+      { title: "Stock Transfer", href: "/admin/stock/transfer", icon: ArrowRightLeft },
+      { title: "Low Stock Alerts", href: "/admin/stock/low", icon: AlertTriangle },
+    ],
+  },
+
+  {
+    label: "Stock Movements",
+    icon: ClipboardList,
+    items: [
+      { title: "All Movements", href: "/admin/stock/movements", icon: ClipboardList },
+      { title: "Audit Trail", href: "/admin/stock/audit", icon: ShieldCheck },
+      { title: "Movement Reports", href: "/admin/stock/reports", icon: BarChart3 },
     ],
   },
 
