@@ -152,6 +152,7 @@ export const adminNav = [
     items: [
       { title: "Branches", href: "/admin/permissions/branches", icon: Building },
       { title: "Users", href: "/admin/permissions/users", icon: ShieldCheck },
+      { title: "Roles", href: "/admin/permissions/roles", icon: ShieldCheck },
     ],
   },
 

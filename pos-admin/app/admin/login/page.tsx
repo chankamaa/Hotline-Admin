@@ -4,12 +4,17 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL; 
+// example: http://localhost:5000
+
 export default function LoginPage() {
   const router = useRouter();
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,24 +24,32 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data?.message ?? "Login failed");
+        setError(data?.message || "Invalid username or password");
         return;
       }
 
-      // Redirect to dashboard on success
+      // ✅ STEP 4: Save session (VERY IMPORTANT)
+      localStorage.setItem("accessToken", data.data.accessToken);
+      localStorage.setItem("refreshToken", data.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(data.data.user));
+
+      // ✅ Redirect after successful login
       router.push("/admin/dashboard");
       router.refresh();
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("Cannot connect to server");
     } finally {
       setLoading(false);
     }
@@ -49,58 +62,56 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-gray-900">Admin Login</h1>
           <p className="text-gray-600 mt-2">Sign in to your account</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Username
             </label>
             <input
-              id="username"
               type="text"
               value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              placeholder="Enter your username"
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
+              className="w-full px-4 py-2 border rounded-lg"
               required
-              autoComplete="username"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
             <input
-              id="password"
               type="password"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              placeholder="Enter your password"
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              className="w-full px-4 py-2 border rounded-lg"
               required
-              autoComplete="current-password"
             />
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="p-3 bg-red-100 text-red-700 rounded">
+              {error}
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
-              <Link href="/admin/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+              Don&apos;t have an account?{" "}
+              <Link href="/admin/signup" className="text-blue-600">
                 Sign up
               </Link>
             </p>
