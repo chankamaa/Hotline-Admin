@@ -89,8 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/admin/login");
   };
 
-  // Show loading spinner while checking authentication
-  if (loading) {
+  // Show loading spinner while checking authentication (only for protected routes)
+  if (loading && !isPublicRoute) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
@@ -98,6 +98,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
+    );
+  }
+
+  // For public routes, don't block rendering while loading
+  if (loading && isPublicRoute) {
+    return (
+      <AuthContext.Provider value={{ user, setUser, loading, logout, isAuthenticated }}>
+        {children}
+      </AuthContext.Provider>
     );
   }
 
