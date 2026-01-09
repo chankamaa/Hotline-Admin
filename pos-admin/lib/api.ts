@@ -69,9 +69,9 @@ export async function api<T>(
 // helpers
 export const endpoints = {
   auth: {
-    login: "/auth/login",
-    me: "/auth/me",
-    logout: "/auth/logout",
+    login: "/api/v1/auth/login",
+    me: "/api/v1/auth/me",
+    logout: "/api/v1/auth/logout",
   },
   users: `${API_PREFIX}/users`,
   roles: `${API_PREFIX}/roles`,
