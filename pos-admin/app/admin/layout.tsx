@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthProvider } from "@/providers/providers";
 import { AdminLayout } from "./admin-layout";
 
 export default function AdminLayoutWrapper({
@@ -7,5 +8,9 @@ export default function AdminLayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  return <AdminLayout>{children}</AdminLayout>;
+  return (
+    <AuthProvider>
+      <AdminLayout>{children}</AdminLayout>
+    </AuthProvider>
+  );
 }
