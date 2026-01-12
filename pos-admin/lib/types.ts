@@ -1,26 +1,36 @@
 // Shared types for the POS system
-
-export interface Product {
-  id: string;
+export type Product = {
+  _id: string;
   name: string;
-  sku: string;
-  barcode: string;
-  category: string;
-  brand: string;
-  type: 'phone' | 'accessory' | 'part';
-  imei?: string;
-  price: number;
-  cost: number;
-  stockQuantity: number;
-  minStockLevel: number;
   description?: string;
-  specifications?: Record<string, string>;
-  images?: string[];
-  supplier?: string;
-  warranty?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+  sku?: string;
+  barcode?: string;
+  category: string | Category;          // ObjectId
+  costPrice: number;
+  sellingPrice: number;
+  wholesalePrice?: number;
+  unit?: string;
+  taxRate?: number;
+  image?: string;
+  minStockLevel?: number;
+  isActive: boolean;
+
+  // backend virtuals (optional)
+  profitMargin?: number;
+  sellingPriceWithTax?: number;
+};
+
+export type Category = {
+  _id: string;
+  name: string;
+  description?: string;
+  parent?: string | null;
+  image?: string;
+  isActive: boolean;
+  subcategories?: Category[];
+};
+
+
 
 export interface Customer {
   id: string;
@@ -210,13 +220,7 @@ export interface WarrantyClaim {
   cost?: number;
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  description?: string;
-  parentId?: string;
-  productCount: number;
-}
+
 
 export interface Brand {
   id: string;

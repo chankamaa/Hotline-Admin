@@ -1,4 +1,4 @@
-import { api, endpoints } from "@/lib/api";
+import { api, endpoints } from "@/lib/api/api";
 
 export async function getMe() {
   const res: any = await api(endpoints.auth.me);

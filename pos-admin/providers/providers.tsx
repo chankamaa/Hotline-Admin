@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getMe } from "@/lib/auth";
-import { clearSession } from "@/lib/api";
+import { clearSession } from "@/lib/api/api";
 
 interface User {
   id: string;
