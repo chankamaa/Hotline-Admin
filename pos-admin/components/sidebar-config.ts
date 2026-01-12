@@ -24,7 +24,72 @@ import {
   Building,
   RefreshCw,
   ArrowRightLeft,
+  LucideIcon,
 } from "lucide-react";
+
+// User roles
+export type UserRole = "admin" | "manager" | "cashier" | "technician";
+
+// Navigation item types
+export interface NavItem {
+  title: string;
+  href: string;
+  icon: LucideIcon;
+  permission?: string;
+}
+
+export interface NavSection {
+  label: string;
+  icon?: LucideIcon;
+  items: NavItem[];
+  roles?: UserRole[];
+}
+
+// Permission constants
+export const PERMISSIONS = {
+  // Sales
+  SALES_CREATE: "sales:create",
+  SALES_READ: "sales:read",
+  SALES_REFUND: "sales:refund",
+  
+  // Inventory
+  INVENTORY_CREATE: "inventory:create",
+  INVENTORY_READ: "inventory:read",
+  INVENTORY_UPDATE: "inventory:update",
+  INVENTORY_DELETE: "inventory:delete",
+  
+  // Products
+  PRODUCT_CREATE: "products:create",
+  PRODUCT_READ: "products:read",
+  PRODUCT_UPDATE: "products:update",
+  PRODUCT_DELETE: "products:delete",
+  
+  // Repairs
+  REPAIR_CREATE: "repairs:create",
+  REPAIR_READ: "repairs:read",
+  REPAIR_UPDATE: "repairs:update",
+  REPAIR_ASSIGN: "repairs:assign",
+  
+  // Reports
+  REPORT_VIEW: "reports:view",
+  REPORT_FINANCIAL: "reports:financial",
+  
+  // Users
+  USER_CREATE: "users:create",
+  USER_READ: "users:read",
+  USER_UPDATE: "users:update",
+  USER_DELETE: "users:delete",
+  
+  // Roles
+  ROLE_READ: "roles:read",
+  ROLE_CREATE: "roles:create",
+  ROLE_UPDATE: "roles:update",
+  ROLE_DELETE: "roles:delete",
+  
+  // Settings
+  SETTINGS_READ: "settings:read",
+  SETTINGS_UPDATE: "settings:update",
+} as const;
 
 export const adminNav = [
   {
@@ -151,9 +216,11 @@ export const adminNav = [
     icon: Building,
     items: [
       { title: "Branches", href: "/admin/permissions/branches", icon: Building },
-      { title: "Users", href: "/admin/permissions/users", icon: ShieldCheck },
-      { title: "Roles", href: "/admin/permissions/roles", icon: ShieldCheck },
+      { title: "Users", href: "/admin/permissions/users", icon: Users, permission: PERMISSIONS.USER_READ },
+      { title: "Roles", href: "/admin/permissions/roles", icon: ShieldCheck, permission: PERMISSIONS.ROLE_READ },
+      { title: "Permission Matrix", href: "/admin/permissions/matrix", icon: ShieldCheck, permission: PERMISSIONS.ROLE_UPDATE },
     ],
+    roles: ["admin", "manager"],
   },
 
   {

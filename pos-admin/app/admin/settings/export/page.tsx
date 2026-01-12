@@ -11,7 +11,7 @@ import {
   CheckSquare,
   FileJson,
   FileSpreadsheet,
-  FileCsv,
+  FileText,
   Calendar,
   Clock,
   Play,
@@ -311,7 +311,7 @@ export default function DataExportPage() {
                   : "border-gray-200 hover:border-blue-300"
               }`}
             >
-              <FileCsv size={32} className={exportFormat === "csv" ? "text-blue-600" : "text-gray-600"} />
+              <FileText size={32} className={exportFormat === "csv" ? "text-blue-600" : "text-gray-600"} />
               <h4 className="font-semibold text-black mt-2 text-sm">CSV</h4>
               <p className="text-xs text-gray-600 mt-1">Comma-separated values for data import</p>
             </div>
