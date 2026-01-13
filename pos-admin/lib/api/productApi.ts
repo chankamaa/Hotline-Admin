@@ -1,15 +1,14 @@
-// src/lib/productApi.ts
 import { api } from "./api";
-import type { Product } from "../types";
 
-/* ---------------------------------------------
-   Backend response shapes
---------------------------------------------- */
+
+/* =====================================================
+   Response Types (match backend exactly)
+===================================================== */
 
 type ProductListResponse = {
-  status: string;
+  status: "success";
   results: number;
-  pagination: {
+  pagination?: {
     page: number;
     limit: number;
     total: number;
@@ -21,65 +20,107 @@ type ProductListResponse = {
 };
 
 type SingleProductResponse = {
-  status: string;
+  status: "success";
   data: {
     product: Product;
   };
 };
 
-/* ---------------------------------------------
-   Fetch products (list + filters + pagination)
---------------------------------------------- */
+type DeleteProductResponse = {
+  status: "success";
+  message: string;
+};
+
+/* =====================================================
+   GET: Products (list + filters + pagination)
+   GET /api/v1/products
+===================================================== */
+
 export async function fetchProducts(params?: {
-  search?: string;
   category?: string;
+  search?: string;
   minPrice?: number;
   maxPrice?: number;
+  isActive?: boolean;
   page?: number;
   limit?: number;
   sort?: string;
-  includeInactive?: boolean;
 }) {
   const query = new URLSearchParams();
 
-  if (params?.search) query.set("search", params.search);
   if (params?.category) query.set("category", params.category);
-  if (params?.minPrice !== undefined)
-    query.set("minPrice", String(params.minPrice));
-  if (params?.maxPrice !== undefined)
-    query.set("maxPrice", String(params.maxPrice));
+  if (params?.search) query.set("search", params.search);
+  if (params?.minPrice !== undefined) query.set("minPrice", String(params.minPrice));
+  if (params?.maxPrice !== undefined) query.set("maxPrice", String(params.maxPrice));
+  if (params?.isActive !== undefined) query.set("isActive", String(params.isActive));
   if (params?.page) query.set("page", String(params.page));
   if (params?.limit) query.set("limit", String(params.limit));
   if (params?.sort) query.set("sort", params.sort);
-  if (params?.includeInactive) query.set("includeInactive", "true");
 
   return api<ProductListResponse>(
     `/api/v1/products?${query.toString()}`
   );
 }
 
-/* ---------------------------------------------
-   Get single product by ID
---------------------------------------------- */
+/* =====================================================
+   GET: Single product by ID
+   GET /api/v1/products/:id
+===================================================== */
+
 export async function fetchProductById(productId: string) {
   return api<SingleProductResponse>(
     `/api/v1/products/${productId}`
   );
 }
 
-/* ---------------------------------------------
-   Create product
---------------------------------------------- */
+/* =====================================================
+   GET: Product by barcode (POS)
+   GET /api/v1/products/barcode/:barcode
+===================================================== */
+
+export async function fetchProductByBarcode(barcode: string) {
+  return api<SingleProductResponse>(
+    `/api/v1/products/barcode/${barcode}`
+  );
+}
+
+/* =====================================================
+   GET: Products by category
+   GET /api/v1/products/category/:categoryId
+===================================================== */
+
+export async function fetchProductsByCategory(categoryId: string) {
+  return api<ProductListResponse>(
+    `/api/v1/products/category/${categoryId}`
+  );
+}
+
+/* =====================================================
+   GET: Quick search (POS)
+   GET /api/v1/products/search?q=...
+===================================================== */
+
+export async function searchProducts(query: string) {
+  return api<ProductListResponse>(
+    `/api/v1/products/search?q=${encodeURIComponent(query)}`
+  );
+}
+
+/* =====================================================
+   POST: Create product
+   POST /api/v1/products
+===================================================== */
+
 export async function createProduct(payload: {
   name: string;
   description?: string;
   sku?: string;
   barcode?: string;
-  category: string; // categoryId
+  category: string;
   costPrice: number;
   sellingPrice: number;
-  wholesalePrice?: number;
-  unit?: string;
+  wholesalePrice?: number | null;
+  unit?: Product["unit"];
   taxRate?: number;
   image?: string;
   minStockLevel?: number;
@@ -88,27 +129,28 @@ export async function createProduct(payload: {
     "/api/v1/products",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: payload,
     }
   );
 }
 
-/* ---------------------------------------------
-   Update product
---------------------------------------------- */
+/* =====================================================
+   PUT: Update product
+   PUT /api/v1/products/:id
+===================================================== */
+
 export async function updateProduct(
   productId: string,
   payload: Partial<{
     name: string;
     description: string;
     sku: string;
-    barcode: string;
+    barcode: string | null;
     category: string;
     costPrice: number;
     sellingPrice: number;
-    wholesalePrice: number;
-    unit: string;
+    wholesalePrice: number | null;
+    unit: Product["unit"];
     taxRate: number;
     image: string;
     minStockLevel: number;
@@ -119,45 +161,21 @@ export async function updateProduct(
     `/api/v1/products/${productId}`,
     {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: payload,
     }
   );
 }
 
-/* ---------------------------------------------
-   Soft delete product
---------------------------------------------- */
+/* =====================================================
+   DELETE: Soft delete product
+   DELETE /api/v1/products/:id
+===================================================== */
+
 export async function deleteProduct(productId: string) {
-  return api<{
-    status: string;
-    message: string;
-  }>(
+  return api<DeleteProductResponse>(
     `/api/v1/products/${productId}`,
-    { method: "DELETE" }
-  );
-}
-
-/* ---------------------------------------------
-   Search product by barcode (POS scan)
---------------------------------------------- */
-export async function fetchProductByBarcode(barcode: string) {
-  return api<SingleProductResponse>(
-    `/api/v1/products/barcode/${barcode}`
-  );
-}
-
-/* ---------------------------------------------
-   Get products by category (simple list)
---------------------------------------------- */
-export async function fetchProductsByCategory(categoryId: string) {
-  return api<{
-    status: string;
-    results: number;
-    data: {
-      products: Product[];
-    };
-  }>(
-    `/api/v1/products/category/${categoryId}`
+    {
+      method: "DELETE",
+    }
   );
 }

@@ -124,9 +124,7 @@ export const adminNav = [
     icon: Boxes,
     items: [
       { title: "Stock Overview", href: "/admin/stock", icon: LayoutDashboard },
-      { title: "Stock Entry", href: "/admin/stock/entry", icon: Plus },
       { title: "Stock Adjustment", href: "/admin/stock/adjustment", icon: RefreshCw },
-      { title: "Stock Transfer", href: "/admin/stock/transfer", icon: ArrowRightLeft },
       { title: "Low Stock Alerts", href: "/admin/stock/low", icon: AlertTriangle },
     ],
   },

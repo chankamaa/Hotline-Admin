@@ -1,13 +1,12 @@
-// src/lib/categoryApi.ts
 import { api } from "./api";
-import type { Category } from "../types";
 
-/* ---------------------------------------------
-   Backend response shapes
---------------------------------------------- */
+
+/* =====================================================
+   Response Types (match backend responses)
+===================================================== */
 
 type CategoryListResponse = {
-  status: string;
+  status: "success";
   results?: number;
   data: {
     categories: Category[];
@@ -15,58 +14,62 @@ type CategoryListResponse = {
 };
 
 type SingleCategoryResponse = {
-  status: string;
+  status: "success";
   data: {
-    category: Category;
+    category: Category & {
+      fullPath?: string; // only returned by GET /:id
+    };
   };
 };
 
-/* ---------------------------------------------
-   Get category tree (for sidebar, dropdowns)
-   GET /api/v1/categories?tree=true
---------------------------------------------- */
-export async function fetchCategoryTree(includeInactive = false) {
-  const query = new URLSearchParams();
-  query.set("tree", "true");
-  if (includeInactive) query.set("includeInactive", "true");
+type DeleteCategoryResponse = {
+  status: "success";
+  message: string;
+};
 
-  return api<CategoryListResponse>(
-    `/api/v1/categories?${query.toString()}`
-  );
-}
-
-/* ---------------------------------------------
-   Get flat category list
+/* =====================================================
+   GET: Categories (tree / flat / by parent)
    GET /api/v1/categories
---------------------------------------------- */
-export async function fetchCategories(params?: {
+===================================================== */
+
+/**
+ * Fetch categories
+ * @param options.tree - return hierarchical tree
+ * @param options.parent - fetch children of a parent
+ * @param options.includeInactive - include inactive categories
+ */
+export async function fetchCategories(options?: {
+  tree?: boolean;
   parent?: string;
   includeInactive?: boolean;
 }) {
-  const query = new URLSearchParams();
+  const params = new URLSearchParams();
 
-  if (params?.parent) query.set("parent", params.parent);
-  if (params?.includeInactive) query.set("includeInactive", "true");
+  if (options?.tree) params.set("tree", "true");
+  if (options?.parent) params.set("parent", options.parent);
+  if (options?.includeInactive) params.set("includeInactive", "true");
 
   return api<CategoryListResponse>(
-    `/api/v1/categories?${query.toString()}`
+    `/api/v1/categories?${params.toString()}`
   );
 }
 
-/* ---------------------------------------------
-   Get single category by ID
+/* =====================================================
+   GET: Single category by ID
    GET /api/v1/categories/:id
---------------------------------------------- */
+===================================================== */
+
 export async function fetchCategoryById(categoryId: string) {
   return api<SingleCategoryResponse>(
     `/api/v1/categories/${categoryId}`
   );
 }
 
-/* ---------------------------------------------
-   Create category
+/* =====================================================
+   POST: Create category
    POST /api/v1/categories
---------------------------------------------- */
+===================================================== */
+
 export async function createCategory(payload: {
   name: string;
   description?: string;
@@ -77,16 +80,16 @@ export async function createCategory(payload: {
     "/api/v1/categories",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: payload,
     }
   );
 }
 
-/* ---------------------------------------------
-   Update category
+/* =====================================================
+   PUT: Update category
    PUT /api/v1/categories/:id
---------------------------------------------- */
+===================================================== */
+
 export async function updateCategory(
   categoryId: string,
   payload: Partial<{
@@ -101,21 +104,18 @@ export async function updateCategory(
     `/api/v1/categories/${categoryId}`,
     {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: payload,
     }
   );
 }
 
-/* ---------------------------------------------
-   Soft delete (deactivate) category
+/* =====================================================
+   DELETE: Soft delete category
    DELETE /api/v1/categories/:id
---------------------------------------------- */
+===================================================== */
+
 export async function deleteCategory(categoryId: string) {
-  return api<{
-    status: string;
-    message: string;
-  }>(
+  return api<DeleteCategoryResponse>(
     `/api/v1/categories/${categoryId}`,
     {
       method: "DELETE",

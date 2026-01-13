@@ -116,6 +116,34 @@ export async function api<T>(
   return data;
 }
 
+// Add helper methods to api
+api.get = <T>(path: string, options?: { params?: Record<string, any> }) => {
+  const queryString = options?.params 
+    ? '?' + new URLSearchParams(
+        Object.entries(options.params)
+          .filter(([_, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => [k, String(v)])
+      ).toString()
+    : '';
+  return api<T>(path + queryString, { method: 'GET' });
+};
+
+api.post = <T>(path: string, body?: any) => {
+  return api<T>(path, { method: 'POST', body });
+};
+
+api.put = <T>(path: string, body?: any) => {
+  return api<T>(path, { method: 'PUT', body });
+};
+
+api.patch = <T>(path: string, body?: any) => {
+  return api<T>(path, { method: 'PATCH', body });
+};
+
+api.delete = <T>(path: string) => {
+  return api<T>(path, { method: 'DELETE' });
+};
+
 // helpers
 export const endpoints = {
   auth: {

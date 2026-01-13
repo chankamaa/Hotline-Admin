@@ -6,15 +6,17 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tags, Pencil, Trash2 } from "lucide-react";
-import type { Category } from "@/lib/types";
+
 import {
   fetchCategories,
   createCategory,
   updateCategory,
   deleteCategory,
 } from "@/lib/api/categoryApi";
+import { useToast } from "@/providers/toast-provider";
 
 export default function CategoriesPage() {
+  const toast = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,10 +33,15 @@ export default function CategoriesPage() {
      Load categories from backend
   -------------------------------------------------- */
   const loadCategories = async () => {
-    setLoading(true);
-    const res = await fetchCategories();
-    setCategories(res.data.categories);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await fetchCategories();
+      setCategories(res.data.categories);
+    } catch (error) {
+      toast.error("Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -64,16 +71,29 @@ export default function CategoriesPage() {
      Save (create / update)
   -------------------------------------------------- */
   const handleSave = async () => {
-    if (!form.name.trim()) return alert("Category name is required");
-
-    if (editingCategory) {
-      await updateCategory(editingCategory._id, form);
-    } else {
-      await createCategory(form);
+    if (!form.name.trim()) {
+      toast.warning("Category name is required");
+      return;
     }
 
-    setModalOpen(false);
-    loadCategories();
+    try {
+      if (editingCategory) {
+        await updateCategory(editingCategory._id, form);
+        toast.success("Category updated successfully!");
+      } else {
+        await createCategory(form);
+        toast.success("Category created successfully!");
+      }
+
+      setModalOpen(false);
+      loadCategories();
+    } catch (error) {
+      toast.error(
+        editingCategory
+          ? "Failed to update category"
+          : "Failed to create category"
+      );
+    }
   };
 
   /* --------------------------------------------------
@@ -81,8 +101,14 @@ export default function CategoriesPage() {
   -------------------------------------------------- */
   const handleDelete = async (id: string) => {
     if (!confirm("Deactivate this category?")) return;
-    await deleteCategory(id);
-    loadCategories();
+    
+    try {
+      await deleteCategory(id);
+      toast.success("Category deleted successfully!");
+      loadCategories();
+    } catch (error) {
+      toast.error("Failed to delete category");
+    }
   };
 
   /* --------------------------------------------------

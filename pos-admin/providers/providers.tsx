@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getMe } from "@/lib/auth";
 import { clearSession } from "@/lib/api/api";
+import { ToastProvider } from "./toast-provider";
 
 interface User {
   id: string;
@@ -117,7 +118,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, setUser, loading, logout, isAuthenticated }}>
-      {children}
+      <ToastProvider>
+        {children}
+      </ToastProvider>
     </AuthContext.Provider>
   );
 }

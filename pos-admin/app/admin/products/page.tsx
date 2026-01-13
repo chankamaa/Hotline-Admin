@@ -6,21 +6,35 @@ import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Product, Category } from "@/lib/types";
+
 import {
   fetchProducts,
   createProduct,
   updateProduct,
   deleteProduct,
 } from "@/lib/api/productApi";
-import { fetchCategoryTree } from "@/lib/api/categoryApi";
-import { Edit, Trash2, Eye, Package } from "lucide-react";
+
+import { fetchCategories } from "@/lib/api/categoryApi";
+import { Edit, Trash2, Package } from "lucide-react";
 
 /* --------------------------------------------------
    Helpers
 -------------------------------------------------- */
 const getCategoryName = (category: string | Category) =>
   typeof category === "string" ? "—" : category.name;
+
+const UNITS = [
+  "piece",
+  "kg",
+  "g",
+  "liter",
+  "ml",
+  "meter",
+  "cm",
+  "box",
+  "pack",
+  "dozen",
+];
 
 /* --------------------------------------------------
    Component
@@ -41,6 +55,10 @@ export default function ProductsPage() {
     category: "",
     costPrice: 0,
     sellingPrice: 0,
+    wholesalePrice: 0,
+    unit: "piece",
+    taxRate: 0,
+    image: "",
     minStockLevel: 0,
     isActive: true,
   });
@@ -53,15 +71,17 @@ export default function ProductsPage() {
     loadCategories();
   }, []);
 
-  const loadProducts = async () => {
+  const loadProducts = async (search?: string) => {
     setLoading(true);
-    const res = await fetchProducts({ search: searchQuery });
+    const res = await fetchProducts({
+      search: search ?? searchQuery,
+    });
     setProducts(res.data.products);
     setLoading(false);
   };
 
   const loadCategories = async () => {
-    const res = await fetchCategoryTree();
+    const res = await fetchCategories();
     setCategories(res.data.categories);
   };
 
@@ -77,6 +97,10 @@ export default function ProductsPage() {
       category: "",
       costPrice: 0,
       sellingPrice: 0,
+      wholesalePrice: 0,
+      unit: "piece",
+      taxRate: 0,
+      image: "",
       minStockLevel: 0,
       isActive: true,
     });
@@ -95,6 +119,10 @@ export default function ProductsPage() {
           : product.category._id,
       costPrice: product.costPrice,
       sellingPrice: product.sellingPrice,
+      wholesalePrice: product.wholesalePrice ?? 0,
+      unit: product.unit ?? "piece",
+      taxRate: product.taxRate ?? 0,
+      image: product.image ?? "",
       minStockLevel: product.minStockLevel ?? 0,
       isActive: product.isActive ?? true,
     });
@@ -102,17 +130,21 @@ export default function ProductsPage() {
   };
 
   const handleSave = async () => {
-    try {
-      if (currentProduct) {
-        await updateProduct(currentProduct._id, formData);
-      } else {
-        await createProduct(formData);
-      }
-      setIsModalOpen(false);
-      loadProducts();
-    } catch (error: any) {
-      alert(error.message || "Failed to save product");
+    const payload = {
+      ...formData,
+      sku: formData.sku || undefined,
+      barcode: formData.barcode || undefined,
+      image: formData.image || undefined,
+    };
+
+    if (currentProduct) {
+      await updateProduct(currentProduct._id, payload);
+    } else {
+      await createProduct(payload);
     }
+
+    setIsModalOpen(false);
+    loadProducts();
   };
 
   const handleDelete = async (id: string) => {
@@ -150,9 +182,7 @@ export default function ProductsPage() {
       label: "Price",
       render: (p) => (
         <div>
-          <div className="font-semibold">
-            ${p.sellingPrice.toFixed(2)}
-          </div>
+          <div className="font-semibold">${p.sellingPrice.toFixed(2)}</div>
           <div className="text-xs text-gray-500">
             Cost: ${p.costPrice.toFixed(2)}
           </div>
@@ -164,10 +194,16 @@ export default function ProductsPage() {
       label: "Actions",
       render: (p) => (
         <div className="flex gap-2">
-          <button onClick={() => handleEdit(p)}>
+          <button
+            onClick={() => handleEdit(p)}
+            className="p-1 hover:bg-gray-100 rounded"
+          >
             <Edit size={16} />
           </button>
-          <button onClick={() => handleDelete(p._id)}>
+          <button
+            onClick={() => handleDelete(p._id)}
+            className="p-1 hover:bg-red-100 text-red-600 rounded"
+          >
             <Trash2 size={16} />
           </button>
         </div>
@@ -180,23 +216,20 @@ export default function ProductsPage() {
   -------------------------------------------------- */
   return (
     <div className="p-6 text-gray-800">
-      <PageHeader
-        title="Products"
-        description="Manage your product catalog"
-      />
+      <PageHeader title="Products" description="Manage your product catalog" />
 
       <DataTable
         data={products}
         columns={columns}
+        loading={loading}
         onAdd={handleAdd}
         onSearch={(q) => {
           setSearchQuery(q);
-          loadProducts();
+          loadProducts(q);
         }}
         addButtonLabel="Add Product"
       />
 
-      {/* Add/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -213,58 +246,53 @@ export default function ProductsPage() {
         }
       >
         <div className="space-y-4">
-          <Input name="name" label="Name" value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
-          />
-          <Input name="sku" label="SKU" value={formData.sku}
-            onChange={(e) =>
-              setFormData({ ...formData, sku: e.target.value })
-            }
-          />
-          <Input name="barcode" label="Barcode" value={formData.barcode}
-            onChange={(e) =>
-              setFormData({ ...formData, barcode: e.target.value })
-            }
-          />
-          <Input
-            name="category"
-            label="Category"
-            type="select"
-            value={formData.category}
-            onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value })
-            }
-            options={categories.map((c) => ({
-              value: c._id,
-              label: c.name,
-            }))}
-          />
-          <Input
-            name="sellingPrice"
-            label="Selling Price"
-            type="number"
-            value={formData.sellingPrice}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                sellingPrice: Number(e.target.value),
-              })
-            }
-          />
-          <Input
-            name="costPrice"
-            label="Cost Price"
-            type="number"
-            value={formData.costPrice}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                costPrice: Number(e.target.value),
-              })
-            }
-          />
+          <Input label="Name" value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+
+          <Input label="SKU (optional)" value={formData.sku}
+            onChange={(e) => setFormData({ ...formData, sku: e.target.value })} />
+
+          <Input label="Barcode (optional)" value={formData.barcode}
+            onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} />
+
+          <Input label="Category" type="select" value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            options={categories.map((c) => ({ value: c._id, label: c.name }))} required />
+
+          <Input label="Selling Price" type="number" value={formData.sellingPrice}
+            onChange={(e) => setFormData({ ...formData, sellingPrice: +e.target.value })} required />
+
+          <Input label="Cost Price" type="number" value={formData.costPrice}
+            onChange={(e) => setFormData({ ...formData, costPrice: +e.target.value })} required />
+
+          <Input label="Wholesale Price (optional)" type="number" value={formData.wholesalePrice}
+            onChange={(e) => setFormData({ ...formData, wholesalePrice: +e.target.value })} />
+
+          <Input label="Unit" type="select" value={formData.unit}
+            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+            options={UNITS.map((u) => ({ value: u, label: u }))} />
+
+          <Input label="Tax Rate (%)" type="number" value={formData.taxRate}
+            onChange={(e) => setFormData({ ...formData, taxRate: +e.target.value })} />
+
+          <Input label="Image URL (optional)" value={formData.image}
+            onChange={(e) => setFormData({ ...formData, image: e.target.value })} />
+
+          <Input label="Minimum Stock Level" type="number" value={formData.minStockLevel}
+            onChange={(e) => setFormData({ ...formData, minStockLevel: +e.target.value })} />
+
+          {/* ENTERED DETAILS */}
+          <div className="border rounded-lg p-4 bg-gray-50 text-sm space-y-1">
+            <div className="font-semibold">Entered Details</div>
+            {Object.entries(formData).map(
+              ([key, value]) =>
+                value !== "" && value !== 0 && (
+                  <div key={key}>
+                    {key}: {String(value)}
+                  </div>
+                )
+            )}
+          </div>
         </div>
       </Modal>
     </div>
