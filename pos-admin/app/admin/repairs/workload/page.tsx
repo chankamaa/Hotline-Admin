@@ -2,15 +2,19 @@
 
 import { PageHeader } from '@/components/ui/page-header';
 import TechnicianDashboard from '@/components/repairs/technician-dashboard';
+import RequirePerm from '@/components/RequirePerm';
+import { PERMISSIONS } from '@/components/sidebar-config';
 
 export default function RepairWorkloadPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Technician Workload"
-        description="Monitor technician performance and manage workload distribution"
-      />
-      <TechnicianDashboard />
-    </div>
+    <RequirePerm perm={PERMISSIONS.REPAIR_READ}>
+      <div className="space-y-6">
+        <PageHeader
+          title="Technician Workload"
+          description="Monitor technician performance and manage workload distribution"
+        />
+        <TechnicianDashboard />
+      </div>
+    </RequirePerm>
   );
 }

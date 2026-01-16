@@ -6,6 +6,7 @@ import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/providers/toast-provider";
 
 import {
   fetchProducts,
@@ -53,15 +54,17 @@ export default function ProductsPage() {
     sku: "",
     barcode: "",
     category: "",
-    costPrice: 0,
-    sellingPrice: 0,
-    wholesalePrice: 0,
+    costPrice: "",
+    sellingPrice: "",
+    wholesalePrice: "",
     unit: "piece",
-    taxRate: 0,
+    taxRate: "",
     image: "",
-    minStockLevel: 0,
+    minStockLevel: "",
     isActive: true,
   });
+
+  const toast = useToast();
 
   /* --------------------------------------------------
      Load products + categories
@@ -95,13 +98,13 @@ export default function ProductsPage() {
       sku: "",
       barcode: "",
       category: "",
-      costPrice: 0,
-      sellingPrice: 0,
-      wholesalePrice: 0,
+      costPrice: "",
+      sellingPrice: "",
+      wholesalePrice: "",
       unit: "piece",
-      taxRate: 0,
+      taxRate: "",
       image: "",
-      minStockLevel: 0,
+      minStockLevel: "",
       isActive: true,
     });
     setIsModalOpen(true);
@@ -117,34 +120,42 @@ export default function ProductsPage() {
         typeof product.category === "string"
           ? product.category
           : product.category._id,
-      costPrice: product.costPrice,
-      sellingPrice: product.sellingPrice,
-      wholesalePrice: product.wholesalePrice ?? 0,
-      unit: product.unit ?? "piece",
-      taxRate: product.taxRate ?? 0,
-      image: product.image ?? "",
-      minStockLevel: product.minStockLevel ?? 0,
-      isActive: product.isActive ?? true,
+      costPrice: product.costPrice?.toString() ?? "",
+      sellingPrice: product.sellingPrice?.toString() ?? "",
+      wholesalePrice: product.wholesalePrice?.toString() ?? "",
+      unit: product.unit,
+      taxRate: product.taxRate?.toString() ?? "",
+      image: product.image || "",
+      minStockLevel: product.minStockLevel?.toString() ?? "",
+      isActive: product.isActive,
     });
     setIsModalOpen(true);
   };
 
   const handleSave = async () => {
+    if (!formData.name || !formData.sellingPrice || !formData.costPrice) return;
+    setLoading(true);
     const payload = {
       ...formData,
-      sku: formData.sku || undefined,
-      barcode: formData.barcode || undefined,
-      image: formData.image || undefined,
+      sellingPrice: formData.sellingPrice === "" ? 0 : +formData.sellingPrice,
+      costPrice: formData.costPrice === "" ? 0 : +formData.costPrice,
+      wholesalePrice: formData.wholesalePrice === "" ? 0 : +formData.wholesalePrice,
+      taxRate: formData.taxRate === "" ? 0 : +formData.taxRate,
+      minStockLevel: formData.minStockLevel === "" ? 0 : +formData.minStockLevel,
     };
-
-    if (currentProduct) {
-      await updateProduct(currentProduct._id, payload);
-    } else {
-      await createProduct(payload);
+    try {
+      if (currentProduct) {
+        await updateProduct(currentProduct._id, payload);
+        // Optionally show update toast here
+      } else {
+        await createProduct(payload);
+        toast.success("Product added successfully!");
+      }
+      await loadProducts();
+      setIsModalOpen(false);
+    } finally {
+      setLoading(false);
     }
-
-    setIsModalOpen(false);
-    loadProducts();
   };
 
   const handleDelete = async (id: string) => {
@@ -246,40 +257,62 @@ export default function ProductsPage() {
         }
       >
         <div className="space-y-4">
+
           <Input label="Name" value={formData.name}
+            placeholder="Enter product name"
             onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
 
+
           <Input label="SKU (optional)" value={formData.sku}
+            placeholder="Stock keeping unit (optional)"
             onChange={(e) => setFormData({ ...formData, sku: e.target.value })} />
 
+
           <Input label="Barcode (optional)" value={formData.barcode}
+            placeholder="Barcode (optional)"
             onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} />
 
+
           <Input label="Category" type="select" value={formData.category}
+            placeholder="Select category"
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             options={categories.map((c) => ({ value: c._id, label: c.name }))} required />
 
+
           <Input label="Selling Price" type="number" value={formData.sellingPrice}
-            onChange={(e) => setFormData({ ...formData, sellingPrice: +e.target.value })} required />
+            placeholder="Enter selling price"
+            onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })} required />
+
 
           <Input label="Cost Price" type="number" value={formData.costPrice}
-            onChange={(e) => setFormData({ ...formData, costPrice: +e.target.value })} required />
+            placeholder="Enter cost price"
+            onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })} required />
+
 
           <Input label="Wholesale Price (optional)" type="number" value={formData.wholesalePrice}
-            onChange={(e) => setFormData({ ...formData, wholesalePrice: +e.target.value })} />
+            placeholder="Wholesale price (optional)"
+            onChange={(e) => setFormData({ ...formData, wholesalePrice: e.target.value })} />
+
 
           <Input label="Unit" type="select" value={formData.unit}
+            placeholder="Select unit"
             onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
             options={UNITS.map((u) => ({ value: u, label: u }))} />
 
+
           <Input label="Tax Rate (%)" type="number" value={formData.taxRate}
-            onChange={(e) => setFormData({ ...formData, taxRate: +e.target.value })} />
+            placeholder="e.g. 18 for 18%"
+            onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })} />
+
 
           <Input label="Image URL (optional)" value={formData.image}
+            placeholder="Paste image URL (optional)"
             onChange={(e) => setFormData({ ...formData, image: e.target.value })} />
 
+
           <Input label="Minimum Stock Level" type="number" value={formData.minStockLevel}
-            onChange={(e) => setFormData({ ...formData, minStockLevel: +e.target.value })} />
+            placeholder="e.g. 10"
+            onChange={(e) => setFormData({ ...formData, minStockLevel: e.target.value })} />
 
           {/* ENTERED DETAILS */}
           <div className="border rounded-lg p-4 bg-gray-50 text-sm space-y-1">

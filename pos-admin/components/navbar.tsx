@@ -28,7 +28,7 @@ export function AdminNavbar({
   }, []);
 
   return (
-    <header className="h-14 border-b bg-white sticky top-0 z-20">
+    <header className="h-14 border-b bg-white sticky top-0 z-20 text-gray-500">
       <div className="h-full px-4 flex items-center gap-3">
         {/* Mobile menu */}
         <button

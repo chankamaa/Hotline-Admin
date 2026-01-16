@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useEffect } from "react";
+import { useState, use } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -12,29 +12,13 @@ import {
   Package,
   DollarSign
 } from "lucide-react";
-import { 
-  getSalesReport, 
-  getDailySalesSummary 
-} from "@/lib/api/sale.api";
 
 interface SalesSummary {
-  date: string;
   totalSales: number;
-  totalRevenue: number;
-  totalDiscount: number;
-  totalTax: number;
-  totalItems: number;
-  cashTotal: number;
-  cardTotal: number;
-  voidedSales: number;
-}
-
-interface DailyBreakdown {
-  _id: string;
-  totalSales: number;
-  totalRevenue: number;
-  totalDiscount: number;
-  totalTax: number;
+  transactions: number;
+  avgTransaction: number;
+  topProduct: string;
+  topCategory: string;
 }
 
 interface ProductSales {
@@ -65,90 +49,29 @@ export default function SalesReportsPage({
   const { tab = "summary" } = use(searchParams);
   const [activeTab, setActiveTab] = useState(tab);
   const [dateRange, setDateRange] = useState("this-month");
-  const [loading, setLoading] = useState(false);
-  
-  // State for backend data
-  const [salesSummary, setSalesSummary] = useState<SalesSummary | null>(null);
-  const [dailyBreakdown, setDailyBreakdown] = useState<DailyBreakdown[]>([]);
-  const [reportTotals, setReportTotals] = useState<{
-    totalSales: number;
-    totalRevenue: number;
-    totalDiscount: number;
-    totalTax: number;
-  } | null>(null);
 
-  // Load daily summary
-  const loadDailySummary = async () => {
-    setLoading(true);
-    try {
-      const res = await getDailySalesSummary() as any;
-      if (res.data?.data?.summary) {
-        setSalesSummary(res.data.data.summary);
-      }
-    } catch (error) {
-      console.error("Failed to load daily summary:", error);
-    } finally {
-      setLoading(false);
-    }
+  const salesSummary: SalesSummary = {
+    totalSales: 283500,
+    transactions: 1245,
+    avgTransaction: 227.69,
+    topProduct: "iPhone 15 Pro 256GB",
+    topCategory: "Smartphones"
   };
 
-  // Load sales report by date range
-  const loadSalesReport = async (startDate: string, endDate: string) => {
-    setLoading(true);
-    try {
-      const res = await getSalesReport(startDate, endDate) as any;
-      if (res.data?.data) {
-        setDailyBreakdown(res.data.data.dailyBreakdown || []);
-        setReportTotals(res.data.data.totals || null);
-      }
-    } catch (error) {
-      console.error("Failed to load sales report:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const paymentMethodData = [
+    { method: "Cash", amount: 85000, count: 456, percentage: 30 },
+    { method: "Credit Card", amount: 142000, count: 567, percentage: 50 },
+    { method: "Debit Card", amount: 42500, count: 156, percentage: 15 },
+    { method: "Digital Wallet", amount: 14000, count: 66, percentage: 5 },
+  ];
 
-  // Calculate date ranges based on selection
-  const getDateRange = (range: string) => {
-    const today = new Date();
-    let startDate = new Date();
-    const endDate = new Date();
+  const categoryData = [
+    { category: "Smartphones", sales: 185000, count: 234, percentage: 65 },
+    { category: "Accessories", sales: 56500, count: 678, percentage: 20 },
+    { category: "Repairs", sales: 35000, count: 198, percentage: 12 },
+    { category: "Parts", sales: 7000, count: 135, percentage: 3 },
+  ];
 
-    switch (range) {
-      case "today":
-        startDate = new Date();
-        break;
-      case "this-week":
-        startDate = new Date(today.setDate(today.getDate() - today.getDay()));
-        break;
-      case "this-month":
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        break;
-      case "last-month":
-        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        endDate.setDate(0); // Last day of previous month
-        break;
-      case "this-year":
-        startDate = new Date(today.getFullYear(), 0, 1);
-        break;
-      default:
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    }
-
-    return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
-    };
-  };
-
-  // Load data on mount and when date range changes
-  useEffect(() => {
-    loadDailySummary();
-    const { startDate, endDate } = getDateRange(dateRange);
-    loadSalesReport(startDate, endDate);
-  }, [dateRange]);
-
-  // Mock data for product sales (keep for now until backend implements)
   const productSales: ProductSales[] = [
     { id: "1", productName: "iPhone 15 Pro 256GB", sku: "IP15P-256", quantitySold: 78, revenue: 93600, trend: "up", trendPercent: 15.5 },
     { id: "2", productName: "Samsung Galaxy S24 Ultra", sku: "SGS24U-512", quantitySold: 56, revenue: 72800, trend: "up", trendPercent: 8.3 },
@@ -157,7 +80,6 @@ export default function SalesReportsPage({
     { id: "5", productName: "Phone Case Premium", sku: "CASE-PREM", quantitySold: 234, revenue: 11700, trend: "up", trendPercent: 22.1 },
   ];
 
-  // Mock data for discount usage (keep for now until backend implements)
   const discountUsage: DiscountUsage[] = [
     { id: "1", discountCode: "NEWYEAR2026", timesUsed: 245, totalDiscount: 36750, avgDiscount: 150, employeeName: "Multiple", impactOnProfit: -15.2 },
     { id: "2", discountCode: "VIP20", timesUsed: 156, totalDiscount: 31200, avgDiscount: 200, employeeName: "Multiple", impactOnProfit: -12.8 },
@@ -302,196 +224,96 @@ export default function SalesReportsPage({
             </Button>
           </div>
 
-          {loading ? (
-            <div className="text-center py-8">Loading...</div>
-          ) : (
-            <>
-              {/* Key Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-xl border p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-600">Total Revenue</div>
-                    <DollarSign size={20} className="text-green-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-black">
-                    Rs. {(reportTotals?.totalRevenue || 0).toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {reportTotals?.totalSales || 0} transactions
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl border p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-600">Today's Sales</div>
-                    <ShoppingCart size={20} className="text-blue-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-black">
-                    Rs. {(salesSummary?.totalRevenue || 0).toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {salesSummary?.totalSales || 0} transactions
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl border p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-600">Total Discount</div>
-                    <Percent size={20} className="text-red-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-red-600">
-                    Rs. {(reportTotals?.totalDiscount || 0).toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {reportTotals?.totalSales > 0 
-                      ? ((reportTotals.totalDiscount / reportTotals.totalRevenue) * 100).toFixed(1)
-                      : 0}% of revenue
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl border p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-600">Total Tax</div>
-                    <TrendingUp size={20} className="text-purple-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-black">
-                    Rs. {(reportTotals?.totalTax || 0).toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">Tax collected</div>
-                </div>
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Total Sales</div>
+                <DollarSign size={20} className="text-green-600" />
               </div>
+              <div className="text-2xl font-bold text-black">${salesSummary.totalSales.toLocaleString()}</div>
+              <div className="text-xs text-green-600 mt-1">+12.5% from last period</div>
+            </div>
+            <div className="bg-white rounded-xl border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Transactions</div>
+                <ShoppingCart size={20} className="text-blue-600" />
+              </div>
+              <div className="text-2xl font-bold text-black">{salesSummary.transactions}</div>
+              <div className="text-xs text-blue-600 mt-1">+8.3% from last period</div>
+            </div>
+            <div className="bg-white rounded-xl border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Avg Transaction</div>
+                <TrendingUp size={20} className="text-purple-600" />
+              </div>
+              <div className="text-2xl font-bold text-black">${salesSummary.avgTransaction.toFixed(2)}</div>
+              <div className="text-xs text-purple-600 mt-1">+3.9% from last period</div>
+            </div>
+            <div className="bg-white rounded-xl border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Top Product</div>
+                <Package size={20} className="text-orange-600" />
+              </div>
+              <div className="text-sm font-bold text-black">{salesSummary.topProduct}</div>
+              <div className="text-xs text-gray-500 mt-1">78 units sold</div>
+            </div>
+          </div>
 
-              {/* Payment Method Distribution - Today's Data */}
-              {salesSummary && (
-                <div className="bg-white rounded-xl border p-6">
-                  <h3 className="text-lg font-semibold text-black mb-4">
-                    Today's Payment Method Distribution
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-black">Cash</span>
-                        <span className="text-black font-semibold">
-                          Rs. {salesSummary.cashTotal.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-green-600 h-3 rounded-full" 
-                          style={{ 
-                            width: `${salesSummary.totalRevenue > 0 
-                              ? (salesSummary.cashTotal / salesSummary.totalRevenue) * 100 
-                              : 0}%` 
-                          }}
-                        />
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {salesSummary.totalRevenue > 0 
-                          ? ((salesSummary.cashTotal / salesSummary.totalRevenue) * 100).toFixed(1)
-                          : 0}% of total
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-black">Card</span>
-                        <span className="text-black font-semibold">
-                          Rs. {salesSummary.cardTotal.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-blue-600 h-3 rounded-full" 
-                          style={{ 
-                            width: `${salesSummary.totalRevenue > 0 
-                              ? (salesSummary.cardTotal / salesSummary.totalRevenue) * 100 
-                              : 0}%` 
-                          }}
-                        />
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {salesSummary.totalRevenue > 0 
-                          ? ((salesSummary.cardTotal / salesSummary.totalRevenue) * 100).toFixed(1)
-                          : 0}% of total
-                      </div>
-                    </div>
+          {/* Payment Method Distribution */}
+          <div className="bg-white rounded-xl border p-6">
+            <h3 className="text-lg font-semibold text-black mb-4">Payment Method Distribution</h3>
+            <div className="space-y-4">
+              {paymentMethodData.map((method, index) => (
+                <div key={index}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-black">{method.method}</span>
+                    <span className="text-black font-semibold">${method.amount.toLocaleString()} ({method.count} txns)</span>
                   </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-blue-600 h-3 rounded-full" 
+                      style={{ width: `${method.percentage}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">{method.percentage}% of total</div>
                 </div>
-              )}
+              ))}
+            </div>
+          </div>
 
-              {/* Daily Breakdown Table */}
-              {dailyBreakdown.length > 0 && (
-                <div className="bg-white rounded-xl border p-6">
-                  <h3 className="text-lg font-semibold text-black mb-4">Daily Sales Breakdown</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-4 text-black font-semibold">Date</th>
-                          <th className="text-left py-3 px-4 text-black font-semibold">Transactions</th>
-                          <th className="text-left py-3 px-4 text-black font-semibold">Revenue</th>
-                          <th className="text-left py-3 px-4 text-black font-semibold">Discount</th>
-                          <th className="text-left py-3 px-4 text-black font-semibold">Tax</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dailyBreakdown.map((day, index) => (
-                          <tr key={index} className="border-b hover:bg-gray-50">
-                            <td className="py-3 px-4 text-black font-medium">
-                              {new Date(day._id).toLocaleDateString()}
-                            </td>
-                            <td className="py-3 px-4 text-black">{day.totalSales}</td>
-                            <td className="py-3 px-4 text-black font-semibold">
-                              Rs. {day.totalRevenue.toLocaleString()}
-                            </td>
-                            <td className="py-3 px-4 text-red-600">
-                              Rs. {day.totalDiscount.toLocaleString()}
-                            </td>
-                            <td className="py-3 px-4 text-black">
-                              Rs. {day.totalTax.toLocaleString()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      {reportTotals && (
-                        <tfoot>
-                          <tr className="border-t-2 bg-gray-50 font-semibold">
-                            <td className="py-3 px-4 text-black">TOTAL</td>
-                            <td className="py-3 px-4 text-black">{reportTotals.totalSales}</td>
-                            <td className="py-3 px-4 text-black">
-                              Rs. {reportTotals.totalRevenue.toLocaleString()}
-                            </td>
-                            <td className="py-3 px-4 text-red-600">
-                              Rs. {reportTotals.totalDiscount.toLocaleString()}
-                            </td>
-                            <td className="py-3 px-4 text-black">
-                              Rs. {reportTotals.totalTax.toLocaleString()}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      )}
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {salesSummary && salesSummary.voidedSales > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="font-semibold text-black mb-1">Voided Transactions</div>
-                  <div className="text-sm text-black">
-                    {salesSummary.voidedSales} transaction(s) were voided today.
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+          {/* Category-wise Sales */}
+          <div className="bg-white rounded-xl border p-6">
+            <h3 className="text-lg font-semibold text-black mb-4">Category-wise Sales Distribution</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 text-black font-semibold">Category</th>
+                    <th className="text-left py-3 px-4 text-black font-semibold">Sales</th>
+                    <th className="text-left py-3 px-4 text-black font-semibold">Units Sold</th>
+                    <th className="text-left py-3 px-4 text-black font-semibold">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categoryData.map((cat, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4 text-black font-medium">{cat.category}</td>
+                      <td className="py-3 px-4 text-black font-semibold">${cat.sales.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-black">{cat.count}</td>
+                      <td className="py-3 px-4 text-black">{cat.percentage}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* PRODUCT ANALYSIS TAB - Using Mock Data (Backend API not yet implemented) */}
+      {/* PRODUCT ANALYSIS TAB */}
       {activeTab === "products" && (
         <div className="space-y-6">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-yellow-800">
-              <strong>Note:</strong> This tab currently uses mock data. Product-level sales analytics API will be implemented in the backend.
-            </p>
-          </div>
           <div className="bg-white rounded-xl border p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-black">Product Sales Analysis</h3>
@@ -529,14 +351,9 @@ export default function SalesReportsPage({
         </div>
       )}
 
-      {/* DISCOUNT ANALYSIS TAB - Using Mock Data (Backend API not yet implemented) */}
+      {/* DISCOUNT ANALYSIS TAB */}
       {activeTab === "discounts" && (
         <div className="space-y-6">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-yellow-800">
-              <strong>Note:</strong> This tab currently uses mock data. Discount analytics API will be implemented in the backend.
-            </p>
-          </div>
           {/* Discount Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border p-4">

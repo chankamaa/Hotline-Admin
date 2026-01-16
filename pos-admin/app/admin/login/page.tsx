@@ -63,7 +63,7 @@ export default function LoginPage() {
           <p className="text-gray-600 mt-2">Sign in to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 text-gray-500">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Username

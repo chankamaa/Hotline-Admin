@@ -8,6 +8,8 @@ import RepairJobForm from '@/components/repairs/repair-job-form';
 import TechnicianDashboard from '@/components/repairs/technician-dashboard';
 import RepairHistory from '@/components/repairs/repair-history';
 import { Plus } from 'lucide-react';
+import RequirePerm from '@/components/RequirePerm';
+import { PERMISSIONS } from '@/components/sidebar-config';
 
 type TabType = 'jobs' | 'create' | 'technicians' | 'history';
 
@@ -31,13 +33,14 @@ export default function RepairsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Repair & Service Management"
-        description="Manage repair jobs, technician workload, and service history"
-        action={
-          activeTab === 'jobs' && (
-            <Button onClick={handleCreateNew}>
+    <RequirePerm perm={PERMISSIONS.REPAIR_READ}>
+      <div className="space-y-6">
+        <PageHeader
+          title="Repair & Service Management"
+          description="Manage repair jobs, technician workload, and service history"
+          action={
+            activeTab === 'jobs' && (
+              <Button onClick={handleCreateNew}>
               <Plus className="w-4 h-4 mr-2" />
               Create Repair Job
             </Button>
@@ -106,6 +109,7 @@ export default function RepairsPage() {
         {activeTab === 'technicians' && <TechnicianDashboard />}
         {activeTab === 'history' && <RepairHistory />}
       </div>
-    </div>
+      </div>
+    </RequirePerm>
   );
 }

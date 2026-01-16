@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { ShieldPlus, Edit, Trash2, Users, Key } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
@@ -17,6 +18,8 @@ interface Role {
 }
 
 export default function RolesManagementPage() {
+  const router = useRouter();
+  
   // Mock data - replace with actual API call
   const [roles] = useState<Role[]>([
     {
@@ -98,7 +101,7 @@ export default function RolesManagementPage() {
           subtitle="Create and manage user roles with specific permissions"
           action={{
             label: "Create Role",
-            onClick: () => alert("Create role functionality"),
+            onClick: () => router.push("/admin/permissions/roles/create"),
             icon: ShieldPlus,
           }}
         />

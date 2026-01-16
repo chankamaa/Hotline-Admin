@@ -1,28 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
-import { ArrowLeft, Eye, EyeOff, RefreshCw, Send } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, RefreshCw, Send, Loader2 } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
 import { PERMISSIONS } from "@/components/sidebar-config";
+import userApi from "@/lib/api/userApi";
+import roleApi, { Role } from "@/lib/api/roleApi";
 
 export default function CreateUserPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     confirmPassword: "",
-    name: "",
     email: "",
-    phone: "",
-    employeeId: "",
-    role: "cashier" as "admin" | "manager" | "cashier" | "technician",
+    role: "" as string, // Store role ID instead of name
   });
 
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [autoGeneratePassword, setAutoGeneratePassword] = useState(false);
   const [sendCredentials, setSendCredentials] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Fetch roles on component mount
+  useEffect(() => {
+    fetchRoles();
+  }, []);
+
+  const fetchRoles = async () => {
+    try {
+      setLoadingRoles(true);
+      const response = await roleApi.getAll();
+      setRoles(response.data.roles);
+      
+      // Set default role to CASHIER if available
+      const cashierRole = response.data.roles.find(r => r.name === "CASHIER");
+      if (cashierRole && !formData.role) {
+        setFormData(prev => ({ ...prev, role: cashierRole._id }));
+      }
+    } catch (error: any) {
+      console.error("Error fetching roles:", error);
+      alert("Failed to load roles. Please refresh the page.");
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
 
   const generatePassword = () => {
     const length = 12;
@@ -54,41 +82,66 @@ export default function CreateUserPage() {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Full name is required";
-    }
-
+    
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    }
-
-    if (!formData.employeeId.trim()) {
-      newErrors.employeeId = "Employee ID is required";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // API call to create user
-    console.log("Creating user:", formData);
-    alert(`User ${formData.username} created successfully!`);
-    
-    // Redirect to users list
-    window.location.href = "/admin/permissions/users";
+    if (!formData.role) {
+      alert("Please select a role");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      
+      // Create user with backend API
+      await userApi.create({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        passwordConfirm: formData.confirmPassword,
+        roles: [formData.role], // Send role ID in array
+      });
+
+      alert(`User ${formData.username} created successfully!`);
+      
+      // TODO: Implement email sending if sendCredentials is true
+      if (sendCredentials) {
+        console.log("Sending credentials via email...");
+      }
+      
+      // Redirect to users list
+      router.push("/admin/permissions/users");
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      
+      // Handle specific error messages from backend
+      const errorMessage = error.message || "Failed to create user";
+      
+      if (errorMessage.includes("username") || errorMessage.includes("unique")) {
+        setErrors({ username: "Username already exists" });
+      } else if (errorMessage.includes("email")) {
+        setErrors({ email: "Email already exists" });
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -116,7 +169,7 @@ export default function CreateUserPage() {
           }}
         />
 
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto text-gray-400">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Account Information */}
             <div className="bg-white rounded-lg border p-6">
@@ -141,6 +194,24 @@ export default function CreateUserPage() {
                     <p className="mt-1 text-sm text-red-500">{errors.username}</p>
                   )}
                 </div>
+
+ <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                        errors.email ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="john.doe@company.com"
+                    />
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                    )}
+                  </div>
 
                 {/* Password */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -213,89 +284,7 @@ export default function CreateUserPage() {
               </div>
             </div>
 
-            {/* Employee Details */}
-            <div className="bg-white rounded-lg border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Employee Details</h3>
-              
-              <div className="space-y-4">
-                {/* Full Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                      errors.name ? "border-red-500" : "border-gray-300"
-                    }`}
-                    placeholder="John Doe"
-                  />
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-red-500">{errors.name}</p>
-                  )}
-                </div>
-
-                {/* Email & Phone */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                        errors.email ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="john.doe@company.com"
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                        errors.phone ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="+1234567890"
-                    />
-                    {errors.phone && (
-                      <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Employee ID */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Employee ID <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.employeeId}
-                    onChange={(e) => handleInputChange("employeeId", e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                      errors.employeeId ? "border-red-500" : "border-gray-300"
-                    }`}
-                    placeholder="EMP001"
-                  />
-                  {errors.employeeId && (
-                    <p className="mt-1 text-sm text-red-500">{errors.employeeId}</p>
-                  )}
-                </div>
-              </div>
-            </div>
+           
 
             {/* Role Assignment */}
             <div className="bg-white rounded-lg border p-6">
@@ -305,58 +294,49 @@ export default function CreateUserPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Employee Type <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    {
-                      value: "admin",
-                      label: "Admin",
-                      description: "Full system access with all permissions",
-                      color: "purple",
-                    },
-                    {
-                      value: "manager",
-                      label: "Manager",
-                      description: "Manage inventory, authorize returns, approve discounts",
-                      color: "blue",
-                    },
-                    {
-                      value: "cashier",
-                      label: "Cashier",
-                      description: "Process sales and handle customer transactions",
-                      color: "green",
-                    },
-                    {
-                      value: "technician",
-                      label: "Technician",
-                      description: "Manage repair jobs and warranties",
-                      color: "orange",
-                    },
-                  ].map((role) => (
-                    <label
-                      key={role.value}
-                      className={`relative flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        formData.role === role.value
-                          ? `border-${role.color}-500 bg-${role.color}-50`
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="role"
-                        value={role.value}
-                        checked={formData.role === role.value}
-                        onChange={(e) =>
-                          handleInputChange("role", e.target.value as typeof formData.role)
-                        }
-                        className="mt-1"
-                      />
-                      <div className="ml-3">
-                        <div className="text-sm font-semibold text-gray-900">{role.label}</div>
-                        <div className="text-xs text-gray-600 mt-1">{role.description}</div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+                
+                {loadingRoles ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="animate-spin text-gray-400" size={24} />
+                    <span className="ml-2 text-gray-600">Loading roles...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {roles.map((role) => {
+                      const roleColors: Record<string, string> = {
+                        ADMIN: "red",
+                        MANAGER: "blue",
+                        CASHIER: "green",
+                        TECHNICIAN: "purple",
+                      };
+                      const color = roleColors[role.name] || "gray";
+                      
+                      return (
+                        <label
+                          key={role._id}
+                          className={`relative flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                            formData.role === role._id
+                              ? `border-${color}-500 bg-${color}-50`
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="role"
+                            value={role._id}
+                            checked={formData.role === role._id}
+                            onChange={(e) => handleInputChange("role", e.target.value)}
+                            className="mt-1"
+                          />
+                          <div className="ml-3">
+                            <div className="text-sm font-semibold text-gray-900">{role.name}</div>
+                            <div className="text-xs text-gray-600 mt-1">{role.description}</div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -387,16 +367,25 @@ export default function CreateUserPage() {
             <div className="flex items-center justify-end gap-4">
               <button
                 type="button"
-                onClick={() => (window.location.href = "/admin/permissions/users")}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                onClick={() => router.push("/admin/permissions/users")}
+                disabled={submitting}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+                disabled={submitting || loadingRoles}
+                className="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Create User
+                {submitting ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    Creating...
+                  </>
+                ) : (
+                  "Create User"
+                )}
               </button>
             </div>
           </form>

@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { adminNav } from "./sidebar-config";
 import {ChevronDown} from "lucide-react";
 import { useMemo, useState, useRef, useEffect } from "react";
+import { useAuth } from "@/providers/providers";
+import { can, hasRole } from "@/lib/acl";
 
 function cx(...classes: Array<string | false | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -23,6 +25,7 @@ export function AdminSidebar({
   onToggle: () => void;
 }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -40,6 +43,37 @@ export function AdminSidebar({
         : [...prev, sectionLabel]
     );
   };
+
+  // Filter navigation based on user permissions and roles
+  const filteredNav = useMemo(() => {
+    if (!user) return [];
+
+    return adminNav
+      .map((section) => {
+        // Check if section has role restrictions
+        if (section.roles && !hasRole(user, section.roles)) {
+          return null;
+        }
+
+        // Filter items based on permissions
+        const filteredItems = section.items.filter((item) => {
+          // If item has permission requirement, check it
+          if (item.permission && !can(user, item.permission)) {
+            return false;
+          }
+          return true;
+        });
+
+        // Only include section if it has visible items
+        if (filteredItems.length === 0) return null;
+
+        return {
+          ...section,
+          items: filteredItems,
+        };
+      })
+      .filter(Boolean);
+  }, [user]);
 
   return (
     <aside
@@ -77,7 +111,7 @@ export function AdminSidebar({
 
       {/* ================= NAVIGATION ================= */}
       <nav className="px-2 py-3 overflow-y-auto h-[calc(100dvh-56px)]">
-        {adminNav.map((section) => {
+        {filteredNav.map((section: any) => {
           const isExpanded = expandedSections.includes(section.label);
           const hasMultipleItems = section.items.length > 1;
 
