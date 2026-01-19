@@ -22,10 +22,9 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
   const [statusFilter, setStatusFilter] = useState<RepairStatus>('all');
   const [priorityFilter, setPriorityFilter] = useState<RepairPriority>('all');
   const [technicianFilter, setTechnicianFilter] = useState('all');
-  const [selectedJob, setSelectedJob] = useState<RepairJob | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [technicians, setTechnicians] = useState<any[]>([]);
 
   useEffect(() => {
     loadJobs();
@@ -201,20 +200,22 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
             </select>
           </div>
 
-          <div>
-            <select
-              value={technicianFilter}
-              onChange={(e) => setTechnicianFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Technicians</option>
-              {technicians.map((tech) => (
-                <option key={tech.id} value={tech.id}>
-                  {tech.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!isTechnician && (
+            <div>
+              <select
+                value={technicianFilter}
+                onChange={(e) => setTechnicianFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Technicians</option>
+                {technicians.map((tech) => (
+                  <option key={tech._id} value={tech._id}>
+                    {tech.username}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
@@ -364,21 +365,6 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
           </div>
         )}
       </div>
-
-      {/* Job Details Modal */}
-      {showDetails && selectedJob && (
-        <RepairJobDetails
-          job={selectedJob}
-          onClose={() => {
-            setShowDetails(false);
-            setSelectedJob(null);
-          }}
-          onEdit={() => {
-            setShowDetails(false);
-            onEditJob(selectedJob.id);
-          }}
-        />
-      )}
     </div>
   );
 }

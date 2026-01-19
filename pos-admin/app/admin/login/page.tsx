@@ -45,8 +45,17 @@ export default function LoginPage() {
       localStorage.setItem("refreshToken", data.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data.data.user));
 
-      // ✅ Redirect after successful login
-      router.push("/admin/dashboard");
+      // ✅ Redirect after successful login based on user role
+      const userRole = data.data.user?.role?.toLowerCase();
+      
+      if (userRole === "technician") {
+        // Redirect technicians to their dedicated dashboard
+        router.push("/admin/repairs/technician-dashboard");
+      } else {
+        // Redirect all other roles to the main dashboard
+        router.push("/admin/dashboard");
+      }
+      
       router.refresh();
     } catch (err) {
       setError("Cannot connect to server");

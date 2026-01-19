@@ -60,9 +60,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(me);
         setIsAuthenticated(true);
 
-        // If user is authenticated and on login page, redirect to dashboard
+        // If user is authenticated and on login page, redirect based on role
         if (isPublicRoute && me) {
-          router.push("/admin/dashboard");
+          const userRole = me.role?.toLowerCase();
+          
+          if (userRole === "technician") {
+            // Redirect technicians to their dedicated dashboard
+            router.push("/admin/repairs/technician-dashboard");
+          } else {
+            // Redirect all other roles to the main dashboard
+            router.push("/admin/dashboard");
+          }
         }
       } catch (error) {
         console.error("Authentication error:", error);

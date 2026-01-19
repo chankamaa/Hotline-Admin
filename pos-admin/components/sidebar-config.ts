@@ -100,6 +100,15 @@ export const adminNav = [
     
   },
 
+  // Technician-specific dashboard (only visible to technicians)
+  {
+    label: "My Dashboard",
+    items: [
+      { title: "Technician Dashboard", href: "/admin/repairs/technician-dashboard", icon: Wrench },
+    ],
+    roles: ["technician"],
+  },
+
   {
     label: "Sales",
     icon: ShoppingCart,

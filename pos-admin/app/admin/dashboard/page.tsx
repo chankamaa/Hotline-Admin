@@ -1,6 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useAuth } from "@/providers/providers";
+import { useRouter } from "next/navigation";
+import { hasRole } from "@/lib/acl";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsCard } from "@/components/ui/stats-card";
 import {
@@ -15,7 +18,30 @@ import {
 } from "lucide-react";
 import SalesTrendChart from "@/components/ui/sales-trend";
 
+/**
+ * Main Dashboard Page
+ * 
+ * This dashboard is for admin, manager, and cashier roles.
+ * Technicians are automatically redirected to their dedicated dashboard.
+ */
 export default function DashboardPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  // Redirect technicians to their dedicated dashboard
+  useEffect(() => {
+    if (loading) return;
+
+    if (user && hasRole(user, ["technician"])) {
+      router.replace("/admin/repairs/technician-dashboard");
+    }
+  }, [user, loading, router]);
+
+  // Don't render for technicians
+  if (user && hasRole(user, ["technician"])) {
+    return null;
+  }
+
   // Mock data - replace with real data from API
   const stats = {
     todaySales: { value: "$12,450", change: "+12.5%", changeType: "increase" as const },
