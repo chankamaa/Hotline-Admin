@@ -1,134 +1,79 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import RepairJobDetails from '@/components/repairs/repair-job-details';
-import { RepairJob } from '@/lib/types';
+import { repairApi } from '@/lib/api/repairApi';
+import { useToast } from '@/providers/toast-provider';
+import { RepairJob } from '@/types/repair';
 import { Search, Filter, Eye, Edit, Trash2, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface RepairJobListProps {
   onEditJob: (jobId: string) => void;
+  isTechnician?: boolean;
 }
 
 type RepairStatus = 'all' | 'received' | 'in-progress' | 'waiting-parts' | 'ready' | 'delivered';
 type RepairPriority = 'all' | 'low' | 'medium' | 'high' | 'urgent';
 
-export default function RepairJobList({ onEditJob }: RepairJobListProps) {
+export default function RepairJobList({ onEditJob, isTechnician = false }: RepairJobListProps) {
+  const toast = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<RepairStatus>('all');
   const [priorityFilter, setPriorityFilter] = useState<RepairPriority>('all');
   const [technicianFilter, setTechnicianFilter] = useState('all');
   const [selectedJob, setSelectedJob] = useState<RepairJob | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadJobs();
+  }, [isTechnician]);
+
+  const loadJobs = async () => {
+    try {
+      setLoading(true);
+      let response;
+      
+      if (isTechnician) {
+        // Technicians see only their assigned jobs (excluding completed/cancelled)
+        response = await repairApi.getMyJobs({ 
+          status: 'IN_PROGRESS,ASSIGNED,PENDING'
+        });
+      } else {
+        // Admin/Manager see all jobs
+        response = await repairApi.getAll();
+      }
+      
+      const allJobs = response.data.repairs || [];
+      setJobs(allJobs);
+    } catch (error: any) {
+      console.error('Error loading repair jobs:', error);
+      toast.error(error?.message || 'Failed to load repair jobs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Mock data - replace with actual API data
-  const [jobs] = useState<RepairJob[]>([
-    {
-      id: '1',
-      jobNumber: 'REP-001',
-      customer: {
-        id: 'c1',
-        name: 'John Doe',
-        phone: '+1234567890',
-        email: 'john@example.com',
-        totalPurchases: 0,
-        createdAt: new Date(),
-      },
-      device: 'iPhone 14 Pro',
-      deviceType: 'Mobile Phone',
-      brand: 'Apple',
-      model: 'iPhone 14 Pro',
-      imei: '123456789012345',
-      issue: 'Cracked screen needs replacement',
-      diagnosis: 'LCD intact, digitizer damaged',
-      estimatedCost: 250,
-      finalCost: 250,
-      status: 'in-progress',
-      priority: 'high',
-      technicianId: 't1',
-      technicianName: 'Mike Johnson',
-      parts: [{ partId: 'p1', partName: 'iPhone 14 Pro Screen', quantity: 1, cost: 180 }],
-      laborCost: 70,
-      notes: 'Customer requested express service',
-      createdAt: new Date('2026-01-03T10:00:00'),
-      expectedCompletionDate: new Date('2026-01-05T18:00:00'),
-    },
-    {
-      id: '2',
-      jobNumber: 'REP-002',
-      customer: {
-        id: 'c2',
-        name: 'Sarah Williams',
-        phone: '+1234567891',
-        email: 'sarah@example.com',
-        totalPurchases: 0,
-        createdAt: new Date(),
-      },
-      device: 'Samsung Galaxy S23',
-      deviceType: 'Mobile Phone',
-      brand: 'Samsung',
-      model: 'Galaxy S23',
-      imei: '987654321098765',
-      issue: 'Battery draining quickly',
-      diagnosis: 'Battery health at 60%, needs replacement',
-      estimatedCost: 120,
-      status: 'waiting-parts',
-      priority: 'medium',
-      technicianId: 't2',
-      technicianName: 'Alex Chen',
-      parts: [],
-      laborCost: 40,
-      notes: 'Waiting for battery shipment',
-      createdAt: new Date('2026-01-04T14:30:00'),
-      expectedCompletionDate: new Date('2026-01-08T16:00:00'),
-    },
-    {
-      id: '3',
-      jobNumber: 'REP-003',
-      customer: {
-        id: 'c3',
-        name: 'Robert Brown',
-        phone: '+1234567892',
-        totalPurchases: 0,
-        createdAt: new Date(),
-      },
-      device: 'MacBook Pro 2021',
-      deviceType: 'Laptop',
-      brand: 'Apple',
-      model: 'MacBook Pro 16"',
-      issue: 'Keyboard keys not responding',
-      estimatedCost: 300,
-      status: 'ready',
-      priority: 'high',
-      technicianId: 't1',
-      technicianName: 'Mike Johnson',
-      parts: [{ partId: 'p2', partName: 'MacBook Keyboard Assembly', quantity: 1, cost: 220 }],
-      laborCost: 80,
-      createdAt: new Date('2026-01-02T09:00:00'),
-      expectedCompletionDate: new Date('2026-01-05T12:00:00'),
-      completedAt: new Date('2026-01-05T11:30:00'),
-    },
-  ]);
-
-  const technicians = [
-    { id: 't1', name: 'Mike Johnson' },
-    { id: 't2', name: 'Alex Chen' },
-    { id: 't3', name: 'Emily Rodriguez' },
-  ];
+  // Removed mock data - now using real API data from loadJobs()
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
-      job.jobNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.customer.phone.includes(searchTerm) ||
-      job.device.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.imei?.includes(searchTerm);
+      job.jobNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.customer?.phone?.includes(searchTerm) ||
+      job.device?.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.device?.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.device?.imei?.includes(searchTerm);
 
-    const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || job.priority === priorityFilter;
+    // Convert backend status format (UPPER_CASE) to filter format (lowercase-with-dashes)
+    const jobStatusFormatted = job.status?.toLowerCase().replace('_', '-');
+    const matchesStatus = statusFilter === 'all' || jobStatusFormatted === statusFilter;
+    const matchesPriority = priorityFilter === 'all' || job.priority?.toLowerCase() === priorityFilter;
     const matchesTechnician =
-      technicianFilter === 'all' || job.technicianId === technicianFilter;
+      technicianFilter === 'all' || job.assignedTo?._id === technicianFilter;
 
     return matchesSearch && matchesStatus && matchesPriority && matchesTechnician;
   });
@@ -310,7 +255,7 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredJobs.map((job) => (
-                <tr key={job.id} className="hover:bg-gray-50">
+                <tr key={job._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-blue-600">{job.jobNumber}</div>
                     <div className="text-xs text-gray-500">
@@ -318,22 +263,22 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{job.customer.name}</div>
-                    <div className="text-xs text-gray-500">{job.customer.phone}</div>
+                    <div className="text-sm font-medium text-gray-900">{job.customer?.name}</div>
+                    <div className="text-xs text-gray-500">{job.customer?.phone}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{job.device}</div>
-                    {job.imei && (
-                      <div className="text-xs text-gray-500 font-mono">{job.imei}</div>
+                    <div className="text-sm text-gray-900">{job.device?.brand} {job.device?.model}</div>
+                    {job.device?.imei && (
+                      <div className="text-xs text-gray-500 font-mono">{job.device.imei}</div>
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-xs truncate" title={job.issue}>
-                      {job.issue}
+                    <div className="text-sm text-gray-900 max-w-xs truncate" title={job.problemDescription}>
+                      {job.problemDescription}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {job.technicianName || 'Unassigned'}
+                    {job.assignedTo?.username || 'Unassigned'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -341,7 +286,7 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
                         job.status
                       )}`}
                     >
-                      {job.status.replace('-', ' ')}
+                      {job.status?.replace('_', ' ')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -369,19 +314,21 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => onEditJob(job.id)}
+                        onClick={() => onEditJob(job._id)}
                         className="text-gray-600 hover:text-gray-900"
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => handleDeleteJob(job.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {!isTechnician && (
+                        <button
+                          onClick={() => handleDeleteJob(job._id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -389,6 +336,27 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
             </tbody>
           </table>
         </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Loading jobs...</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && filteredJobs.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            <p className="text-lg font-medium">No repair jobs found</p>
+            <p className="text-sm mt-1">
+              {isTechnician 
+                ? "You don't have any assigned jobs at the moment"
+                : "Create a new repair job to get started"
+              }
+            </p>
+          </div>
+        )}
 
         {filteredJobs.length === 0 && (
           <div className="text-center py-12">

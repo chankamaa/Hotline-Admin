@@ -1,7 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/ui/page-header';
-import TechnicianDashboard from '@/components/repairs/technician-dashboard';
+import TechnicianDashboard from '@/app/admin/repairs/technician-dashboard/technician-dashboard';
 import RequirePerm from '@/components/RequirePerm';
 import { PERMISSIONS } from '@/components/sidebar-config';
 

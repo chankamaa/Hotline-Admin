@@ -154,4 +154,5 @@ export const endpoints = {
   users: `${API_PREFIX}/users`,
   roles: `${API_PREFIX}/roles`,
   permissions: `${API_PREFIX}/permissions`,
+  repairs: `${API_PREFIX}/repairs`,
 };
