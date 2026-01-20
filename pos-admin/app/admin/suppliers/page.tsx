@@ -7,7 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Supplier } from "@/lib/types";
-import { Edit, Trash2, Eye, Mail, Phone, Globe } from "lucide-react";
+import { Edit, Trash2, Eye, Mail, Phone, Globe, RefreshCw } from "lucide-react";
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([
@@ -214,9 +214,16 @@ export default function SuppliersPage() {
   return (
     <div className="p-6">
       <PageHeader
-        title="Suppliers"
+        title={`Suppliers (${suppliers.length})`}
         description="Manage your supplier directory and relationships"
       />
+
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setSuppliers([...suppliers])} variant="secondary">
+          <RefreshCw size={16} className="mr-2" />
+          Refresh
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl border p-4">

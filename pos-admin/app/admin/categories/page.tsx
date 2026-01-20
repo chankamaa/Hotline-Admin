@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tags, Pencil, Trash2 } from "lucide-react";
+import { Tags, Pencil, Trash2, RefreshCw } from "lucide-react";
 
 import {
   fetchCategories,
@@ -132,7 +132,7 @@ export default function CategoriesPage() {
   return (
     <div className="p-6 space-y-6">
       <PageHeader
-        title="Categories"
+        title={`Categories (${categories.length})`}
         description="Manage product categories"
       />
 
@@ -147,7 +147,13 @@ export default function CategoriesPage() {
               </div>
             </div>
           </div>
-          <Button onClick={openNew}>Add Category</Button>
+          <div className="flex gap-2">
+            <Button onClick={loadCategories} disabled={loading} variant="secondary">
+              <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button onClick={openNew}>Add Category</Button>
+          </div>
         </div>
 
         <div className="divide-y border rounded-lg">

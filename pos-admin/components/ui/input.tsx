@@ -12,6 +12,9 @@ interface InputProps {
   error?: string;
   rows?: number;
   options?: { value: string | number; label: string }[];
+  min?: number;
+  max?: number;
+  maxLength?: number;
 }
 
 export function Input({
@@ -26,6 +29,9 @@ export function Input({
   error,
   rows,
   options,
+  min,
+  max,
+  maxLength,
 }: InputProps) {
   const inputClasses = `w-full px-3 py-2 rounded-lg border ${
     error ? "border-red-500" : "border-gray-300"
@@ -50,6 +56,7 @@ export function Input({
           required={required}
           disabled={disabled}
           rows={rows || 3}
+          maxLength={maxLength}
           className={inputClasses}
         />
       ) : type === "select" ? (
@@ -79,6 +86,9 @@ export function Input({
           placeholder={placeholder}
           required={required}
           disabled={disabled}
+          min={min}
+          max={max}
+          maxLength={maxLength}
           className={inputClasses}
         />
       )}

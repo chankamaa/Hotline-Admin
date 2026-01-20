@@ -14,7 +14,7 @@ export const fetchStock = (params?: {
   page?: number;
   limit?: number;
 }) => {
-  return api.get("/inventory", {
+  return api.get("/api/v1/inventory", {
     params: {
       ...params,
       lowStock: params?.lowStock ? "true" : undefined,
@@ -27,7 +27,7 @@ export const fetchStock = (params?: {
  * GET /api/v1/inventory/:productId
  */
 export const fetchProductStock = (productId: string) => {
-  return api.get(`/inventory/${productId}`);
+  return api.get(`/api/v1/inventory/${productId}`);
 };
 
 /**
@@ -35,7 +35,7 @@ export const fetchProductStock = (productId: string) => {
  * GET /api/v1/inventory/low-stock
  */
 export const fetchLowStock = () => {
-  return api.get("/inventory/low-stock");
+  return api.get("/api/v1/inventory/low-stock");
 };
 
 /* =====================================================
@@ -64,7 +64,7 @@ export const adjustStock = (data: {
   reference?: string;
   referenceType?: "Sale" | "Purchase" | "Transfer" | "Manual";
 }) => {
-  return api.post("/inventory/adjust", data);
+  return api.post("/api/v1/inventory/adjust", data);
 };
 
 /**
@@ -81,7 +81,23 @@ export const fetchStockHistory = (
     limit?: number;
   }
 ) => {
-  return api.get(`/inventory/${productId}/history`, {
+  return api.get(`/api/v1/inventory/${productId}/history`, {
+    params,
+  });
+};
+
+/**
+ * Get all stock adjustments (recent history)
+ * GET /api/v1/inventory/adjustments
+ */
+export const fetchAllAdjustments = (params?: {
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  return api.get("/api/v1/inventory/adjustments", {
     params,
   });
 };
@@ -92,7 +108,7 @@ export const fetchStockHistory = (
  * GET /api/v1/inventory/adjustment-types
  */
 export const fetchAdjustmentTypes = () => {
-  return api.get("/inventory/adjustment-types");
+  return api.get("/api/v1/inventory/adjustment-types");
 };
 
 /* =====================================================
@@ -104,7 +120,7 @@ export const fetchAdjustmentTypes = () => {
  * GET /api/v1/inventory/value
  */
 export const fetchInventoryValue = (category?: string) => {
-  return api.get("/inventory/value", {
+  return api.get("/api/v1/inventory/value", {
     params: { category },
   });
 };

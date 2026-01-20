@@ -6,7 +6,7 @@ import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/providers/toast-provider";
 import { fetchStock } from "@/lib/api/inventoryApi";
-import { Package, RefreshCw, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Plus } from "lucide-react";
+import { Package, RefreshCw, TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 interface StockItem {
@@ -29,9 +29,10 @@ interface StockItem {
 /* --------------------------------------------------
    Component
 -------------------------------------------------- */
-export default function StockPage() {
+export default function StockOverviewPage() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState("");
   const toast = useToast();
 
   /* --------------------------------------------------
@@ -41,10 +42,11 @@ export default function StockPage() {
     loadStock();
   }, []);
 
-  const loadStock = async () => {
+  const loadStock = async (category?: string) => {
     setLoading(true);
     try {
       const response: any = await fetchStock({ 
+        category: category || undefined,
         limit: 100 
       });
       // Backend returns { status: "success", data: { items: [...] } }
@@ -235,19 +237,19 @@ export default function StockPage() {
       <div className="flex justify-between items-center">
         <div className="flex gap-2">
           <Link href="/admin/stock/adjustment">
-            <Button>
-              <Plus size={18} className="mr-2" />
-              Create Adjustment
+            <Button variant="secondary">
+              <TrendingUp size={18} className="mr-2" />
+              Stock Adjustment
             </Button>
           </Link>
           <Link href="/admin/stock/low">
             <Button variant="secondary">
               <AlertTriangle size={18} className="mr-2" />
-              Low Stock Alerts
+              Low Stock Alert
             </Button>
           </Link>
         </div>
-        <Button onClick={loadStock} disabled={loading} variant="secondary">
+        <Button onClick={() => loadStock()} disabled={loading} variant="secondary">
           <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>

@@ -16,7 +16,7 @@ import {
 } from "@/lib/api/productApi";
 
 import { fetchCategories } from "@/lib/api/categoryApi";
-import { Edit, Trash2, Package } from "lucide-react";
+import { Edit, Trash2, Package, RefreshCw } from "lucide-react";
 
 /* --------------------------------------------------
    Helpers
@@ -227,7 +227,14 @@ export default function ProductsPage() {
   -------------------------------------------------- */
   return (
     <div className="p-6 text-gray-800">
-      <PageHeader title="Products" description="Manage your product catalog" />
+      <PageHeader title={`Products (${products.length})`} description="Manage your product catalog" />
+
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => loadProducts()} disabled={loading} variant="secondary">
+          <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </div>
 
       <DataTable
         data={products}

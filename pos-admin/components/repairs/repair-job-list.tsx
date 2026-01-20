@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { repairApi } from '@/lib/api/repairApi';
+import { Modal } from '@/components/ui/modal';
+import { repairApi, RepairJob } from '@/lib/api/repairApi';
 import { useToast } from '@/providers/toast-provider';
-import { RepairJob } from '@/types/repair';
 import { Search, Filter, Eye, Edit, Trash2, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface RepairJobListProps {
@@ -13,8 +13,8 @@ interface RepairJobListProps {
   isTechnician?: boolean;
 }
 
-type RepairStatus = 'all' | 'received' | 'in-progress' | 'waiting-parts' | 'ready' | 'delivered';
-type RepairPriority = 'all' | 'low' | 'medium' | 'high' | 'urgent';
+type RepairStatus = 'all' | 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'WAITING_PARTS' | 'READY' | 'COMPLETED' | 'CANCELLED';
+type RepairPriority = 'all' | 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
 export default function RepairJobList({ onEditJob, isTechnician = false }: RepairJobListProps) {
   const toast = useToast();
@@ -25,6 +25,8 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [technicians, setTechnicians] = useState<any[]>([]);
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<any | null>(null);
 
   useEffect(() => {
     loadJobs();
@@ -67,10 +69,9 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
       job.device?.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.device?.imei?.includes(searchTerm);
 
-    // Convert backend status format (UPPER_CASE) to filter format (lowercase-with-dashes)
-    const jobStatusFormatted = job.status?.toLowerCase().replace('_', '-');
-    const matchesStatus = statusFilter === 'all' || jobStatusFormatted === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || job.priority?.toLowerCase() === priorityFilter;
+    // Match status directly with backend format
+    const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
+    const matchesPriority = priorityFilter === 'all' || job.priority === priorityFilter;
     const matchesTechnician =
       technicianFilter === 'all' || job.assignedTo?._id === technicianFilter;
 
@@ -79,27 +80,29 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      received: 'bg-gray-100 text-gray-700',
-      'in-progress': 'bg-blue-100 text-blue-700',
-      'waiting-parts': 'bg-orange-100 text-orange-700',
-      ready: 'bg-green-100 text-green-700',
-      delivered: 'bg-purple-100 text-purple-700',
+      PENDING: 'bg-gray-100 text-gray-700',
+      ASSIGNED: 'bg-yellow-100 text-yellow-700',
+      IN_PROGRESS: 'bg-blue-100 text-blue-700',
+      WAITING_PARTS: 'bg-orange-100 text-orange-700',
+      READY: 'bg-green-100 text-green-700',
+      COMPLETED: 'bg-purple-100 text-purple-700',
+      CANCELLED: 'bg-red-100 text-red-700',
     };
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-700';
   };
 
   const getPriorityBadge = (priority: string) => {
     const badges = {
-      low: 'bg-gray-100 text-gray-600',
-      medium: 'bg-blue-100 text-blue-600',
-      high: 'bg-orange-100 text-orange-600',
-      urgent: 'bg-red-100 text-red-600',
+      LOW: 'bg-gray-100 text-gray-600',
+      NORMAL: 'bg-blue-100 text-blue-600',
+      HIGH: 'bg-orange-100 text-orange-600',
+      URGENT: 'bg-red-100 text-red-600',
     };
     return badges[priority as keyof typeof badges] || 'bg-gray-100 text-gray-600';
   };
 
   const getPriorityIcon = (priority: string) => {
-    if (priority === 'urgent') return <AlertTriangle className="w-3 h-3" />;
+    if (priority === 'URGENT') return <AlertTriangle className="w-3 h-3" />;
     return null;
   };
 
@@ -108,19 +111,34 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
     setShowDetails(true);
   };
 
-  const handleDeleteJob = (jobId: string) => {
-    if (confirm('Are you sure you want to delete this repair job?')) {
-      // Implement delete logic
-      console.log('Delete job:', jobId);
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm('Are you sure you want to cancel this repair job? This action cannot be undone.')) {
+      return;
+    }
+
+    const reason = prompt('Please provide a reason for cancelling this job:');
+    if (!reason || reason.trim() === '') {
+      toast.info('Job cancellation aborted - reason is required');
+      return;
+    }
+
+    try {
+      await repairApi.cancel(jobId, { reason: reason.trim() });
+      toast.success('Repair job cancelled successfully');
+      loadJobs(); // Reload the jobs list
+    } catch (error: any) {
+      console.error('Error cancelling job:', error);
+      toast.error(error.response?.data?.message || 'Failed to cancel repair job');
     }
   };
 
+  // Calculate stats based on actual backend status values
   const stats = {
     total: jobs.length,
-    received: jobs.filter((j) => j.status === 'received').length,
-    inProgress: jobs.filter((j) => j.status === 'in-progress').length,
-    waitingParts: jobs.filter((j) => j.status === 'waiting-parts').length,
-    ready: jobs.filter((j) => j.status === 'ready').length,
+    cancelled: jobs.filter((j) => j.status === 'CANCELLED').length,
+    inProgress: jobs.filter((j) => j.status === 'IN_PROGRESS').length,
+    waitingParts: jobs.filter((j) => j.status === 'WAITING_PARTS').length,
+    ready: jobs.filter((j) => j.status === 'READY').length,
   };
 
   return (
@@ -129,7 +147,7 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-lg border p-4">
           <div className="text-sm text-gray-600 mb-1">Total Jobs</div>
-          <div className="text-2xl font-bold">{stats.total}</div>
+          <div className="text-2xl font-bold text-gray-500">{stats.total}</div>
         </div>
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
           <div className="text-sm text-blue-600 mb-1 flex items-center gap-1">
@@ -138,10 +156,7 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
           </div>
           <div className="text-2xl font-bold text-blue-700">{stats.inProgress}</div>
         </div>
-        <div className="bg-orange-50 rounded-lg border border-orange-200 p-4">
-          <div className="text-sm text-orange-600 mb-1">Waiting Parts</div>
-          <div className="text-2xl font-bold text-orange-700">{stats.waitingParts}</div>
-        </div>
+        
         <div className="bg-green-50 rounded-lg border border-green-200 p-4">
           <div className="text-sm text-green-600 mb-1 flex items-center gap-1">
             <CheckCircle className="w-4 h-4" />
@@ -150,17 +165,17 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
           <div className="text-2xl font-bold text-green-700">{stats.ready}</div>
         </div>
         <div className="bg-gray-50 rounded-lg border p-4">
-          <div className="text-sm text-gray-600 mb-1">Received</div>
-          <div className="text-2xl font-bold text-gray-700">{stats.received}</div>
+          <div className="text-sm text-gray-600 mb-1">Cancelled</div>
+          <div className="text-2xl font-bold text-gray-700">{stats.cancelled}</div>
         </div>
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg border p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white  rounded-lg border p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 ">
           <div className="md:col-span-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <div className="relative  text-gray-800">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-00 w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search by job #, customer, phone, IMEI..."
@@ -175,14 +190,16 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as RepairStatus)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border  text-gray-800 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Statuses</option>
-              <option value="received">Received</option>
-              <option value="in-progress">In Progress</option>
-              <option value="waiting-parts">Waiting Parts</option>
-              <option value="ready">Ready</option>
-              <option value="delivered">Delivered</option>
+             
+              <option value="ASSIGNED">Assigned</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              
+              <option value="READY">Ready</option>
+              
+              <option value="CANCELLED">Cancelled</option>
             </select>
           </div>
 
@@ -190,13 +207,13 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as RepairPriority)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border  text-gray-800 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Priorities</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
+              <option value="LOW">Low</option>
+              <option value="NORMAL">Normal</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
             </select>
           </div>
 
@@ -205,7 +222,7 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
               <select
                 value={technicianFilter}
                 onChange={(e) => setTechnicianFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border  text-gray-800 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Technicians</option>
                 {technicians.map((tech) => (
@@ -325,7 +342,7 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
                         <button
                           onClick={() => handleDeleteJob(job._id)}
                           className="text-red-600 hover:text-red-900"
-                          title="Delete"
+                          title="Cancel Job"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -365,6 +382,209 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
           </div>
         )}
       </div>
+
+      {/* View Details Modal */}
+      <Modal
+        isOpen={showDetails}
+        onClose={() => setShowDetails(false)}
+        title={`Repair Job Details - ${selectedJob?.jobNumber || ''}`}
+        size="xl"
+      >
+        {selectedJob && (
+          <div className="space-y-6">
+            {/* Customer Information */}
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-900 mb-3">Customer Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-blue-600 font-medium">Name</p>
+                  <p className="text-gray-900">{selectedJob.customer?.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-blue-600 font-medium">Phone</p>
+                  <p className="text-gray-900">{selectedJob.customer?.phone}</p>
+                </div>
+                {selectedJob.customer?.email && (
+                  <div>
+                    <p className="text-sm text-blue-600 font-medium">Email</p>
+                    <p className="text-gray-900">{selectedJob.customer.email}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Device Information */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Device Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Brand</p>
+                  <p className="text-gray-900">{selectedJob.device?.brand}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Model</p>
+                  <p className="text-gray-900">{selectedJob.device?.model}</p>
+                </div>
+                {selectedJob.device?.imei && (
+                  <div>
+                    <p className="text-sm text-gray-600 font-medium">IMEI</p>
+                    <p className="text-gray-900 font-mono">{selectedJob.device.imei}</p>
+                  </div>
+                )}
+                {selectedJob.device?.serialNumber && (
+                  <div>
+                    <p className="text-sm text-gray-600 font-medium">Serial Number</p>
+                    <p className="text-gray-900 font-mono">{selectedJob.device.serialNumber}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Job Information */}
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Job Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Job Number</p>
+                  <p className="text-gray-900 font-semibold">{selectedJob.jobNumber}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Status</p>
+                  <span
+                    className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${getStatusBadge(
+                      selectedJob.status
+                    )}`}
+                  >
+                    {selectedJob.status?.replace('_', ' ')}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Priority</p>
+                  <span
+                    className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${getPriorityBadge(
+                      selectedJob.priority
+                    )}`}
+                  >
+                    {selectedJob.priority}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Assigned To</p>
+                  <p className="text-gray-900">{selectedJob.assignedTo?.username || 'Unassigned'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Created Date</p>
+                  <p className="text-gray-900">
+                    {new Date(selectedJob.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                {selectedJob.expectedCompletionDate && (
+                  <div>
+                    <p className="text-sm text-gray-600 font-medium">Expected Completion</p>
+                    <p className="text-gray-900">
+                      {new Date(selectedJob.expectedCompletionDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Problem Description */}
+            <div className="bg-red-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Problem Description</h3>
+              <p className="text-gray-900 whitespace-pre-wrap">{selectedJob.problemDescription}</p>
+            </div>
+
+            {/* Diagnosis Notes */}
+            {selectedJob.diagnosisNotes && (
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Diagnosis Notes</h3>
+                <p className="text-gray-900 whitespace-pre-wrap">{selectedJob.diagnosisNotes}</p>
+              </div>
+            )}
+
+            {/* Repair Notes */}
+            {selectedJob.repairNotes && (
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Repair Notes</h3>
+                <p className="text-gray-900 whitespace-pre-wrap">{selectedJob.repairNotes}</p>
+              </div>
+            )}
+
+            {/* Parts Used */}
+            {selectedJob.partsUsed && selectedJob.partsUsed.length > 0 && (
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Parts Used</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Part Name</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Quantity</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Unit Price</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {selectedJob.partsUsed.map((part: any, index: number) => (
+                        <tr key={index}>
+                          <td className="px-4 py-2 text-sm text-gray-900">{part.productName || 'N/A'}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900">{part.quantity}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            ${part.unitPrice?.toFixed(2) || '0.00'}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-900 font-semibold">
+                            ${((part.quantity * (part.unitPrice || 0)).toFixed(2))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Cost Summary */}
+            <div className="bg-gradient-to-r from-blue-50 to-green-50 p-6 rounded-lg border-2 border-blue-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Cost Summary</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center pb-2">
+                  <span className="text-gray-700 font-medium">Labor Cost:</span>
+                  <span className="text-lg font-bold text-gray-900">${(selectedJob.laborCost || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center pb-2">
+                  <span className="text-gray-700 font-medium">Parts Cost:</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    ${selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0).toFixed(2) : '0.00'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pb-2 border-t pt-2">
+                  <span className="text-gray-700 font-medium">Total Cost:</span>
+                  <span className="text-xl font-bold text-blue-700">
+                    ${((selectedJob.laborCost || 0) + (selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0)).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pb-2">
+                  <span className="text-gray-700 font-medium">Advance Payment:</span>
+                  <span className="text-lg font-bold text-green-700">-${(selectedJob.advancePayment || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center pt-3 border-t-2 border-blue-300">
+                  <span className="text-gray-900 font-bold text-lg">Balance Due:</span>
+                  <span className="text-2xl font-bold text-orange-600">
+                    ${(((selectedJob.laborCost || 0) + (selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0)) - (selectedJob.advancePayment || 0)).toFixed(2)}
+                  </span>
+                </div>
+                {selectedJob.estimatedCost && (
+                  <div className="flex justify-between items-center pt-2 text-sm">
+                    <span className="text-gray-500 italic">Original Estimate:</span>
+                    <span className="text-gray-500 italic">${selectedJob.estimatedCost.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

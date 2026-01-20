@@ -161,7 +161,7 @@ export const adminNav = [
       { title: "Technician Workload", href: "/admin/repairs/workload", icon: Users },
       { title: "Repair History", href: "/admin/repairs/history", icon: ClipboardList },
     ],
-    roles: ["admin", "manager", "technician","cashier"],
+    roles: ["admin", "manager", ,"cashier"],
   },
 
   {

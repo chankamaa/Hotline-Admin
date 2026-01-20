@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import RepairJobList from '@/components/repairs/repair-job-list';
 import RepairJobForm from '@/app/admin/repairs/create-job/repair-job-form';
 import TechnicianDashboard from '@/app/admin/repairs/technician-dashboard/technician-dashboard';
-import RepairHistory from '@/app/admin/repairs/history/repair-history';
-import CompletedJobsHistory from '@/app/admin/repairs/history/page';
+import RepairHistoryPage from '@/app/admin/repairs/history/page';
 import { Plus } from 'lucide-react';
 import RequirePerm from '@/components/RequirePerm';
 import { PERMISSIONS } from '@/components/sidebar-config';
@@ -86,16 +85,6 @@ export default function RepairsPage() {
               >
                 My Active Jobs
               </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`${
-                  activeTab === 'history'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors`}
-              >
-                Completed Jobs
-              </button>
             </nav>
           </div>
 
@@ -111,7 +100,6 @@ export default function RepairsPage() {
                 onCancel={() => setActiveTab('jobs')}
               />
             )}
-            {activeTab === 'history' && <CompletedJobsHistory />}
           </div>
         </div>
       </RequirePerm>
@@ -194,7 +182,7 @@ export default function RepairsPage() {
           />
         )}
         {activeTab === 'technicians' && <TechnicianDashboard />}
-        {activeTab === 'history' && <RepairHistory />}
+        {activeTab === 'history' && <RepairHistoryPage />}
       </div>
       </div>
     </RequirePerm>
