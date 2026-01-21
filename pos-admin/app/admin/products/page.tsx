@@ -61,6 +61,9 @@ export default function ProductsPage() {
     taxRate: "",
     image: "",
     minStockLevel: "",
+    warrantyDuration: "0",
+    warrantyType: "NONE",
+    warrantyDescription: "",
     isActive: true,
   });
 
@@ -105,6 +108,9 @@ export default function ProductsPage() {
       taxRate: "",
       image: "",
       minStockLevel: "",
+      warrantyDuration: "0",
+      warrantyType: "NONE",
+      warrantyDescription: "",
       isActive: true,
     });
     setIsModalOpen(true);
@@ -127,6 +133,9 @@ export default function ProductsPage() {
       taxRate: product.taxRate?.toString() ?? "",
       image: product.image || "",
       minStockLevel: product.minStockLevel?.toString() ?? "",
+      warrantyDuration: product.warrantyDuration?.toString() ?? "0",
+      warrantyType: product.warrantyType ?? "NONE",
+      warrantyDescription: product.warrantyDescription || "",
       isActive: product.isActive,
     });
     setIsModalOpen(true);
@@ -142,6 +151,9 @@ export default function ProductsPage() {
       wholesalePrice: formData.wholesalePrice === "" ? 0 : +formData.wholesalePrice,
       taxRate: formData.taxRate === "" ? 0 : +formData.taxRate,
       minStockLevel: formData.minStockLevel === "" ? 0 : +formData.minStockLevel,
+      warrantyDuration: formData.warrantyDuration === "" ? 0 : +formData.warrantyDuration,
+      warrantyType: formData.warrantyType,
+      warrantyDescription: formData.warrantyDescription || undefined,
     };
     try {
       if (currentProduct) {
@@ -320,6 +332,50 @@ export default function ProductsPage() {
           <Input label="Minimum Stock Level" type="number" value={formData.minStockLevel}
             placeholder="e.g. 10"
             onChange={(e) => setFormData({ ...formData, minStockLevel: e.target.value })} />
+
+          {/* Warranty Section */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-semibold text-gray-900 mb-3">Warranty Information</h3>
+            
+            <Input 
+              label="Warranty Type" 
+              type="select" 
+              value={formData.warrantyType}
+              onChange={(e) => setFormData({ ...formData, warrantyType: e.target.value })}
+              options={[
+                { value: "NONE", label: "No Warranty" },
+                { value: "MANUFACTURER", label: "Manufacturer Warranty" },
+                { value: "SHOP", label: "Shop Warranty" },
+                { value: "BOTH", label: "Both (Manufacturer + Shop)" }
+              ]}
+            />
+
+            <Input 
+              label="Warranty Duration (Months)" 
+              type="number" 
+              value={formData.warrantyDuration}
+              placeholder="e.g. 12 for 1 year"
+              onChange={(e) => setFormData({ ...formData, warrantyDuration: e.target.value })}
+              helperText={formData.warrantyDuration && +formData.warrantyDuration > 0 
+                ? `${Math.floor(+formData.warrantyDuration / 12)} year(s) ${+formData.warrantyDuration % 12} month(s)`
+                : "0 = No warranty"}
+            />
+
+            {formData.warrantyType !== "NONE" && (
+              <Input 
+                label="Warranty Description" 
+                value={formData.warrantyDescription}
+                placeholder="e.g. Covers manufacturing defects only"
+                onChange={(e) => setFormData({ ...formData, warrantyDescription: e.target.value })}
+              />
+            )}
+
+            {formData.warrantyType !== "NONE" && +formData.warrantyDuration > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-gray-700">
+                <strong>Note:</strong> This warranty will be automatically applied when this product is sold.
+              </div>
+            )}
+          </div>
 
           {/* ENTERED DETAILS */}
           <div className="border rounded-lg p-4 bg-gray-50 text-sm space-y-1">
