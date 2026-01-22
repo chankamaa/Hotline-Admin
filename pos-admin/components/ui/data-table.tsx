@@ -35,12 +35,12 @@ export function DataTable<T extends Record<string, any>>({
   actions,
 }: DataTableProps<T>) {
   return (
-    <div className="bg-white rounded-xl border">
+    <div className="bg-white rounded-xl border ">
       {/* Toolbar */}
-      <div className="p-4 border-b flex items-center gap-3 flex-wrap">
+      <div className="p-4 border-b flex items-center gap-3 flex-wrap text-gray-900">
         {/* Search */}
         {onSearch && (
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-[200px] ">
             <Search
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -49,7 +49,7 @@ export function DataTable<T extends Record<string, any>>({
               type="text"
               placeholder={searchPlaceholder}
               onChange={(e) => onSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-black/10 text-sm"
+              className="w-full pl-9 pr-3 py-2 rounded-lg border focus:outline-none  focus:ring-2 focus:ring-black/10 text-sm"
             />
           </div>
         )}
@@ -82,7 +82,7 @@ export function DataTable<T extends Record<string, any>>({
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full  text-gray-900">
           <thead className="bg-gray-50 border-b">
             <tr>
               {columns.map((column) => (

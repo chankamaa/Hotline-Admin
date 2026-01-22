@@ -38,7 +38,7 @@ export interface CreateSalePayload {
  * POST /api/v1/sales
  */
 export const createSale = (payload: CreateSalePayload) => {
-  return api.post("/sales", payload);
+  return api.post("/api/v1/sales", payload);
 };
 
 /**
@@ -53,7 +53,7 @@ export const getSales = (params?: {
   page?: number;
   limit?: number;
 }) => {
-  return api.get("/sales", { params });
+  return api.get("/api/v1/sales", { params });
 };
 
 /**
@@ -61,7 +61,7 @@ export const getSales = (params?: {
  * GET /api/v1/sales/:id
  */
 export const getSaleById = (saleId: string) => {
-  return api.get(`/sales/${saleId}`);
+  return api.get(`/api/v1/sales/${saleId}`);
 };
 
 /**
@@ -69,7 +69,7 @@ export const getSaleById = (saleId: string) => {
  * GET /api/v1/sales/number/:saleNumber
  */
 export const getSaleByNumber = (saleNumber: string) => {
-  return api.get(`/sales/number/${saleNumber}`);
+  return api.get(`/api/v1/sales/number/${saleNumber}`);
 };
 
 /**
@@ -77,7 +77,7 @@ export const getSaleByNumber = (saleNumber: string) => {
  * POST /api/v1/sales/:id/void
  */
 export const voidSale = (saleId: string, reason: string) => {
-  return api.post(`/sales/${saleId}/void`, { reason });
+  return api.post(`/api/v1/sales/${saleId}/void`, { reason });
 };
 
 /**
@@ -85,7 +85,7 @@ export const voidSale = (saleId: string, reason: string) => {
  * GET /api/v1/sales/daily
  */
 export const getDailySalesSummary = (date?: string) => {
-  return api.get("/sales/daily", {
+  return api.get("/api/v1/sales/daily", {
     params: { date }
   });
 };
@@ -95,7 +95,7 @@ export const getDailySalesSummary = (date?: string) => {
  * GET /api/v1/sales/report
  */
 export const getSalesReport = (startDate: string, endDate: string) => {
-  return api.get("/sales/report", {
+  return api.get("/api/v1/sales/report", {
     params: { startDate, endDate }
   });
 };
