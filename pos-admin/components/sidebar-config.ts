@@ -48,9 +48,6 @@ export interface NavSection {
 // Permission constants
 export const PERMISSIONS = {
   // Sales
-  SALES_CREATE: "sales:create",
-  SALES_READ: "sales:read",
-  SALES_REFUND: "sales:refund",
   
   // Inventory
   INVENTORY_CREATE: "inventory:create",
@@ -97,7 +94,7 @@ export const adminNav = [
     items: [
       { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     ],
-    
+ 
   },
 
   // Technician-specific dashboard (only visible to technicians)
@@ -106,7 +103,7 @@ export const adminNav = [
     items: [
       { title: "Technician Dashboard", href: "/admin/repairs/technician-dashboard", icon: Wrench },
     ],
-    roles: ["technician"],
+    roles: ["technician"]
   },
 
   {
@@ -124,9 +121,9 @@ export const adminNav = [
     label: "Inventory",
     icon: Package,
     items: [
-      { title: "Products", href: "/admin/products", icon: Package, permission: PERMISSIONS.PRODUCT_READ },
-      { title: "Categories & Brands", href: "/admin/categories", icon: Tags, permission: PERMISSIONS.PRODUCT_READ },
-      { title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode, permission: PERMISSIONS.PRODUCT_READ },
+      { title: "Products", href: "/admin/products", icon: Package, },
+      { title: "Categories & Brands", href: "/admin/categories", icon: Tags, },
+      { title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode,  },
     ],
     roles: ["admin", "manager", "cashier"],
   },
@@ -135,11 +132,11 @@ export const adminNav = [
     label: "Stock Management",
     icon: Boxes,
     items: [
-      { title: "Stock Overview", href: "/admin/stock", icon: LayoutDashboard, permission: PERMISSIONS.INVENTORY_READ },
-      { title: "Stock Adjustment", href: "/admin/stock/adjustment", icon: RefreshCw, permission: PERMISSIONS.INVENTORY_UPDATE },
-      { title: "Low Stock Alerts", href: "/admin/stock/low", icon: AlertTriangle, permission: PERMISSIONS.INVENTORY_READ },
+      { title: "Stock Overview", href: "/admin/stock", icon: LayoutDashboard,  },
+      { title: "Stock Adjustment", href: "/admin/stock/adjustment", icon: RefreshCw,  },
+      { title: "Low Stock Alerts", href: "/admin/stock/low", icon: AlertTriangle, },
     ],
-    roles: ["admin", "manager"],
+    roles: ["admin", "manager"]
   },
 
   {
@@ -150,7 +147,7 @@ export const adminNav = [
       { title: "Audit Trail", href: "/admin/stock/audit", icon: ShieldCheck },
       { title: "Movement Reports", href: "/admin/stock/reports", icon: BarChart3 },
     ],
-    roles: ["admin", "manager"],
+    roles: ["admin", ""],
   },
 
   {
@@ -161,7 +158,7 @@ export const adminNav = [
       { title: "Technician Workload", href: "/admin/repairs/workload", icon: Users },
       { title: "Repair History", href: "/admin/repairs/history", icon: ClipboardList },
     ],
-    roles: ["admin", "manager", ,"cashier"],
+    roles: ["admin", "manager", "cashier"],
   },
 
   {
@@ -172,7 +169,7 @@ export const adminNav = [
       { title: "Registrations", href: "/admin/warranty/registrations", icon: ClipboardList },
       { title: "Claims & Analytics", href: "/admin/warranty/claims", icon: BarChart3 },
     ],
-    roles: ["admin", "manager","cashier"],
+    roles: ["admin", "", "cashier"],
   },
 
   {
@@ -182,7 +179,7 @@ export const adminNav = [
       { title: "Customers", href: "/admin/customers", icon: Users },
       { title: "Communications", href: "/admin/communications", icon: Bell },
     ],
-    roles: ["admin", "manager", "cashier"],
+    roles: ["admin", "", "cashier"],
   },
 
 
@@ -194,7 +191,7 @@ export const adminNav = [
       { title: "All PO", href: "/admin/purchase-orders", icon: ClipboardList },
        { title: "Supplier Directory", href: "/admin/suppliers", icon: Truck },
     ],
-    roles: ["admin", "manager"],
+    roles: ["admin", ""],
   },
 
   {
@@ -205,7 +202,7 @@ export const adminNav = [
       { title: "Bulk Price Updates", href: "/admin/pricing/bulk", icon: Percent },
       { title: "Discount Rules", href: "/admin/discounts", icon: Percent },
     ],
-    roles: ["admin", "manager", "cashier"],
+    roles: ["admin", "", "cashier"],
   },
 
   {
@@ -227,7 +224,7 @@ export const adminNav = [
       { title: "Performance", href: "/admin/performance", icon: BarChart3 },
       { title: "Audit Logs", href: "/admin/audit-logs", icon: ShieldCheck },
     ],
-    roles: ["admin", "manager"],
+    roles: ["admin", ""],
   },
 
   {
@@ -239,7 +236,7 @@ export const adminNav = [
       { title: "Roles", href: "/admin/permissions/roles", icon: ShieldCheck, permission: PERMISSIONS.ROLE_READ },
       { title: "Permission Matrix", href: "/admin/permissions/matrix", icon: ShieldCheck, permission: PERMISSIONS.ROLE_UPDATE },
     ],
-    roles: ["admin", "manager"],
+    roles: ["admin", ""],
   },
 
   {
@@ -251,6 +248,6 @@ export const adminNav = [
       { title: "Hardware & Integrations", href: "/admin/settings/integrations", icon: HardDrive },
       { title: "Backup & Restore", href: "/admin/settings/backup", icon: Database },
     ],
-    roles: ["admin", "manager"],
+   roles: ["admin"]
   },
 ];

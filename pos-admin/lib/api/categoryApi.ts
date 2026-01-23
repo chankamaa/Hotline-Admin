@@ -112,13 +112,22 @@ export async function updateCategory(
 /* =====================================================
    DELETE: Soft delete category
    DELETE /api/v1/categories/:id
+   Query params:
+   - cascade=true: Delete all subcategories (if supported by backend)
 ===================================================== */
 
-export async function deleteCategory(categoryId: string) {
-  return api<DeleteCategoryResponse>(
-    `/api/v1/categories/${categoryId}`,
-    {
-      method: "DELETE",
-    }
-  );
+export async function deleteCategory(
+  categoryId: string,
+  options?: { cascade?: boolean }
+) {
+  const params = new URLSearchParams();
+  if (options?.cascade) params.set("cascade", "true");
+  
+  const url = params.toString()
+    ? `/api/v1/categories/${categoryId}?${params.toString()}`
+    : `/api/v1/categories/${categoryId}`;
+
+  return api<DeleteCategoryResponse>(url, {
+    method: "DELETE",
+  });
 }

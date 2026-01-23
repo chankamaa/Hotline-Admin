@@ -17,21 +17,39 @@ export function can(user: any, perm: string) {
 }
 
 export function hasRole(user: any, roles: UserRole[]): boolean {
-  if (!user) return false;
+  if (!user) {
+    console.log('hasRole - No user');
+    return false;
+  }
+  
+  console.log('hasRole - Checking roles:', { 
+    requiredRoles: roles, 
+    userRole: user.role, 
+    userRoles: user.roles,
+    isSuperAdmin: user.isSuperAdmin 
+  });
+  
+  // Convert required roles to lowercase for comparison
+  const normalizedRoles = roles.map(r => r.toLowerCase());
   
   // Handle both user.role (string) and user.roles (array)
   if (user.role) {
-    return roles.includes(user.role);
+    const hasIt = normalizedRoles.includes(user.role.toLowerCase());
+    console.log('hasRole - Single role check:', user.role, hasIt);
+    return hasIt;
   }
   
   // Check if user has roles array
   if (Array.isArray(user.roles)) {
-    return user.roles.some((userRole: any) => {
+    const hasIt = user.roles.some((userRole: any) => {
       const roleName = typeof userRole === 'string' ? userRole : userRole.name;
-      return roles.includes(roleName?.toLowerCase() as UserRole);
+      return normalizedRoles.includes(roleName?.toLowerCase());
     });
+    console.log('hasRole - Array roles check:', hasIt);
+    return hasIt;
   }
   
+  console.log('hasRole - No role found, denied');
   return false;
 }
 

@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/providers/toast-provider";
+import { CategorySelector } from "@/components/categories/category-selector";
 
 import {
   fetchProducts,
@@ -87,7 +88,8 @@ export default function ProductsPage() {
   };
 
   const loadCategories = async () => {
-    const res = await fetchCategories();
+    // Load tree structure for hierarchical display
+    const res = await fetchCategories({ tree: true });
     setCategories(res.data.categories);
   };
 
@@ -291,12 +293,16 @@ export default function ProductsPage() {
             placeholder="Barcode (optional)"
             onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} />
 
-
-          <Input label="Category" type="select" value={formData.category}
-            placeholder="Select category"
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            options={categories.map((c) => ({ value: c._id, label: c.name }))} required />
-
+          {/* Hierarchical Category Selector */}
+          <CategorySelector
+            label="Category"
+            value={formData.category}
+            onChange={(categoryId) => setFormData({ ...formData, category: categoryId })}
+            categories={categories}
+            placeholder="Select a category"
+            required
+            showFullPath
+          />
 
           <Input label="Selling Price" type="number" value={formData.sellingPrice}
             placeholder="Enter selling price"

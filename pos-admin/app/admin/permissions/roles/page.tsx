@@ -1,100 +1,89 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
-import { ShieldPlus, Edit, Trash2, Users, Key } from "lucide-react";
+import { ShieldPlus, Edit, Trash2, Users, Key, AlertCircle } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
-import { PERMISSIONS } from "@/components/sidebar-config";
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  userCount: number;
-  permissions: string[];
-  isSystem: boolean;
-  createdAt: string;
-}
+import { PERMISSIONS } from "@/lib/permissions";
+import { roleApi, Role } from "@/lib/api/roleApi";
 
 export default function RolesManagementPage() {
   const router = useRouter();
-  
-  // Mock data - replace with actual API call
-  const [roles] = useState<Role[]>([
-    {
-      id: 1,
-      name: "Admin",
-      description: "Full system access with all permissions",
-      userCount: 2,
-      permissions: ["*"],
-      isSystem: true,
-      createdAt: "2024-01-01",
-    },
-    {
-      id: 2,
-      name: "Manager",
-      description: "Manage inventory, authorize returns, approve discounts",
-      userCount: 5,
-      permissions: [
-        "inventory:*",
-        "products:*",
-        "returns:authorize",
-        "discounts:approve",
-        "reports:view",
-        "employees:view",
-      ],
-      isSystem: true,
-      createdAt: "2024-01-01",
-    },
-    {
-      id: 3,
-      name: "Cashier",
-      description: "Process sales and handle customer transactions",
-      userCount: 12,
-      permissions: [
-        "sales:create",
-        "sales:view",
-        "customers:view",
-        "products:view",
-        "discounts:standard",
-      ],
-      isSystem: true,
-      createdAt: "2024-01-01",
-    },
-    {
-      id: 4,
-      name: "Technician",
-      description: "Manage repair jobs and warranties",
-      userCount: 8,
-      permissions: [
-        "repairs:*",
-        "warranty:*",
-        "products:view",
-        "customers:view",
-      ],
-      isSystem: true,
-      createdAt: "2024-01-01",
-    },
-    {
-      id: 5,
-      name: "Inventory Specialist",
-      description: "Manage stock, purchase orders, and suppliers",
-      userCount: 3,
-      permissions: [
-        "inventory:*",
-        "products:*",
-        "suppliers:*",
-        "purchase-orders:*",
-        "stock:*",
-      ],
-      isSystem: false,
-      createdAt: "2024-02-15",
-    },
-  ]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
+
+  const fetchRoles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await roleApi.getAll();
+      setRoles(response.data.roles);
+    } catch (err) {
+      console.error("Failed to fetch roles:", err);
+      setError(err instanceof Error ? err.message : "Failed to load roles");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (roleId: string, roleName: string) => {
+    if (deleteConfirm !== roleId) {
+      setDeleteConfirm(roleId);
+      return;
+    }
+
+    try {
+      await roleApi.delete(roleId);
+      setRoles(roles.filter((r) => r._id !== roleId));
+      setDeleteConfirm(null);
+      alert(`Role "${roleName}" deleted successfully`);
+    } catch (err) {
+      console.error("Failed to delete role:", err);
+      alert(err instanceof Error ? err.message : "Failed to delete role");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <PageHeader
+          title="Role Management"
+          subtitle="Create and manage user roles with specific permissions"
+        />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <PageHeader
+          title="Role Management"
+          subtitle="Create and manage user roles with specific permissions"
+        />
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3">
+          <AlertCircle className="text-red-600" size={24} />
+          <div>
+            <h3 className="font-semibold text-red-900">Error Loading Roles</h3>
+            <p className="text-red-700">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <RequirePerm perm={PERMISSIONS.ROLE_READ}>
+    <RequirePerm perm={PERMISSIONS.VIEW_ROLES}>
       <div className="p-6">
         <PageHeader
           title="Role Management"
@@ -110,9 +99,9 @@ export default function RolesManagementPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {roles.map((role) => (
             <div
-              key={role.id}
+              key={role._id}
               className={`bg-white rounded-lg border-2 ${
-                role.isSystem ? "border-gray-200" : "border-sky-200"
+                role.isDefault ? "border-gray-200" : "border-sky-200"
               } p-6 hover:shadow-lg transition-shadow`}
             >
               {/* Header */}
@@ -120,7 +109,7 @@ export default function RolesManagementPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{role.name}</h3>
-                    {role.isSystem && (
+                    {role.isDefault && (
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
                         System
                       </span>
@@ -133,24 +122,16 @@ export default function RolesManagementPage() {
               {/* Stats */}
               <div className="flex items-center gap-4 mb-4 pb-4 border-b">
                 <div className="flex items-center gap-2">
-                  <Users size={16} className="text-gray-400" />
-                  <span className="text-sm text-gray-600">
-                    {role.userCount} {role.userCount === 1 ? "user" : "users"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
                   <Key size={16} className="text-gray-400" />
                   <span className="text-sm text-gray-600">
-                    {role.permissions.length === 1 && role.permissions[0] === "*"
-                      ? "All permissions"
-                      : `${role.permissions.length} permissions`}
+                    {role.permissions.length} {role.permissions.length === 1 ? "permission" : "permissions"}
                   </span>
                 </div>
               </div>
 
               {/* Permissions Preview */}
               <div className="mb-4">
-                <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                <div className="text-xs font-medium text-gray-60 uppercase tracking-wider mb-2  ">   
                   Key Permissions
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -159,7 +140,7 @@ export default function RolesManagementPage() {
                       key={idx}
                       className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
                     >
-                      {perm}
+                      {perm.code}
                     </span>
                   ))}
                   {role.permissions.length > 4 && (
@@ -174,25 +155,23 @@ export default function RolesManagementPage() {
               <div className="flex items-center gap-2">
                 <button
                   className="flex-1 px-4 py-2 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-100 transition-colors text-sm font-medium"
-                  onClick={() => alert(`View ${role.name} details`)}
+                  onClick={() => router.push(`/admin/permissions/roles/${role._id}`)}
                 >
-                  View Details
+                  Edit Permissions
                 </button>
-                {!role.isSystem && (
-                  <>
-                    <button
-                      className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
-                      title="Edit Role"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete Role"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </>
+                {!role.isDefault && (
+                  <button
+                    className={`p-2 rounded-lg transition-colors ${
+                      deleteConfirm === role._id
+                        ? "bg-red-600 text-white"
+                        : "text-red-600 hover:bg-red-50"
+                    }`}
+                    title={deleteConfirm === role._id ? "Click again to confirm" : "Delete Role"}
+                    onClick={() => handleDelete(role._id, role.name)}
+                    onMouseLeave={() => setDeleteConfirm(null)}
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 )}
               </div>
 
