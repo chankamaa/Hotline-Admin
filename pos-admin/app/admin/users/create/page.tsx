@@ -307,7 +307,6 @@ export default function CreateUserPage() {
                         ADMIN: "red",
                         MANAGER: "blue",
                         CASHIER: "green",
-                        TECHNICIAN: "purple",
                       };
                       const color = roleColors[role.name] || "gray";
                       

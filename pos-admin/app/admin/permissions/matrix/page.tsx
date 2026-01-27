@@ -73,7 +73,7 @@ export default function PermissionMatrixPage() {
     },
   ];
 
-  const roles = ["admin", "manager", "cashier", "technician"];
+  const roles = ["admin", "manager", "cashier"];
 
   // Initialize permissions state with default values
   const [permissions, setPermissions] = useState<RolePermissions>({
@@ -99,16 +99,6 @@ export default function PermissionMatrixPage() {
       products: { create: false, read: true, update: false, delete: false, pricing: false },
       customers: { create: true, read: true, update: true, delete: false },
       repairs: { create: false, read: false, update: false, delete: false, assign: false },
-      reports: { view: false, export: false, financial: false, inventory: false, sales: false },
-      users: { create: false, read: false, update: false, delete: false, "reset-password": false },
-      settings: { read: false, update: false, backup: false, integrations: false },
-    },
-    technician: {
-      sales: { create: false, read: false, update: false, delete: false, refund: false },
-      inventory: { create: false, read: true, update: false, delete: false, transfer: false, audit: false },
-      products: { create: false, read: true, update: false, delete: false, pricing: false },
-      customers: { create: false, read: true, update: false, delete: false },
-      repairs: { create: true, read: true, update: true, delete: false, assign: false },
       reports: { view: false, export: false, financial: false, inventory: false, sales: false },
       users: { create: false, read: false, update: false, delete: false, "reset-password": false },
       settings: { read: false, update: false, backup: false, integrations: false },
@@ -170,7 +160,6 @@ export default function PermissionMatrixPage() {
       admin: "bg-purple-600 text-white",
       manager: "bg-blue-600 text-white",
       cashier: "bg-green-600 text-white",
-      technician: "bg-orange-600 text-white",
     };
     return colors[role] || "bg-gray-600 text-white";
   };

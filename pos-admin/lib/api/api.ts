@@ -76,44 +76,52 @@ export async function api<T>(
 ): Promise<T> {
   const token = getAccessToken();
 
-  const res = await fetch(`${BASE}${path}`, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}), // matches authenticate middleware 
-    },
-    body: options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined,
-  });
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}), // matches authenticate middleware 
+      },
+      body: options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined,
+    });
 
-  if (res.status === 401 && retry) {
-    // token expired → try refresh once
+    if (res.status === 401 && retry) {
+      // token expired → try refresh once
+      try {
+        await refresh();
+        return api<T>(path, options, false);
+      } catch (error) {
+        // Refresh failed, don't retry
+        throw error;
+      }
+    }
+
+    let data: any = null;
+
     try {
-      await refresh();
-      return api<T>(path, options, false);
-    } catch (error) {
-      // Refresh failed, don't retry
+      data = await res.json();
+    } catch {
+      // response is not JSON
+    }
+
+    if (!res.ok) {
+      const message =
+        typeof data?.message === "string"
+          ? data.message
+          : "Request failed";
+      throw new Error(message);
+    }
+
+    return data;
+  } catch (error: any) {
+    // Network error or fetch failed
+    if (error.message && error.message !== "Request failed") {
       throw error;
     }
+    throw new Error(`Failed to connect to API at ${BASE}${path}. Make sure your backend server is running.`);
   }
-
-  let data: any = null;
-
-  try {
-    data = await res.json();
-  } catch {
-    // response is not JSON
-  }
-
-  if (!res.ok) {
-    const message =
-      typeof data?.message === "string"
-        ? data.message
-        : "Request failed";
-    throw new Error(message);
-  }
-
-  return data;
 }
 
 // Add helper methods to api

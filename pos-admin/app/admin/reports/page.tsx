@@ -63,7 +63,6 @@ export default function ReportsPage() {
       reports: [
         { name: "Individual Performance", href: "/admin/performance", count: "Available" },
         { name: "Comparative Analysis", href: "/admin/performance", count: "Available" },
-        { name: "Technician Reports", href: "/admin/performance", count: "Available" },
       ]
     },
   ];

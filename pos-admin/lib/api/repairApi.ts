@@ -56,10 +56,6 @@ export interface CompleteRepairRequest {
   repairNotes?: string;
 }
 
-export interface AssignTechnicianRequest {
-  technicianId: string;
-}
-
 export interface CollectPaymentRequest {
   amount: number;
 }
@@ -152,13 +148,6 @@ export interface RepairJob {
   updatedAt: string;
 }
 
-export interface Technician {
-  _id: string;
-  username: string;
-  email?: string;
-  activeJobs?: number;
-}
-
 export interface ApiResponse<T> {
   status: "success" | "fail" | "error";
   data: T;
@@ -194,17 +183,6 @@ export const repairApi = {
   }) =>
     api.get<ApiResponse<{ repairs: RepairJob[] }>>(endpoints.repairs, { params }),
 
-  /* Technician: my jobs */
-  getMyJobs: (params?: {
-    status?: string;
-    page?: number;
-    limit?: number;
-  }) =>
-    api.get<ApiResponse<{ repairs: RepairJob[] }>>(
-      `${endpoints.repairs}/my-jobs`,
-      { params }
-    ),
-
   /* Get repair by ID */
   getById: (id: string) =>
     api.get<ApiResponse<{ repair: RepairJob }>>(`${endpoints.repairs}/${id}`),
@@ -220,20 +198,6 @@ export const repairApi = {
     api.put<ApiResponse<{ repair: RepairJob }>>(
       `${endpoints.repairs}/${id}`,
       data
-    ),
-
-  /* Assign technician */
-  assignTechnician: (id: string, data: AssignTechnicianRequest) =>
-    api.put<ApiResponse<{ repair: RepairJob }>>(
-      `${endpoints.repairs}/${id}/assign`,
-      data
-    ),
-
-  /* Technician starts repair */
-  start: (id: string) =>
-    api.put<ApiResponse<{ repair: RepairJob }>>(
-      `${endpoints.repairs}/${id}/start`,
-      {}
     ),
 
   /* Complete repair */
@@ -257,16 +221,10 @@ export const repairApi = {
       data
     ),
 
-  /* Get technicians */
-  getTechnicians: () =>
-    api.get<ApiResponse<{ technicians: Technician[] }>>(
-      `${endpoints.repairs}/technicians`
-    ),
-
   /* Dashboard stats */
   getDashboard: () =>
     api.get<ApiResponse<{
-      pending: number;
+      received: number;  // Backend returns 'received' (devices received, waiting to start)
       inProgress: number;
       ready: number;
       completedToday: number;

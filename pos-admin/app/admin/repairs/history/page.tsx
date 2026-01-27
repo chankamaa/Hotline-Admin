@@ -514,12 +514,6 @@ export default function RepairHistoryPage() {
                               <p className="text-sm text-gray-600 bg-white p-3 rounded-lg">{repair.repairNotes}</p>
                             </div>
                           )}
-                          {repair.assignedTo && (
-                            <div>
-                              <h5 className="text-sm font-semibold text-gray-700 mb-1">Technician</h5>
-                              <p className="text-sm text-gray-600 bg-white p-3 rounded-lg">{repair.assignedTo.username}</p>
-                            </div>
-                          )}
                         </div>
 
                         {/* Parts Used */}

@@ -1,28 +1,73 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { RefreshCw } from "lucide-react";
+import { getSalesTrend } from "@/lib/api/dashboardApi";
 
 type Range = "today" | "week" | "month";
 
-const sampleData: Record<Range, number[]> = {
-  today: Array.from({ length: 24 }, (_, i) => {
-    // Hourly data - simulate business hours activity
-    if (i < 6 || i > 22) return Math.random() * 10;
-    return Math.random() * 100 + 50;
-  }),
-  week: [0, 0, 0, 0, 120, 200, 175],
-  month: Array.from({ length: 30 }, (_, i) => {
-    // Last 30 days - spike at the end
-    if (i < 25) return Math.random() * 50;
-    return 150 + Math.random() * 200;
-  }),
-};
-
 export default function SalesTrendChart({}: {}) {
   const [range, setRange] = useState<Range>("week");
+  const [data, setData] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const data = useMemo(() => sampleData[range], [range]);
+  useEffect(() => {
+    loadSalesData();
+  }, [range]);
+
+  const loadSalesData = async () => {
+    setLoading(true);
+    try {
+      let days = 7;
+      if (range === "today") days = 1;
+      if (range === "month") days = 30;
+      
+      const response: any = await getSalesTrend(days);
+      console.log("Sales trend data:", response);
+      
+      // Extract daily sales from response - backend returns { data: { dailyBreakdown: [...] } }
+      const dailySales = response.data?.dailyBreakdown || [];
+      
+      if (range === "today") {
+        // For today, if we have data for just today, show it, otherwise use hourly mock
+        if (dailySales.length > 0) {
+          const todayTotal = dailySales[0].totalRevenue || dailySales[0].totalAmount || 0;
+          // Distribute across hours (simplified)
+          const hourlyData = Array.from({ length: 24 }, (_, i) => {
+            if (i < 9 || i > 20) return 0; // Closed hours
+            return todayTotal / 12; // Distribute across open hours
+          });
+          setData(hourlyData);
+        } else {
+          setData(Array.from({ length: 24 }, () => 0));
+        }
+      } else {
+        // Use daily data - map totalRevenue
+        const values = dailySales.map((day: any) => day.totalRevenue || day.totalAmount || 0);
+        
+        // Ensure we have the right number of data points
+        const expectedLength = range === "week" ? 7 : 30;
+        if (values.length < expectedLength) {
+          // Pad with zeros at the beginning
+          const padding = Array(expectedLength - values.length).fill(0);
+          setData([...padding, ...values]);
+        } else {
+          setData(values);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load sales trend:", error);
+      // Use fallback data
+      const fallbackData = range === "today" 
+        ? Array.from({ length: 24 }, () => 0)
+        : range === "week"
+        ? [0, 0, 0, 0, 0, 0, 0]
+        : Array.from({ length: 30 }, () => 0);
+      setData(fallbackData);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
@@ -45,10 +90,20 @@ export default function SalesTrendChart({}: {}) {
       return Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
     }
     if (range === "week") {
-      return ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const today = new Date();
+      return Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(today);
+        date.setDate(date.getDate() - (6 - i));
+        return days[date.getDay()];
+      });
     }
     // month - show every few days
-    return Array.from({ length: 30 }, (_, i) => String(9 + i));
+    return Array.from({ length: 30 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (29 - i));
+      return String(date.getDate());
+    });
   }, [range]);
 
   const periodText = (() => {
@@ -66,7 +121,7 @@ export default function SalesTrendChart({}: {}) {
       return labels;
     }
     // month - show select days
-    return labels.filter((_, i) => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29].includes(i));
+    return labels.filter((_, i) => i % 3 === 0);
   }, [labels, range]);
 
   return (
@@ -83,8 +138,12 @@ export default function SalesTrendChart({}: {}) {
             <option value="week">This Week</option>
             <option value="month">This Month</option>
           </select>
-          <button className="p-1.5 hover:bg-gray-100 rounded">
-            <RefreshCw size={16} className="text-gray-600" />
+          <button 
+            onClick={loadSalesData}
+            disabled={loading}
+            className="p-1.5 hover:bg-gray-100 rounded"
+          >
+            <RefreshCw size={16} className={`text-gray-600 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>

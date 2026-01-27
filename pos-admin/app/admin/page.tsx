@@ -7,9 +7,7 @@ import { useEffect } from "react";
 /**
  * Admin Root Page
  * 
- * This page handles role-based redirects for authenticated users:
- * - Technicians → /admin/repairs/technician-dashboard
- * - All other roles → /admin/dashboard
+ * This page redirects authenticated users to the main dashboard.
  */
 export default function AdminPage() {
   const { user, loading } = useAuth();
@@ -19,15 +17,8 @@ export default function AdminPage() {
     if (loading) return;
 
     if (user) {
-      const userRole = user.role?.toLowerCase();
-      
-      if (userRole === "technician") {
-        // Redirect technicians to their dedicated dashboard
-        router.replace("/admin/repairs/technician-dashboard");
-      } else {
-        // Redirect all other roles to the main dashboard
-        router.replace("/admin/dashboard");
-      }
+      // Redirect all users to the main dashboard
+      router.replace("/admin/dashboard");
     }
   }, [user, loading, router]);
 

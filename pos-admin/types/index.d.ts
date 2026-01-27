@@ -75,7 +75,6 @@ interface RepairJob {
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "DELIVERED" | "CANCELLED";
   estimatedCost?: number;
   actualCost?: number;
-  technicianId?: string;
   createdAt: string;
   updatedAt: string;
 }

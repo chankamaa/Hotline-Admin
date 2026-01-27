@@ -111,7 +111,7 @@ export const PERMISSIONS = {
   UPDATE_BRANCH: "UPDATE_BRANCH",
   DELETE_BRANCH: "DELETE_BRANCH",
 
-  // ============ DEVICE REPAIR (TECHNICIAN) ============
+  // ============ DEVICE REPAIR ============
   CREATE_REPAIR_JOB: "CREATE_REPAIR_JOB",
   MANAGE_REPAIR_JOBS: "MANAGE_REPAIR_JOBS",
   VIEW_REPAIRS: "VIEW_REPAIRS",
@@ -452,26 +452,6 @@ export const ROLE_DEFINITIONS: Record<string, RoleDefinition> = {
       
       // Warranty Operations
       "VIEW_WARRANTY", "REGISTER_WARRANTY", "VIEW_WARRANTY_CLAIMS",
-      
-      // Performance
-      "VIEW_OWN_PERFORMANCE",
-    ],
-  },
-  TECHNICIAN: {
-    name: "Technician",
-    description: "Manage repair jobs and diagnostics - Specialized repair operations with limited system access",
-    color: "purple",
-    permissions: [
-      // Repair Operations
-      "CREATE_REPAIR_JOB", "MANAGE_REPAIR_JOBS",
-      "SET_REPAIR_PRICING", "UPDATE_REPAIR_STATUS",
-      "VIEW_ASSIGNED_REPAIRS", "VIEW_REPAIRS",
-      
-      // Warranty (View Only)
-      "VIEW_WARRANTY", "VIEW_WARRANTY_CLAIMS",
-      
-      // Limited Product View
-      "VIEW_PRODUCTS", "VIEW_INVENTORY",
       
       // Performance
       "VIEW_OWN_PERFORMANCE",

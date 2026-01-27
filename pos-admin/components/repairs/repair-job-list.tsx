@@ -10,42 +10,30 @@ import { Search, Filter, Eye, Edit, Trash2, Clock, CheckCircle, AlertTriangle } 
 
 interface RepairJobListProps {
   onEditJob: (jobId: string) => void;
-  isTechnician?: boolean;
 }
 
 type RepairStatus = 'all' | 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'WAITING_PARTS' | 'READY' | 'COMPLETED' | 'CANCELLED';
 type RepairPriority = 'all' | 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
-export default function RepairJobList({ onEditJob, isTechnician = false }: RepairJobListProps) {
+export default function RepairJobList({ onEditJob }: RepairJobListProps) {
   const toast = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<RepairStatus>('all');
   const [priorityFilter, setPriorityFilter] = useState<RepairPriority>('all');
-  const [technicianFilter, setTechnicianFilter] = useState('all');
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [technicians, setTechnicians] = useState<any[]>([]);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
 
   useEffect(() => {
     loadJobs();
-  }, [isTechnician]);
+  }, []);
 
   const loadJobs = async () => {
     try {
       setLoading(true);
-      let response;
-      
-      if (isTechnician) {
-        // Technicians see only their assigned jobs (excluding completed/cancelled)
-        response = await repairApi.getMyJobs({ 
-          status: 'IN_PROGRESS,ASSIGNED,PENDING'
-        });
-      } else {
-        // Admin/Manager see all jobs
-        response = await repairApi.getAll();
-      }
+      // Admin/Manager see all jobs
+      const response = await repairApi.getAll();
       
       const allJobs = response.data.repairs || [];
       setJobs(allJobs);
@@ -72,10 +60,8 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
     // Match status directly with backend format
     const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || job.priority === priorityFilter;
-    const matchesTechnician =
-      technicianFilter === 'all' || job.assignedTo?._id === technicianFilter;
 
-    return matchesSearch && matchesStatus && matchesPriority && matchesTechnician;
+    return matchesSearch && matchesStatus && matchesPriority;
   });
 
   const getStatusBadge = (status: string) => {
@@ -172,7 +158,7 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
 
       {/* Filters and Search */}
       <div className="bg-white  rounded-lg border p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 ">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
           <div className="md:col-span-1">
             <div className="relative  text-gray-800">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-00 w-4 h-4" />
@@ -216,23 +202,6 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
               <option value="URGENT">Urgent</option>
             </select>
           </div>
-
-          {!isTechnician && (
-            <div>
-              <select
-                value={technicianFilter}
-                onChange={(e) => setTechnicianFilter(e.target.value)}
-                className="w-full px-3 py-2 border  text-gray-800 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Technicians</option>
-                {technicians.map((tech) => (
-                  <option key={tech._id} value={tech._id}>
-                    {tech.username}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
         </div>
       </div>
 
@@ -253,9 +222,6 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Issue
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Technician
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -294,9 +260,6 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
                     <div className="text-sm text-gray-900 max-w-xs truncate" title={job.problemDescription}>
                       {job.problemDescription}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {job.assignedTo?.username || 'Unassigned'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -338,15 +301,13 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
                       >
                         <Edit className="w-4 h-4" />
                       </button>
-                      {!isTechnician && (
-                        <button
-                          onClick={() => handleDeleteJob(job._id)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Cancel Job"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDeleteJob(job._id)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Cancel Job"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -367,12 +328,7 @@ export default function RepairJobList({ onEditJob, isTechnician = false }: Repai
         {!loading && filteredJobs.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             <p className="text-lg font-medium">No repair jobs found</p>
-            <p className="text-sm mt-1">
-              {isTechnician 
-                ? "You don't have any assigned jobs at the moment"
-                : "Create a new repair job to get started"
-              }
-            </p>
+            <p className="text-sm mt-1">Create a new repair job to get started</p>
           </div>
         )}
 

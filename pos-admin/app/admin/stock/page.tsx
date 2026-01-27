@@ -44,15 +44,25 @@ export default function StockPage() {
   const loadStock = async () => {
     setLoading(true);
     try {
+      console.log("Fetching stock data from backend...");
       const response: any = await fetchStock({ 
-        limit: 100 
+        limit: 1000 // Fetch all items
       });
-      // Backend returns { status: "success", data: { items: [...] } }
-      const items = response.data?.items || [];
+      
+      console.log("Backend response:", response);
+      
+      // Backend returns { status: "success", data: { stock: [...] } }
+      const items = response.data?.stock || response.data?.items || [];
+      
+      console.log(`Loaded ${items.length} stock items`);
       setStockItems(items);
+      
+      if (items.length === 0) {
+        toast.error("No stock data found. Please add products and stock.");
+      }
     } catch (error: any) {
+      console.error("Failed to load stock:", error);
       toast.error(error.message || "Failed to load stock data");
-      console.error(error);
     } finally {
       setLoading(false);
     }

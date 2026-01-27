@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "manager" | "cashier" | "technician";
+export type UserRole = "admin" | "manager" | "cashier";
 
 export function can(user: any, perm: string) {
   if (!user) return false;

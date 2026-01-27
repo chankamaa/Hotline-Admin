@@ -102,7 +102,7 @@ export default function LowStockPage() {
             <div className="flex items-center gap-2">
               <div className="text-xs text-gray-500 w-16">Min Level:</div>
               <span className="text-lg font-semibold text-gray-700">
-                {item.product.minStockLevel}
+                {Number(item.product.minStockLevel) || 0}
               </span>
             </div>
           </div>
@@ -113,7 +113,9 @@ export default function LowStockPage() {
       key: "shortage",
       label: "Shortage",
       render: (item) => {
-        const shortage = Math.max(0, item.product.minStockLevel - item.quantity);
+        const minLevel = Number(item.product.minStockLevel) || 0;
+        const quantity = Number(item.quantity) || 0;
+        const shortage = Math.max(0, minLevel - quantity);
         return (
           <div className="flex items-center gap-1">
             <AlertTriangle size={16} className="text-red-500" />
@@ -144,9 +146,11 @@ export default function LowStockPage() {
     totalItems: lowStockItems.length,
     outOfStock: lowStockItems.filter(item => item.quantity === 0).length,
     critical: lowStockItems.filter(item => item.quantity > 0 && item.quantity <= item.product.minStockLevel / 2).length,
-    totalShortage: lowStockItems.reduce((sum, item) => 
-      sum + Math.max(0, item.product.minStockLevel - item.quantity), 0
-    ),
+    totalShortage: lowStockItems.reduce((sum, item) => {
+      const minLevel = Number(item.product.minStockLevel) || 0;
+      const quantity = Number(item.quantity) || 0;
+      return sum + Math.max(0, minLevel - quantity);
+    }, 0),
   };
 
   /* --------------------------------------------------

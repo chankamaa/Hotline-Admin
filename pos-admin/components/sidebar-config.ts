@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 
 // User roles
-export type UserRole = "admin" | "manager" | "cashier" | "technician";
+export type UserRole = "admin" | "manager" | "cashier" | "technician" | "inventory-manager";
 
 // Navigation item types
 export interface NavItem {
@@ -92,18 +92,16 @@ export const adminNav = [
   {
     label: "Dashboard",
     items: [
+      { title: "Admin Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    ],
+    roles: ["admin"],
+  },
+  {
+    label: "Dashboard",
+    items: [
       { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     ],
- 
-  },
-
-  // Technician-specific dashboard (only visible to technicians)
-  {
-    label: "My Dashboard",
-    items: [
-      { title: "Technician Dashboard", href: "/admin/repairs/technician-dashboard", icon: Wrench },
-    ],
-    roles: ["technician"]
+    roles: ["manager", "cashier", "technician", "inventory-manager"],
   },
 
   {
@@ -138,9 +136,9 @@ export const adminNav = [
     ],
     roles: ["admin", "manager"]
   },
-
+ /*
   {
-    label: "Stock Movements",
+   label: "Stock Movements",
     icon: ClipboardList,
     items: [
       { title: "All Movements", href: "/admin/stock/movements", icon: ClipboardList },
@@ -149,16 +147,15 @@ export const adminNav = [
     ],
     roles: ["admin", ""],
   },
-
+*/
   {
     label: "Repairs & Service",
     icon: Wrench,
     items: [
       { title: "Repair Jobs", href: "/admin/repairs", icon: Wrench  },
-      { title: "Technician Workload", href: "/admin/repairs/workload", icon: Users },
       { title: "Repair History", href: "/admin/repairs/history", icon: ClipboardList },
     ],
-    roles: ["admin", "manager", "cashier"],
+    roles: ["admin", "manager", "cashier", "technician"],
   },
 
   {
@@ -169,7 +166,7 @@ export const adminNav = [
       { title: "Registrations", href: "/admin/warranty/registrations", icon: ClipboardList },
       { title: "Claims & Analytics", href: "/admin/warranty/claims", icon: BarChart3 },
     ],
-    roles: ["admin", "", "cashier"],
+    roles: ["admin", "", "cashier" ,"technician"],
   },
 
   {
@@ -236,7 +233,7 @@ export const adminNav = [
       { title: "Roles", href: "/admin/permissions/roles", icon: ShieldCheck, permission: PERMISSIONS.ROLE_READ },
       { title: "Permission Matrix", href: "/admin/permissions/matrix", icon: ShieldCheck, permission: PERMISSIONS.ROLE_UPDATE },
     ],
-    roles: ["admin", ""],
+    roles: ["admin"],
   },
 
   {

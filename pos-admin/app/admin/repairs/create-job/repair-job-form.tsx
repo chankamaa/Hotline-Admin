@@ -106,14 +106,35 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
   useEffect(() => {
     loadCurrentUser();
   }, []);
+  
+  // Auto-assign to technician if they're creating a new job
+  useEffect(() => {
+    if (currentUser && !jobId) {
+      const userRole = currentUser.role?.toLowerCase() || currentUser.roles?.[0]?.name?.toLowerCase();
+      if (userRole === 'technician') {
+        setFormData(prev => ({
+          ...prev,
+          assignedTo: currentUser.id,
+          status: 'ASSIGNED',
+        }));
+      }
+    }
+  }, [currentUser, jobId]);
 
   // Load technicians and existing job data
   useEffect(() => {
-    loadTechnicians();
+    // Only load technicians if user is admin/manager (not technician)
+    if (currentUser) {
+      const userRole = currentUser.role?.toLowerCase() || currentUser.roles?.[0]?.name?.toLowerCase();
+      if (userRole !== 'technician') {
+        loadTechnicians();
+      }
+    }
+    
     if (jobId) {
       loadJobData(jobId);
     }
-  }, [jobId]);
+  }, [jobId, currentUser]);
 
   // Handle click outside for autocomplete
   useEffect(() => {
@@ -351,7 +372,8 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
 
   // Check if current user is a technician
   const isTechnician = () => {
-    return currentUser?.role?.name?.toLowerCase() === 'technician';
+    const userRole = currentUser?.role?.toLowerCase() || currentUser?.roles?.[0]?.name?.toLowerCase();
+    return userRole === 'technician';
   };
 
   // Check if field is editable by technician
@@ -379,6 +401,16 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
     if (!formData.model.trim()) newErrors.model = 'Device model is required';
     if (!formData.problemDescription.trim()) newErrors.problemDescription = 'Problem description is required';
 
+    // Validation for COMPLETED status - require labor cost and parts
+    if (formData.status === 'COMPLETED') {
+      if (!formData.laborCost || parseFloat(formData.laborCost) <= 0) {
+        newErrors.laborCost = 'Labor cost is required before completing the job';
+      }
+      if (parts.length === 0) {
+        newErrors.parts = 'At least one part must be added before completing the job';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -394,6 +426,26 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
     setLoading(true);
 
     try {
+      // If completing the job, use the complete endpoint with labor cost and parts
+      if (jobId && formData.status === 'COMPLETED') {
+        const completePayload = {
+          laborCost: parseFloat(formData.laborCost),
+          partsUsed: parts.map(part => ({
+            productId: part.productId,
+            quantity: part.quantity,
+            unitPrice: part.unitPrice,
+          })),
+          diagnosisNotes: formData.diagnosisNotes || undefined,
+          repairNotes: formData.repairNotes || undefined,
+        };
+        
+        await repairApi.complete(jobId, completePayload);
+        toast.success('Repair job completed successfully!');
+        onSuccess();
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         customer: {
           name: formData.customerName,
@@ -688,7 +740,13 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           <div className="flex items-center gap-2 mb-4 text-gray-700">
             <PackageIcon className="w-5 h-5 text-gray-500" />
             <h3 className="text-lg font-semibold">Parts Used</h3>
+            {isTechnician() && <span className="text-green-600 text-sm">(Required for Completion)</span>}
           </div>
+          {errors.parts && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-700 text-sm">{errors.parts}</p>
+            </div>
+          )}
 
           <div className="mb-4 relative" ref={suggestionRef}>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
@@ -814,50 +872,65 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
         <div>
           <h3 className="text-lg font-semibold mb-4">Assignment & Priority</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative" ref={technicianRef}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assign to Technician {!isFieldEditable('assignedTo') && <span className="text-gray-400">(Read-only)</span>}
-              </label>
-              <Input
-                value={technicianSearchTerm || technicians.find(t => t._id === formData.assignedTo)?.username || ''}
-                onChange={(e) => handleTechnicianSearch(e.target.value)}
-                onFocus={() => {
-                  setShowTechnicianSuggestions(true);
-                  setFilteredTechnicians(technicians);
-                }}
-                placeholder="Search active technicians..."
-                disabled={!isFieldEditable('assignedTo')}
-              />
-              {showTechnicianSuggestions && isFieldEditable('assignedTo') && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  {filteredTechnicians.length > 0 ? (
-                    filteredTechnicians.map((tech) => (
-                      <button
-                        key={tech._id}
-                        type="button"
-                        onClick={() => handleSelectTechnician(tech)}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b last:border-b-0"
-                      >
-                        <div className="font-medium text-gray-900">{tech.username}</div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-4 py-6 text-center text-gray-500">
-                      <p className="text-sm font-medium">No active technicians found</p>
-                      <p className="text-xs mt-1">Add technicians in User Management with TECHNICIAN role</p>
-                    </div>
-                  )}
+            {/* Only show technician assignment field for admin/manager */}
+            {!isTechnician() && (
+              <div className="relative" ref={technicianRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Assign to Technician {!isFieldEditable('assignedTo') && <span className="text-gray-400">(Read-only)</span>}
+                </label>
+                <Input
+                  value={technicianSearchTerm || technicians.find(t => t._id === formData.assignedTo)?.username || ''}
+                  onChange={(e) => handleTechnicianSearch(e.target.value)}
+                  onFocus={() => {
+                    setShowTechnicianSuggestions(true);
+                    setFilteredTechnicians(technicians);
+                  }}
+                  placeholder="Search active technicians..."
+                  disabled={!isFieldEditable('assignedTo')}
+                />
+                {showTechnicianSuggestions && isFieldEditable('assignedTo') && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {filteredTechnicians.length > 0 ? (
+                      filteredTechnicians.map((tech) => (
+                        <button
+                          key={tech._id}
+                          type="button"
+                          onClick={() => handleSelectTechnician(tech)}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b last:border-b-0"
+                        >
+                          <div className="font-medium text-gray-900">{tech.username}</div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-6 text-center text-gray-500">
+                        <p className="text-sm font-medium">No active technicians found</p>
+                        <p className="text-xs mt-1">Add technicians in User Management with TECHNICIAN role</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {isFieldEditable('assignedTo') && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {technicians.length > 0 
+                      ? `${technicians.length} active technician${technicians.length !== 1 ? 's' : ''} from User Management`
+                      : 'No active technicians with TECHNICIAN role found'
+                    }
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {/* Show auto-assignment info for technicians */}
+            {isTechnician() && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Assigned To
+                </label>
+                <div className="px-3 py-2 border border-gray-200 rounded-md bg-green-50">
+                  <p className="text-sm text-gray-700">✓ Auto-assigned to you</p>
                 </div>
-              )}
-              {isFieldEditable('assignedTo') && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {technicians.length > 0 
-                    ? `${technicians.length} active technician${technicians.length !== 1 ? 's' : ''} from User Management`
-                    : 'No active technicians with TECHNICIAN role found'
-                  }
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -918,7 +991,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Labor Cost {isTechnician() && <span className="text-green-600">(Editable)</span>}
+                Labor Cost {isTechnician() && <span className="text-green-600">(Required for Completion)</span>}
               </label>
               <Input
                 type="number"
@@ -930,6 +1003,9 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 min="0"
                 disabled={!isFieldEditable('laborCost')}
               />
+              {errors.laborCost && (
+                <p className="text-red-500 text-sm mt-1">{errors.laborCost}</p>
+              )}
             </div>
 
             <div>

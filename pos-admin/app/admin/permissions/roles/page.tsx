@@ -194,7 +194,7 @@ export default function RolesManagementPage() {
                 1
               </div>
               <div>
-                <strong>System Roles:</strong> Pre-defined roles (Admin, Manager, Cashier, Technician) cannot be deleted but permissions can be customized.
+                <strong>System Roles:</strong> Pre-defined roles (Admin, Manager, Cashier) cannot be deleted but permissions can be customized.
               </div>
             </div>
             <div className="flex gap-3">
