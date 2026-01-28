@@ -75,11 +75,11 @@ export const getPendingRepairs = (limit: number = 10, assignedTo?: string) => {
     limit,
     page: 1
   };
-  
+
   if (assignedTo) {
     params.assignedTo = assignedTo;
   }
-  
+
   return api.get("/api/v1/repairs", { params });
 };
 
@@ -89,7 +89,7 @@ export const getPendingRepairs = (limit: number = 10, assignedTo?: string) => {
  */
 export const getAssignedRepairs = (technicianId: string, limit: number = 20) => {
   return api.get("/api/v1/repairs", {
-    params: { 
+    params: {
       status: "ASSIGNED",
       assignedTo: technicianId,
       limit,
@@ -103,7 +103,7 @@ export const getAssignedRepairs = (technicianId: string, limit: number = 20) => 
  */
 export const getReceivedRepairs = (limit: number = 10) => {
   return api.get("/api/v1/repairs", {
-    params: { 
+    params: {
       status: "RECEIVED",
       limit,
       page: 1
@@ -118,7 +118,7 @@ export const getSalesTrend = (days: number = 7) => {
   const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
-  
+
   return api.get("/api/v1/sales/report", {
     params: {
       startDate: startDate.toISOString().split('T')[0],

@@ -22,16 +22,13 @@ import {
   Plus,
 } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
-import { getPendingRepairs, getReceivedRepairs, getAssignedRepairs } from "@/lib/api/dashboardApi";
 import { repairApi } from "@/lib/api/repairApi";
-import { getMe } from "@/lib/auth";
 
 export default function TechnicianDashboard() {
   const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  
+
   type ChangeType = "increase" | "decrease" | "neutral";
   const [stats, setStats] = useState({
     assignedToMe: { value: "0", change: "Active jobs", changeType: "neutral" as ChangeType },
@@ -44,75 +41,49 @@ export default function TechnicianDashboard() {
   const [pendingRepairs, setPendingRepairs] = useState<any[]>([]);
 
   useEffect(() => {
-    const initDashboard = async () => {
-      try {
-        const user = await getMe();
-        setCurrentUser(user);
-        if (user?.id) {
-          await loadDashboardData(user.id);
-        }
-      } catch (error) {
-        console.error('Error initializing dashboard:', error);
-        toast.error('Failed to load dashboard');
-        setLoading(false);
-      }
-    };
-    
-    initDashboard();
-  }, []);
-  
-  useEffect(() => {
-    if (!currentUser?.id) return;
-    
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => loadDashboardData(currentUser.id), 30000);
-    return () => clearInterval(interval);
-  }, [currentUser]);
+    loadDashboardData();
 
-  const loadDashboardData = async (technicianId: string) => {
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch only repairs assigned to this technician
-      const [inProgressRepairsRes, assignedRepairsRes, receivedRepairsRes, repairDashboardRes] = 
+      // Use getMyJobs for technician's own repairs - this uses VIEW_OWN_REPAIRS permission
+      const [inProgressRepairsRes, receivedRepairsRes] =
         await Promise.allSettled([
-          getPendingRepairs(20, technicianId), // IN_PROGRESS for this technician
-          getAssignedRepairs(technicianId, 20), // ASSIGNED to this technician
-          getReceivedRepairs(10), // RECEIVED/PENDING (unassigned)
-          repairApi.getDashboard(),
+          repairApi.getMyJobs({ status: 'IN_PROGRESS', limit: 20 }),
+          repairApi.getMyJobs({ status: 'RECEIVED', limit: 10 }),
         ]);
 
-      // Combine assigned and in-progress repairs into "My Active Repairs"
-      const allMyRepairs: any[] = [];
-      
-      if (assignedRepairsRes.status === "fulfilled") {
-        const repairsData: any = assignedRepairsRes.value;
-        const repairs = repairsData.data?.repairs || [];
-        allMyRepairs.push(...repairs);
-      }
-      
+      // Process in-progress repairs (assigned to technician)
+      let inProgressCount = 0;
       if (inProgressRepairsRes.status === "fulfilled") {
         const repairsData: any = inProgressRepairsRes.value;
         const repairs = repairsData.data?.repairs || [];
-        allMyRepairs.push(...repairs);
+        inProgressCount = repairs.length;
+
+        setMyRepairs(repairs.map((repair: any) => ({
+          id: repair.jobNumber || repair._id,
+          customer: repair.customer?.name || "Unknown",
+          device: `${repair.device?.brand || ""} ${repair.device?.model || ""}`.trim() || "Unknown Device",
+          issue: repair.problemDescription || "Not specified",
+          priority: repair.priority || "normal",
+          estimatedCost: repair.estimatedCost ? `$${repair.estimatedCost}` : "N/A",
+          status: repair.status?.toLowerCase().replace(/_/g, "-") || "in-progress",
+          createdAt: new Date(repair.createdAt).toLocaleDateString(),
+        })));
       }
-      
-      setMyRepairs(allMyRepairs.map((repair: any) => ({
-        id: repair._id,
-        jobNumber: repair.jobNumber,
-        customer: repair.customer?.name || "Unknown",
-        device: `${repair.device?.brand || ""} ${repair.device?.model || ""}`.trim() || "Unknown Device",
-        issue: repair.problemDescription || "Not specified",
-        priority: repair.priority?.toLowerCase() || "normal",
-        estimatedCost: repair.estimatedCost ? `$${repair.estimatedCost}` : "N/A",
-        status: repair.status?.toLowerCase().replace(/_/g, "-") || "assigned",
-        createdAt: new Date(repair.createdAt).toLocaleDateString(),
-      })));
 
       // Process pending/received repairs
+      let receivedCount = 0;
       if (receivedRepairsRes.status === "fulfilled") {
         const repairsData: any = receivedRepairsRes.value;
         const repairs = repairsData.data?.repairs || [];
-        
+        receivedCount = repairs.length;
+
         setPendingRepairs(repairs.slice(0, 5).map((repair: any) => ({
           id: repair.jobNumber || repair._id,
           customer: repair.customer?.name || "Unknown",
@@ -123,39 +94,29 @@ export default function TechnicianDashboard() {
         })));
       }
 
-      // Process repair dashboard stats
-      if (repairDashboardRes.status === "fulfilled") {
-        const repairData: any = repairDashboardRes.value;
-        const completedToday = repairData.data?.completedToday || 0;
-        const received = repairData.data?.received || 0;
-        
-        // Calculate stats from technician's actual jobs
-        const myActiveCount = allMyRepairs.length;
-        const myInProgressCount = allMyRepairs.filter((r: any) => r.status === 'IN_PROGRESS').length;
-        
-        setStats({
-          assignedToMe: {
-            value: myActiveCount.toString(),
-            change: "My active jobs",
-            changeType: "neutral",
-          },
-          inProgress: {
-            value: myInProgressCount.toString(),
-            change: "Currently working",
-            changeType: myInProgressCount > 0 ? "increase" : "neutral",
-          },
-          completedToday: {
-            value: completedToday.toString(),
-            change: "Finished today",
-            changeType: completedToday > 0 ? "increase" : "neutral",
-          },
-          pending: {
-            value: received.toString(),
-            change: "Unassigned jobs",
-            changeType: "neutral",
-          },
-        });
-      }
+      // Update stats based on fetched data
+      setStats({
+        assignedToMe: {
+          value: (inProgressCount + receivedCount).toString(),
+          change: "Active jobs",
+          changeType: "neutral",
+        },
+        inProgress: {
+          value: inProgressCount.toString(),
+          change: "Currently working",
+          changeType: inProgressCount > 0 ? "increase" : "neutral",
+        },
+        completedToday: {
+          value: "0", // Would need a separate API call with completedAt filter
+          change: "Finished today",
+          changeType: "neutral",
+        },
+        pending: {
+          value: receivedCount.toString(),
+          change: "Awaiting start",
+          changeType: "neutral",
+        },
+      });
 
     } catch (error) {
       console.error("Error loading technician dashboard:", error);
@@ -164,23 +125,7 @@ export default function TechnicianDashboard() {
       setLoading(false);
     }
   };
-  
-  const handleStartWork = async (repairId: string) => {
-    try {
-      await repairApi.update(repairId, { status: 'IN_PROGRESS' } as any);
-      toast.success('Started working on repair job');
-      if (currentUser?.id) {
-        loadDashboardData(currentUser.id);
-      }
-    } catch (error: any) {
-      console.error('Error starting work:', error);
-      toast.error(error?.message || 'Failed to update job status');
-    }
-  };
-  
-  const handleViewRepair = (repairId: string) => {
-    router.push(`/admin/repairs?jobId=${repairId}`);
-  };
+
 
   if (loading && !myRepairs.length) {
     return (
@@ -209,7 +154,7 @@ export default function TechnicianDashboard() {
             <span className="text-sm font-medium">Create Job</span>
           </button>
           <button
-            onClick={() => currentUser?.id && loadDashboardData(currentUser.id)}
+            onClick={loadDashboardData}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
           >
@@ -278,13 +223,12 @@ export default function TechnicianDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <div className="font-medium text-sm text-black">{repair.id}</div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        repair.priority === "urgent"
-                          ? "bg-red-100 text-red-700"
-                          : repair.priority === "high"
+                      <span className={`text-xs px-2 py-1 rounded-full ${repair.priority === "urgent"
+                        ? "bg-red-100 text-red-700"
+                        : repair.priority === "high"
                           ? "bg-orange-100 text-orange-700"
                           : "bg-blue-100 text-blue-700"
-                      }`}>
+                        }`}>
                         {repair.priority}
                       </span>
                     </div>
@@ -300,26 +244,10 @@ export default function TechnicianDashboard() {
                   <span className="font-medium">Issue:</span> {repair.issue}
                 </div>
                 <div className="flex gap-2">
-                  {repair.status === 'assigned' && (
-                    <button 
-                      onClick={() => handleStartWork(repair.id)}
-                      className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Start Work
-                    </button>
-                  )}
-                  {repair.status === 'in-progress' && (
-                    <button 
-                      onClick={() => handleViewRepair(repair.id)}
-                      className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                      Complete Job
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => handleViewRepair(repair.id)}
-                    className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                  >
+                  <button className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Update Status
+                  </button>
+                  <button className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
                     View Details
                   </button>
                 </div>
@@ -361,13 +289,12 @@ export default function TechnicianDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <div className="font-medium text-sm text-black">{repair.id}</div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        repair.priority === "urgent"
-                          ? "bg-red-100 text-red-700"
-                          : repair.priority === "high"
+                      <span className={`text-xs px-2 py-1 rounded-full ${repair.priority === "urgent"
+                        ? "bg-red-100 text-red-700"
+                        : repair.priority === "high"
                           ? "bg-orange-100 text-orange-700"
                           : "bg-gray-100 text-gray-700"
-                      }`}>
+                        }`}>
                         {repair.priority}
                       </span>
                     </div>

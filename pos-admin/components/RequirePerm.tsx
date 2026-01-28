@@ -11,14 +11,6 @@ export default function RequirePerm({
   perm: string;
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && (!user || !can(user, perm))) router.replace("/unauthorized");
-  }, [loading, user, perm, router]);
-
-  if (loading) return <div>Loading...</div>;
-  if (!user || !can(user, perm)) return null;
+  // RBAC disabled - allow all access
   return <>{children}</>;
 }

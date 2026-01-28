@@ -126,12 +126,12 @@ export async function api<T>(
 
 // Add helper methods to api
 api.get = <T>(path: string, options?: { params?: Record<string, any> }) => {
-  const queryString = options?.params 
+  const queryString = options?.params
     ? '?' + new URLSearchParams(
-        Object.entries(options.params)
-          .filter(([_, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, String(v)])
-      ).toString()
+      Object.entries(options.params)
+        .filter(([_, v]) => v !== undefined && v !== null)
+        .map(([k, v]) => [k, String(v)])
+    ).toString()
     : '';
   return api<T>(path + queryString, { method: 'GET' });
 };

@@ -4,10 +4,10 @@ import { useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { 
-  DollarSign, 
-  Package, 
-  ShoppingCart, 
+import {
+  DollarSign,
+  Package,
+  ShoppingCart,
   Users,
   TrendingUp,
   BarChart3,
@@ -151,11 +151,10 @@ export default function ReportsPage() {
                 <Icon size={20} className={`text-${stat.color}-600`} />
               </div>
               <div className="text-2xl font-bold text-black mb-1">{stat.value}</div>
-              <div className={`text-xs ${
-                stat.trend === "up" ? "text-green-600" :
-                stat.trend === "warning" ? "text-red-600" :
-                "text-gray-500"
-              }`}>
+              <div className={`text-xs ${stat.trend === "up" ? "text-green-600" :
+                  stat.trend === "warning" ? "text-red-600" :
+                    "text-gray-500"
+                }`}>
                 {stat.change}
               </div>
             </div>
@@ -170,18 +169,18 @@ export default function ReportsPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Link href="/admin/reports/financial?tab=daily">
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="secondary">
               <FileText size={16} className="mr-2" />
               Generate Daily Report
             </Button>
           </Link>
           <Link href="/admin/reports/builder">
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="secondary">
               <BarChart3 size={16} className="mr-2" />
               Custom Report Builder
             </Button>
           </Link>
-          <Button className="w-full" variant="outline">
+          <Button className="w-full" variant="secondary">
             <Download size={16} className="mr-2" />
             Export All Data
           </Button>
@@ -242,7 +241,7 @@ export default function ReportsPage() {
                     {new Date(report.generatedAt).toLocaleTimeString()}
                   </div>
                 </div>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="secondary">
                   <Download size={14} className="mr-1" />
                   {report.format}
                 </Button>

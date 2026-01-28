@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { repairApi, RepairJob } from '@/lib/api/repairApi';
 import { useToast } from '@/providers/toast-provider';
+import { useAuth } from '@/providers/providers';
 import { Search, Filter, Eye, Edit, Trash2, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface RepairJobListProps {
@@ -17,6 +18,7 @@ type RepairPriority = 'all' | 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
 export default function RepairJobList({ onEditJob }: RepairJobListProps) {
   const toast = useToast();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<RepairStatus>('all');
   const [priorityFilter, setPriorityFilter] = useState<RepairPriority>('all');
@@ -27,14 +29,26 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
 
   useEffect(() => {
     loadJobs();
-  }, []);
+  }, [user]);
 
   const loadJobs = async () => {
     try {
       setLoading(true);
-      // Admin/Manager see all jobs
-      const response = await repairApi.getAll();
-      
+
+      // Check if user is a technician - use getMyJobs instead of getAll
+      const isTechnician = user?.roles?.some((r: any) =>
+        r.name?.toLowerCase() === 'technician' || r.roleName?.toLowerCase() === 'technician'
+      ) || user?.primaryRole?.toLowerCase() === 'technician';
+
+      let response;
+      if (isTechnician) {
+        // Technicians can only see their own jobs (VIEW_OWN_REPAIRS permission)
+        response = await repairApi.getMyJobs();
+      } else {
+        // Admin/Manager see all jobs (VIEW_REPAIRS permission)
+        response = await repairApi.getAll();
+      }
+
       const allJobs = response.data.repairs || [];
       setJobs(allJobs);
     } catch (error: any) {
@@ -66,10 +80,9 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      PENDING: 'bg-gray-100 text-gray-700',
+      RECEIVED: 'bg-gray-100 text-gray-700',
       ASSIGNED: 'bg-yellow-100 text-yellow-700',
       IN_PROGRESS: 'bg-blue-100 text-blue-700',
-      WAITING_PARTS: 'bg-orange-100 text-orange-700',
       READY: 'bg-green-100 text-green-700',
       COMPLETED: 'bg-purple-100 text-purple-700',
       CANCELLED: 'bg-red-100 text-red-700',
@@ -121,9 +134,9 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
   // Calculate stats based on actual backend status values
   const stats = {
     total: jobs.length,
+    received: jobs.filter((j) => j.status === 'RECEIVED').length,
     cancelled: jobs.filter((j) => j.status === 'CANCELLED').length,
     inProgress: jobs.filter((j) => j.status === 'IN_PROGRESS').length,
-    waitingParts: jobs.filter((j) => j.status === 'WAITING_PARTS').length,
     ready: jobs.filter((j) => j.status === 'READY').length,
   };
 
@@ -135,6 +148,13 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
           <div className="text-sm text-gray-600 mb-1">Total Jobs</div>
           <div className="text-2xl font-bold text-gray-500">{stats.total}</div>
         </div>
+        <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-4">
+          <div className="text-sm text-yellow-600 mb-1 flex items-center gap-1">
+            <Clock className="w-4 h-4" />
+            Received
+          </div>
+          <div className="text-2xl font-bold text-yellow-700">{stats.received}</div>
+        </div>
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
           <div className="text-sm text-blue-600 mb-1 flex items-center gap-1">
             <Clock className="w-4 h-4" />
@@ -142,7 +162,7 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
           </div>
           <div className="text-2xl font-bold text-blue-700">{stats.inProgress}</div>
         </div>
-        
+
         <div className="bg-green-50 rounded-lg border border-green-200 p-4">
           <div className="text-sm text-green-600 mb-1 flex items-center gap-1">
             <CheckCircle className="w-4 h-4" />
@@ -179,12 +199,11 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
               className="w-full px-3 py-2 border  text-gray-800 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Statuses</option>
-             
+              <option value="RECEIVED">Received</option>
               <option value="ASSIGNED">Assigned</option>
               <option value="IN_PROGRESS">In Progress</option>
-              
               <option value="READY">Ready</option>
-              
+              <option value="COMPLETED">Completed</option>
               <option value="CANCELLED">Cancelled</option>
             </select>
           </div>

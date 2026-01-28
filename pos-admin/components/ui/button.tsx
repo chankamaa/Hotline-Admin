@@ -10,6 +10,7 @@ interface ButtonProps {
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
   fullWidth?: boolean;
+  className?: string;
 }
 
 export function Button({
@@ -20,6 +21,7 @@ export function Button({
   disabled = false,
   type = "button",
   fullWidth = false,
+  className = "",
 }: ButtonProps) {
   const baseClasses =
     "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
@@ -46,9 +48,8 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
-        fullWidth ? "w-full" : ""
-      } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""
+        } ${disabled ? "cursor-not-allowed opacity-50" : ""} ${className}`}
     >
       {children}
     </button>

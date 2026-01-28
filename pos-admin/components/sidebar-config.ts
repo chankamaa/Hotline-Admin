@@ -5,6 +5,7 @@ import {
   CreditCard,
   Package,
   Tags,
+  Tag,
   Boxes,
   ClipboardList,
   AlertTriangle,
@@ -45,47 +46,78 @@ export interface NavSection {
   roles?: UserRole[];
 }
 
-// Permission constants
+// Permission constants - Aligned with backend (/src/constants/permission.js)
 export const PERMISSIONS = {
-  // Sales
-  
-  // Inventory
-  INVENTORY_CREATE: "inventory:create",
-  INVENTORY_READ: "inventory:read",
-  INVENTORY_UPDATE: "inventory:update",
-  INVENTORY_DELETE: "inventory:delete",
-  
-  // Products
-  PRODUCT_CREATE: "products:create",
-  PRODUCT_READ: "products:read",
-  PRODUCT_UPDATE: "products:update",
-  PRODUCT_DELETE: "products:delete",
-  
-  // Repairs
-  REPAIR_CREATE: "repairs:create",
-  REPAIR_READ: "repairs:read",
-  REPAIR_UPDATE: "repairs:update",
-  REPAIR_ASSIGN: "repairs:assign",
-  
+  // Sales Operations
+  CREATE_SALE: "CREATE_SALE",
+  VOID_SALE: "VOID_SALE",
+  VIEW_SALES: "VIEW_SALES",
+  APPLY_DISCOUNT: "APPLY_DISCOUNT",
+
+  // Returns
+  CREATE_RETURN: "CREATE_RETURN",
+  VIEW_RETURNS: "VIEW_RETURNS",
+
   // Reports
-  REPORT_VIEW: "reports:view",
-  REPORT_FINANCIAL: "reports:financial",
-  
-  // Users
-  USER_CREATE: "users:create",
-  USER_READ: "users:read",
-  USER_UPDATE: "users:update",
-  USER_DELETE: "users:delete",
-  
-  // Roles
-  ROLE_READ: "roles:read",
-  ROLE_CREATE: "roles:create",
-  ROLE_UPDATE: "roles:update",
-  ROLE_DELETE: "roles:delete",
-  
+  VIEW_PROFIT_REPORT: "VIEW_PROFIT_REPORT",
+  VIEW_SALES_REPORT: "VIEW_SALES_REPORT",
+  EXPORT_REPORTS: "EXPORT_REPORTS",
+
+  // User Management
+  CREATE_USER: "CREATE_USER",
+  VIEW_USERS: "VIEW_USERS",
+  UPDATE_USER: "UPDATE_USER",
+  DELETE_USER: "DELETE_USER",
+  UPDATE_OWN_PROFILE: "UPDATE_OWN_PROFILE",
+
+  // Role Management
+  MANAGE_ROLES: "MANAGE_ROLES",
+  ASSIGN_ROLES: "ASSIGN_ROLES",
+
+  // Permission Management
+  MANAGE_PERMISSIONS: "MANAGE_PERMISSIONS",
+  ASSIGN_PERMISSIONS: "ASSIGN_PERMISSIONS",
+
+  // Category Management
+  CREATE_CATEGORY: "CREATE_CATEGORY",
+  VIEW_CATEGORIES: "VIEW_CATEGORIES",
+  UPDATE_CATEGORY: "UPDATE_CATEGORY",
+  DELETE_CATEGORY: "DELETE_CATEGORY",
+
+  // Product Management
+  CREATE_PRODUCT: "CREATE_PRODUCT",
+  VIEW_PRODUCTS: "VIEW_PRODUCTS",
+  UPDATE_PRODUCT: "UPDATE_PRODUCT",
+  DELETE_PRODUCT: "DELETE_PRODUCT",
+
+  // Inventory
+  MANAGE_INVENTORY: "MANAGE_INVENTORY",
+  VIEW_INVENTORY: "VIEW_INVENTORY",
+
+  // Repair Management
+  CREATE_REPAIR: "CREATE_REPAIR",
+  VIEW_REPAIRS: "VIEW_REPAIRS",
+  VIEW_OWN_REPAIRS: "VIEW_OWN_REPAIRS",
+  ASSIGN_REPAIR: "ASSIGN_REPAIR",
+  UPDATE_REPAIR: "UPDATE_REPAIR",
+  COMPLETE_REPAIR: "COMPLETE_REPAIR",
+  COLLECT_REPAIR_PAYMENT: "COLLECT_REPAIR_PAYMENT",
+  CANCEL_REPAIR: "CANCEL_REPAIR",
+
+  // Warranty Management
+  CREATE_WARRANTY: "CREATE_WARRANTY",
+  VIEW_WARRANTIES: "VIEW_WARRANTIES",
+  UPDATE_WARRANTY: "UPDATE_WARRANTY",
+  VOID_WARRANTY: "VOID_WARRANTY",
+  CREATE_WARRANTY_CLAIM: "CREATE_WARRANTY_CLAIM",
+  VIEW_WARRANTY_REPORTS: "VIEW_WARRANTY_REPORTS",
+
   // Settings
-  SETTINGS_READ: "settings:read",
-  SETTINGS_UPDATE: "settings:update",
+  MANAGE_SETTINGS: "MANAGE_SETTINGS",
+
+  // Promotions
+  MANAGE_PROMOTIONS: "MANAGE_PROMOTIONS",
+  VIEW_PROMOTIONS: "VIEW_PROMOTIONS",
 } as const;
 
 export const adminNav = [
@@ -121,7 +153,7 @@ export const adminNav = [
     items: [
       { title: "Products", href: "/admin/products", icon: Package, },
       { title: "Categories & Brands", href: "/admin/categories", icon: Tags, },
-      { title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode,  },
+      { title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode, },
     ],
     roles: ["admin", "manager", "cashier"],
   },
@@ -130,29 +162,29 @@ export const adminNav = [
     label: "Stock Management",
     icon: Boxes,
     items: [
-      { title: "Stock Overview", href: "/admin/stock", icon: LayoutDashboard,  },
-      { title: "Stock Adjustment", href: "/admin/stock/adjustment", icon: RefreshCw,  },
+      { title: "Stock Overview", href: "/admin/stock", icon: LayoutDashboard, },
+      { title: "Stock Adjustment", href: "/admin/stock/adjustment", icon: RefreshCw, },
       { title: "Low Stock Alerts", href: "/admin/stock/low", icon: AlertTriangle, },
     ],
     roles: ["admin", "manager"]
   },
- /*
-  {
-   label: "Stock Movements",
-    icon: ClipboardList,
-    items: [
-      { title: "All Movements", href: "/admin/stock/movements", icon: ClipboardList },
-      { title: "Audit Trail", href: "/admin/stock/audit", icon: ShieldCheck },
-      { title: "Movement Reports", href: "/admin/stock/reports", icon: BarChart3 },
-    ],
-    roles: ["admin", ""],
-  },
-*/
+  /*
+   {
+    label: "Stock Movements",
+     icon: ClipboardList,
+     items: [
+       { title: "All Movements", href: "/admin/stock/movements", icon: ClipboardList },
+       { title: "Audit Trail", href: "/admin/stock/audit", icon: ShieldCheck },
+       { title: "Movement Reports", href: "/admin/stock/reports", icon: BarChart3 },
+     ],
+     roles: ["admin", ""],
+   },
+ */
   {
     label: "Repairs & Service",
     icon: Wrench,
     items: [
-      { title: "Repair Jobs", href: "/admin/repairs", icon: Wrench  },
+      { title: "Repair Jobs", href: "/admin/repairs", icon: Wrench },
       { title: "Repair History", href: "/admin/repairs/history", icon: ClipboardList },
     ],
     roles: ["admin", "manager", "cashier", "technician"],
@@ -166,7 +198,7 @@ export const adminNav = [
       { title: "Registrations", href: "/admin/warranty/registrations", icon: ClipboardList },
       { title: "Claims & Analytics", href: "/admin/warranty/claims", icon: BarChart3 },
     ],
-    roles: ["admin", "", "cashier" ,"technician"],
+    roles: ["admin", "", "cashier", "technician"],
   },
 
   {
@@ -186,28 +218,29 @@ export const adminNav = [
     items: [
       { title: "Create PO", href: "/admin/purchase-orders/create", icon: Plus },
       { title: "All PO", href: "/admin/purchase-orders", icon: ClipboardList },
-       { title: "Supplier Directory", href: "/admin/suppliers", icon: Truck },
+      { title: "Supplier Directory", href: "/admin/suppliers", icon: Truck },
     ],
     roles: ["admin", ""],
   },
 
   {
-    label: "Pricing & Discounts",
+    label: "Pricing & Promotions",
     icon: Percent,
     items: [
+      { title: "Promotions", href: "/admin/promotions", icon: Tag, permission: PERMISSIONS.VIEW_PROMOTIONS },
       { title: "Price History", href: "/admin/pricing/history", icon: Tags },
       { title: "Bulk Price Updates", href: "/admin/pricing/bulk", icon: Percent },
       { title: "Discount Rules", href: "/admin/discounts", icon: Percent },
     ],
-    roles: ["admin", "", "cashier"],
+    roles: ["admin", "manager"],
   },
 
   {
     label: "Reports",
     icon: BarChart3,
     items: [
-      { title: "Reports", href: "/admin/reports", icon: BarChart3, permission: PERMISSIONS.REPORT_VIEW },
-      { title: "Custom Report Builder", href: "/admin/reports/builder", icon: Database, permission: PERMISSIONS.REPORT_VIEW },
+      { title: "Reports", href: "/admin/reports", icon: BarChart3, permission: PERMISSIONS.VIEW_SALES_REPORT },
+      { title: "Custom Report Builder", href: "/admin/reports/builder", icon: Database, permission: PERMISSIONS.VIEW_SALES_REPORT },
     ],
     roles: ["admin", "manager", "cashier"],
   },
@@ -229,9 +262,9 @@ export const adminNav = [
     icon: Building,
     items: [
       { title: "Branches", href: "/admin/permissions/branches", icon: Building },
-      { title: "Users", href: "/admin/permissions/users", icon: Users, permission: PERMISSIONS.USER_READ },
-      { title: "Roles", href: "/admin/permissions/roles", icon: ShieldCheck, permission: PERMISSIONS.ROLE_READ },
-      { title: "Permission Matrix", href: "/admin/permissions/matrix", icon: ShieldCheck, permission: PERMISSIONS.ROLE_UPDATE },
+      { title: "Users", href: "/admin/permissions/users", icon: Users, permission: PERMISSIONS.VIEW_USERS },
+      { title: "Roles", href: "/admin/permissions/roles", icon: ShieldCheck, permission: PERMISSIONS.MANAGE_ROLES },
+      { title: "Permission Matrix", href: "/admin/permissions/matrix", icon: ShieldCheck, permission: PERMISSIONS.MANAGE_ROLES },
     ],
     roles: ["admin"],
   },
@@ -245,6 +278,6 @@ export const adminNav = [
       { title: "Hardware & Integrations", href: "/admin/settings/integrations", icon: HardDrive },
       { title: "Backup & Restore", href: "/admin/settings/backup", icon: Database },
     ],
-   roles: ["admin"]
+    roles: ["admin"]
   },
 ];

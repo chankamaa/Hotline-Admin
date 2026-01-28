@@ -34,11 +34,11 @@ export const permissionApi = {
    * Get all permissions
    * GET /api/permissions
    */
-  getAll: async (params?: { category?: string }): Promise<ApiResponse<{ 
+  getAll: async (params?: { category?: string }): Promise<ApiResponse<{
     permissions: Permission[];
     grouped: PermissionsByCategory;
   }>> => {
-    return api.get<ApiResponse<{ 
+    return api.get<ApiResponse<{
       permissions: Permission[];
       grouped: PermissionsByCategory;
     }>>(endpoints.permissions, { params });
