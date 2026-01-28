@@ -11,6 +11,8 @@ import {
     PROMOTION_TYPES,
     TARGET_TYPES
 } from '@/lib/api/promotionApi';
+import { fetchCategories } from '@/lib/api/categoryApi';
+import { fetchProducts } from '@/lib/api/productApi';
 import { useToast } from '@/providers/toast-provider';
 import {
     Plus,
@@ -23,7 +25,10 @@ import {
     Check,
     X,
     Clock,
-    Gift
+    Gift,
+    Target,
+    Package,
+    Layers
 } from 'lucide-react';
 
 export default function PromotionsPage() {
@@ -36,6 +41,11 @@ export default function PromotionsPage() {
     const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
     const [filter, setFilter] = useState<'all' | 'active' | 'expired' | 'upcoming'>('all');
 
+    // Categories and products for targeting
+    const [categories, setCategories] = useState<Array<{ _id: string; name: string }>>([]);
+    const [products, setProducts] = useState<Array<{ _id: string; name: string }>>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+
     // Form state
     const [formData, setFormData] = useState<CreatePromotionRequest>({
         name: '',
@@ -45,6 +55,8 @@ export default function PromotionsPage() {
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         targetType: 'ALL',
+        targetCategories: [],
+        targetProducts: [],
         isActive: true,
     });
     const [isEditing, setIsEditing] = useState(false);
@@ -52,7 +64,24 @@ export default function PromotionsPage() {
 
     useEffect(() => {
         loadPromotions();
+        loadCategoriesAndProducts();
     }, []);
+
+    const loadCategoriesAndProducts = async () => {
+        setLoadingOptions(true);
+        try {
+            const [catRes, prodRes] = await Promise.all([
+                fetchCategories(),
+                fetchProducts({ limit: 100 })
+            ]);
+            setCategories(catRes.data?.categories || []);
+            setProducts(prodRes.data?.products || []);
+        } catch (error) {
+            console.error('Error loading categories/products:', error);
+        } finally {
+            setLoadingOptions(false);
+        }
+    };
 
     const loadPromotions = async () => {
         try {
@@ -141,6 +170,8 @@ export default function PromotionsPage() {
             startDate: new Date().toISOString().split('T')[0],
             endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             targetType: 'ALL',
+            targetCategories: [],
+            targetProducts: [],
             isActive: true,
         });
         setIsEditing(false);
@@ -517,6 +548,131 @@ export default function PromotionsPage() {
                             />
                         </div>
                     </div>
+
+                    {/* Target Type */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <div className="flex items-center gap-2">
+                                <Target className="w-4 h-4" />
+                                Applies To
+                            </div>
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, targetType: 'ALL', targetCategories: [], targetProducts: [] })}
+                                className={`p-3 rounded-lg border text-sm font-medium transition ${formData.targetType === 'ALL'
+                                    ? 'bg-blue-50 border-blue-500 text-blue-700'
+                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <Layers className="w-4 h-4 mx-auto mb-1" />
+                                All Products
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, targetType: 'CATEGORY', targetProducts: [] })}
+                                className={`p-3 rounded-lg border text-sm font-medium transition ${formData.targetType === 'CATEGORY'
+                                    ? 'bg-purple-50 border-purple-500 text-purple-700'
+                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <Tag className="w-4 h-4 mx-auto mb-1" />
+                                Categories
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, targetType: 'PRODUCT', targetCategories: [] })}
+                                className={`p-3 rounded-lg border text-sm font-medium transition ${formData.targetType === 'PRODUCT'
+                                    ? 'bg-green-50 border-green-500 text-green-700'
+                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <Package className="w-4 h-4 mx-auto mb-1" />
+                                Products
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Category Selection */}
+                    {formData.targetType === 'CATEGORY' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Select Categories
+                            </label>
+                            <div className="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1">
+                                {loadingOptions ? (
+                                    <div className="text-center py-2 text-gray-500">Loading...</div>
+                                ) : categories.length === 0 ? (
+                                    <div className="text-center py-2 text-gray-500">No categories found</div>
+                                ) : (
+                                    categories.map((cat) => (
+                                        <label key={cat._id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.targetCategories?.includes(cat._id) || false}
+                                                onChange={(e) => {
+                                                    const current = formData.targetCategories || [];
+                                                    if (e.target.checked) {
+                                                        setFormData({ ...formData, targetCategories: [...current, cat._id] });
+                                                    } else {
+                                                        setFormData({ ...formData, targetCategories: current.filter(id => id !== cat._id) });
+                                                    }
+                                                }}
+                                                className="w-4 h-4 text-purple-600 rounded"
+                                            />
+                                            <span className="text-sm text-gray-900">{cat.name}</span>
+                                        </label>
+                                    ))
+                                )}
+                            </div>
+                            {formData.targetCategories && formData.targetCategories.length > 0 && (
+                                <div className="mt-2 text-xs text-purple-600">
+                                    {formData.targetCategories.length} categories selected
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Product Selection */}
+                    {formData.targetType === 'PRODUCT' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Select Products
+                            </label>
+                            <div className="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1">
+                                {loadingOptions ? (
+                                    <div className="text-center py-2 text-gray-500">Loading...</div>
+                                ) : products.length === 0 ? (
+                                    <div className="text-center py-2 text-gray-500">No products found</div>
+                                ) : (
+                                    products.map((prod) => (
+                                        <label key={prod._id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.targetProducts?.includes(prod._id) || false}
+                                                onChange={(e) => {
+                                                    const current = formData.targetProducts || [];
+                                                    if (e.target.checked) {
+                                                        setFormData({ ...formData, targetProducts: [...current, prod._id] });
+                                                    } else {
+                                                        setFormData({ ...formData, targetProducts: current.filter(id => id !== prod._id) });
+                                                    }
+                                                }}
+                                                className="w-4 h-4 text-green-600 rounded"
+                                            />
+                                            <span className="text-sm text-gray-900">{prod.name}</span>
+                                        </label>
+                                    ))
+                                )}
+                            </div>
+                            {formData.targetProducts && formData.targetProducts.length > 0 && (
+                                <div className="mt-2 text-xs text-green-600">
+                                    {formData.targetProducts.length} products selected
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Active Toggle */}
                     <div className="flex items-center gap-2">

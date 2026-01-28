@@ -36,7 +36,7 @@ export default function DashboardSelector() {
 
   // Get user's primary role
   const userRole = user.role?.toLowerCase() || "";
-  
+
   console.log("Dashboard Selector - User role:", userRole);
   console.log("Dashboard Selector - Full user:", user);
 
@@ -87,9 +87,9 @@ export default function DashboardSelector() {
  */
 export function useDashboardConfig() {
   const { user } = useAuth();
-  
+
   if (!user) return null;
-  
+
   const userRole = user.role?.toLowerCase() || "cashier";
   return getDashboardConfig(userRole);
 }

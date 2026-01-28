@@ -131,7 +131,7 @@ export default function LowStockPage() {
       label: "Last Updated",
       render: (item) => (
         <div className="text-sm text-gray-500">
-          {item.lastUpdated 
+          {item.lastUpdated
             ? new Date(item.lastUpdated).toLocaleDateString()
             : "Never"}
         </div>

@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/ui/data-table";
-import { Plus, TrendingUp, TrendingDown, Eye, User, X, Package } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Eye, User, X, Package, RefreshCw, Calendar } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
 
 import { fetchProducts } from "@/lib/api/productApi";
-import { adjustStock, fetchAdjustmentTypes, fetchProductStock } from "@/lib/api/inventoryApi";
+import { adjustStock, fetchAdjustmentTypes, fetchProductStock, fetchAllAdjustments } from "@/lib/api/inventoryApi";
 
 /* --------------------------------------------------
    Component
@@ -27,7 +27,7 @@ export default function StockAdjustmentPage() {
   const [productOptions, setProductOptions] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
+
   /* Stock information - fetched from backend */
   const [previousQuantity, setPreviousQuantity] = useState<number>(0);
   const [currentStock, setCurrentStock] = useState<any>(null);
@@ -49,7 +49,33 @@ export default function StockAdjustmentPage() {
   useEffect(() => {
     fetchAdjustmentTypes().then((res) =>
       setAdjustmentTypes(res.data.types)
-    );
+    ).catch((err) => {
+      console.error("Failed to fetch adjustment types:", err);
+    });
+  }, []);
+
+  /* --------------------------------------------------
+     Load all adjustments on mount
+  -------------------------------------------------- */
+  const loadAdjustments = async () => {
+    setLoading(true);
+    try {
+      const response = await fetchAllAdjustments({ limit: 100 }) as any;
+      const data = response?.data?.adjustments || response?.adjustments || [];
+      setAdjustments(data);
+    } catch (error: any) {
+      console.error("Failed to load adjustments:", error);
+      // If endpoint doesn't exist, show empty state gracefully
+      if (error?.status !== 404) {
+        toast.error(error?.message || "Failed to load adjustments");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAdjustments();
   }, []);
 
   /* --------------------------------------------------
@@ -114,10 +140,10 @@ export default function StockAdjustmentPage() {
   -------------------------------------------------- */
   const calculateNewQuantity = (): number => {
     if (!form.type || !form.quantity) return previousQuantity;
-    
+
     const qty = parseInt(form.quantity) || 0;
     const selectedType = adjustmentTypes.find((t) => t.value === form.type);
-    
+
     if (!selectedType) return previousQuantity;
 
     // IN types add to stock, OUT types reduce stock
@@ -185,7 +211,7 @@ export default function StockAdjustmentPage() {
 
       // Backend returns { status: "success", data: { stock: {...}, adjustment: {...} } }
       const { data } = response;
-      
+
       // Add new adjustment to the list
       setAdjustments((prev) => [
         {
@@ -264,7 +290,7 @@ export default function StockAdjustmentPage() {
         const change = a.stock?.change || (a.newQuantity - a.previousQuantity);
         const previous = a.stock?.previousQuantity || a.previousQuantity;
         const newQty = a.stock?.newQuantity || a.newQuantity;
-        
+
         return (
           <div>
             <div className={`font-bold ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -301,7 +327,7 @@ export default function StockAdjustmentPage() {
       key: "actions",
       label: "Actions",
       render: (a: any) => (
-        <Button size="sm" variant="outline" onClick={() => setViewing(a)}>
+        <Button size="sm" variant="secondary" onClick={() => setViewing(a)}>
           <Eye size={14} />
         </Button>
       ),
@@ -318,14 +344,68 @@ export default function StockAdjustmentPage() {
         description="Inventory adjustment audit trail"
       />
 
-      <div className="mb-4 flex justify-end">
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus size={16} className="mr-2" />
-          New Adjustment
-        </Button>
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border rounded-lg p-4">
+          <div className="text-sm text-gray-500">Total Adjustments</div>
+          <div className="text-2xl font-bold">{adjustments.length}</div>
+        </div>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="text-sm text-green-600 flex items-center gap-1">
+            <TrendingUp size={14} /> Stock In
+          </div>
+          <div className="text-2xl font-bold text-green-700">
+            {adjustments.filter((a) => {
+              const change = a.stock?.change || (a.newQuantity - a.previousQuantity);
+              return change > 0;
+            }).length}
+          </div>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="text-sm text-red-600 flex items-center gap-1">
+            <TrendingDown size={14} /> Stock Out
+          </div>
+          <div className="text-2xl font-bold text-red-700">
+            {adjustments.filter((a) => {
+              const change = a.stock?.change || (a.newQuantity - a.previousQuantity);
+              return change < 0;
+            }).length}
+          </div>
+        </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="text-sm text-blue-600 flex items-center gap-1">
+            <Calendar size={14} /> Today
+          </div>
+          <div className="text-2xl font-bold text-blue-700">
+            {adjustments.filter((a) => {
+              const today = new Date().toDateString();
+              return new Date(a.createdAt).toDateString() === today;
+            }).length}
+          </div>
+        </div>
       </div>
 
-      <DataTable data={adjustments} columns={columns} />
+      <div className="mb-4 flex justify-between items-center">
+        <div className="text-sm text-gray-500">
+          Showing {adjustments.length} adjustment{adjustments.length !== 1 ? 's' : ''}
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={loadAdjustments} disabled={loading} variant="danger">
+            <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus size={16} className="mr-2" />
+            New Adjustment
+          </Button>
+        </div>
+      </div>
+
+      <DataTable
+        data={adjustments}
+        columns={columns}
+        emptyMessage="No stock adjustments found. Create one using the button above."
+      />
 
       {/* Create Modal */}
       <Modal
@@ -438,17 +518,14 @@ export default function StockAdjustmentPage() {
 
           {/* New Quantity Preview (calculated) */}
           {form.quantity && form.type && (
-            <div className={`border rounded-lg p-4 ${
-              newQuantity >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-            }`}>
-              <div className={`text-sm font-medium ${
-                newQuantity >= 0 ? 'text-green-600' : 'text-red-600'
+            <div className={`border rounded-lg p-4 ${newQuantity >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
               }`}>
+              <div className={`text-sm font-medium ${newQuantity >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
                 New Quantity
               </div>
-              <div className={`text-2xl font-bold ${
-                newQuantity >= 0 ? 'text-green-900' : 'text-red-900'
-              }`}>
+              <div className={`text-2xl font-bold ${newQuantity >= 0 ? 'text-green-900' : 'text-red-900'
+                }`}>
                 {newQuantity}
               </div>
               {newQuantity < 0 && (
@@ -579,11 +656,10 @@ export default function StockAdjustmentPage() {
               </div>
               <div>
                 <div className="text-sm text-gray-500">Change</div>
-                <div className={`text-xl font-bold ${
-                  (viewing.stock?.change || (viewing.newQuantity - viewing.previousQuantity)) > 0
-                    ? 'text-green-600'
-                    : 'text-red-600'
-                }`}>
+                <div className={`text-xl font-bold ${(viewing.stock?.change || (viewing.newQuantity - viewing.previousQuantity)) > 0
+                  ? 'text-green-600'
+                  : 'text-red-600'
+                  }`}>
                   {(viewing.stock?.change || (viewing.newQuantity - viewing.previousQuantity)) > 0 ? '+' : ''}
                   {viewing.quantity}
                 </div>

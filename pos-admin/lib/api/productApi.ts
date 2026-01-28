@@ -34,6 +34,15 @@ type DeleteProductResponse = {
 /* =====================================================
    GET: Products (list + filters + pagination)
    GET /api/v1/products
+   
+   Query params supported by backend:
+   - category: Filter by category ID
+   - search: Search in name, SKU, barcode
+   - minPrice, maxPrice: Price range filter
+   - isActive: Filter by active status
+   - page, limit: Pagination
+   - sort: Sort field (e.g., "name", "-sellingPrice")
+   - includeStock: Include stock data (default: true)
 ===================================================== */
 
 export async function fetchProducts(params?: {
@@ -45,6 +54,7 @@ export async function fetchProducts(params?: {
   page?: number;
   limit?: number;
   sort?: string;
+  includeStock?: boolean;
 }) {
   const query = new URLSearchParams();
 
@@ -56,6 +66,7 @@ export async function fetchProducts(params?: {
   if (params?.page) query.set("page", String(params.page));
   if (params?.limit) query.set("limit", String(params.limit));
   if (params?.sort) query.set("sort", params.sort);
+  if (params?.includeStock !== undefined) query.set("includeStock", String(params.includeStock));
 
   return api<ProductListResponse>(
     `/api/v1/products?${query.toString()}`
@@ -117,13 +128,31 @@ export async function createProduct(payload: {
   sku?: string;
   barcode?: string;
   category: string;
+  subcategory?: string | null;
   costPrice: number;
   sellingPrice: number;
   wholesalePrice?: number | null;
   unit?: Product["unit"];
   taxRate?: number;
+  warrantyDuration?: number;
+  warrantyType?: "NONE" | "MANUFACTURER" | "SHOP" | "BOTH";
+  warrantyDescription?: string;
+  supplier?: {
+    name?: string;
+    contact?: string;
+    phone?: string;
+    email?: string;
+  };
   image?: string;
   minStockLevel?: number;
+  offer?: {
+    isActive?: boolean;
+    type?: "PERCENTAGE" | "FIXED";
+    value?: number;
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+  };
 }) {
   return api<SingleProductResponse>(
     "/api/v1/products",
@@ -147,13 +176,31 @@ export async function updateProduct(
     sku: string;
     barcode: string | null;
     category: string;
+    subcategory: string | null;
     costPrice: number;
     sellingPrice: number;
     wholesalePrice: number | null;
     unit: Product["unit"];
     taxRate: number;
+    warrantyDuration: number;
+    warrantyType: "NONE" | "MANUFACTURER" | "SHOP" | "BOTH";
+    warrantyDescription: string;
+    supplier: {
+      name?: string;
+      contact?: string;
+      phone?: string;
+      email?: string;
+    };
     image: string;
     minStockLevel: number;
+    offer: {
+      isActive?: boolean;
+      type?: "PERCENTAGE" | "FIXED";
+      value?: number;
+      startDate?: string;
+      endDate?: string;
+      description?: string;
+    };
     isActive: boolean;
   }>
 ) {

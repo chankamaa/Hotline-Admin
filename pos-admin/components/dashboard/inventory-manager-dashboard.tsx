@@ -10,6 +10,7 @@
 import React, { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsCard } from "@/components/ui/stats-card";
+import { Button } from "@/components/ui/button";
 import {
   Package,
   AlertTriangle,
@@ -23,11 +24,12 @@ import {
 } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
 import { getLowStockItems } from "@/lib/api/dashboardApi";
+import { fetchAllAdjustments, fetchInventoryValue, fetchStock } from "@/lib/api/inventoryApi";
 
 export default function InventoryManagerDashboard() {
   const toast = useToast();
   const [loading, setLoading] = useState(true);
-  
+
   type ChangeType = "increase" | "decrease" | "neutral";
   const [stats, setStats] = useState({
     totalProducts: { value: "0", change: "+0 this week", changeType: "neutral" as ChangeType },
@@ -42,7 +44,7 @@ export default function InventoryManagerDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    
+
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadDashboardData, 30000);
     return () => clearInterval(interval);
@@ -51,15 +53,18 @@ export default function InventoryManagerDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [lowStockRes] = await Promise.allSettled([
+      const [lowStockRes, adjustmentsRes, inventoryValueRes, stockRes] = await Promise.allSettled([
         getLowStockItems(),
+        fetchAllAdjustments({ limit: 10 }),
+        fetchInventoryValue(),
+        fetchStock({ limit: 100 }),
       ]);
 
       // Process low stock items
       if (lowStockRes.status === "fulfilled") {
         const stockData: any = lowStockRes.value;
         const items = stockData.data?.items || [];
-        
+
         setLowStockItems(items.map((item: any) => ({
           name: item.product?.name || "Unknown Product",
           sku: item.product?.sku || "N/A",
@@ -68,7 +73,7 @@ export default function InventoryManagerDashboard() {
           category: item.product?.category?.name || "Uncategorized",
           status: item.quantity === 0 ? "out-of-stock" : "low-stock",
         })));
-        
+
         setStats(prev => ({
           ...prev,
           lowStockItems: {
@@ -76,62 +81,94 @@ export default function InventoryManagerDashboard() {
             change: "Need attention",
             changeType: "decrease",
           },
-          totalProducts: {
-            value: "245",
-            change: "+8 this week",
-            changeType: "increase",
-          },
+        }));
+      }
+
+      // Process stock adjustments (recent movements)
+      if (adjustmentsRes.status === "fulfilled") {
+        const adjustData: any = adjustmentsRes.value;
+        const adjustments = adjustData.data?.adjustments || [];
+
+        setRecentMovements(adjustments.map((adj: any) => {
+          const typeMap: Record<string, string> = {
+            'ADDITION': 'in',
+            'PURCHASE': 'in',
+            'RETURN': 'in',
+            'TRANSFER_IN': 'in',
+            'REDUCTION': 'out',
+            'SALE': 'out',
+            'DAMAGE': 'out',
+            'THEFT': 'out',
+            'TRANSFER_OUT': 'out',
+            'CORRECTION': 'adjustment',
+          };
+
+          const timeDiff = Date.now() - new Date(adj.createdAt).getTime();
+          const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+          const dateStr = hours < 1 ? 'Just now' : hours < 24 ? `${hours} hours ago` : `${Math.floor(hours / 24)} days ago`;
+
+          return {
+            product: adj.product?.name || "Unknown Product",
+            type: typeMap[adj.type] || 'adjustment',
+            quantity: adj.quantity,
+            from: adj.reason || adj.referenceType || adj.type,
+            date: dateStr,
+          };
+        }));
+      }
+
+      // Process inventory value
+      if (inventoryValueRes.status === "fulfilled") {
+        const valueData: any = inventoryValueRes.value;
+        const totalValue = valueData.data?.totalValue || 0;
+
+        setStats(prev => ({
+          ...prev,
           stockValue: {
-            value: "$124,500",
-            change: "+5.2%",
+            value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(totalValue),
+            change: "Total value",
             changeType: "increase",
-          },
-          pendingOrders: {
-            value: "3",
-            change: "Arriving soon",
-            changeType: "neutral",
           },
         }));
       }
 
-      // Mock recent movements
-      setRecentMovements([
-        { 
-          product: "iPhone 13 Pro", 
-          type: "in", 
-          quantity: 50, 
-          from: "Supplier A",
-          date: "2 hours ago" 
-        },
-        { 
-          product: "Samsung Galaxy S21", 
-          type: "out", 
-          quantity: 15, 
-          from: "Sales",
-          date: "3 hours ago" 
-        },
-        { 
-          product: "MacBook Air M2", 
-          type: "in", 
-          quantity: 10, 
-          from: "Purchase Order #1234",
-          date: "5 hours ago" 
-        },
-        { 
-          product: "AirPods Pro", 
-          type: "adjustment", 
-          quantity: -2, 
-          from: "Stock Correction",
-          date: "6 hours ago" 
-        },
-      ]);
+      // Process total products and top products
+      if (stockRes.status === "fulfilled") {
+        const stockData: any = stockRes.value;
+        const products = stockData.data?.products || stockData.data?.items || [];
+        const totalProducts = stockData.results || products.length;
 
-      // Mock top products
-      setTopProducts([
-        { name: "iPhone 13 Pro Max", stock: 45, value: "$54,000", trend: "up" },
-        { name: "Samsung Galaxy S22", stock: 32, value: "$28,800", trend: "up" },
-        { name: "MacBook Pro 14\"", stock: 12, value: "$28,800", trend: "down" },
-      ]);
+        // Sort by value (quantity * selling price) for top products
+        const sortedByValue = [...products]
+          .map((p: any) => ({
+            name: p.product?.name || p.name || "Unknown",
+            stock: p.quantity || 0,
+            value: (p.quantity || 0) * (p.product?.sellingPrice || p.sellingPrice || 0),
+            trend: (p.quantity || 0) > (p.product?.minStockLevel || 10) ? "up" : "down",
+          }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 3)
+          .map(p => ({
+            ...p,
+            value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p.value),
+          }));
+
+        setTopProducts(sortedByValue);
+
+        setStats(prev => ({
+          ...prev,
+          totalProducts: {
+            value: totalProducts.toString(),
+            change: "In catalog",
+            changeType: "increase",
+          },
+          pendingOrders: {
+            value: "0",
+            change: "No pending",
+            changeType: "neutral",
+          },
+        }));
+      }
 
     } catch (error) {
       console.error("Error loading inventory dashboard:", error);
@@ -159,14 +196,14 @@ export default function InventoryManagerDashboard() {
           title="Inventory Manager Dashboard"
           description="Stock levels and inventory operations"
         />
-        <button
+        <Button
           onClick={loadDashboardData}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+          variant="danger"
         >
           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          <span className="text-sm font-medium">Refresh</span>
-        </button>
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -230,19 +267,17 @@ export default function InventoryManagerDashboard() {
                       <div className="font-medium text-sm text-black">{item.name}</div>
                       <div className="text-xs text-gray-500">SKU: {item.sku} • {item.category}</div>
                     </div>
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                      item.status === "out-of-stock"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-orange-100 text-orange-700"
-                    }`}>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${item.status === "out-of-stock"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-orange-100 text-orange-700"
+                      }`}>
                       {item.stock} left
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full ${
-                        item.status === "out-of-stock" ? "bg-red-500" : "bg-orange-500"
-                      }`}
+                      className={`h-2 rounded-full ${item.status === "out-of-stock" ? "bg-red-500" : "bg-orange-500"
+                        }`}
                       style={{ width: `${Math.min((item.stock / item.min) * 100, 100)}%` }}
                     />
                   </div>
@@ -279,13 +314,12 @@ export default function InventoryManagerDashboard() {
               recentMovements.map((movement, index) => (
                 <div key={index} className="p-4 hover:bg-gray-50">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      movement.type === "in"
-                        ? "bg-green-100"
-                        : movement.type === "out"
+                    <div className={`p-2 rounded-lg ${movement.type === "in"
+                      ? "bg-green-100"
+                      : movement.type === "out"
                         ? "bg-red-100"
                         : "bg-blue-100"
-                    }`}>
+                      }`}>
                       {movement.type === "in" ? (
                         <ArrowDownCircle size={16} className="text-green-600" />
                       ) : movement.type === "out" ? (
@@ -299,13 +333,12 @@ export default function InventoryManagerDashboard() {
                       <div className="text-xs text-gray-500">{movement.from}</div>
                     </div>
                     <div className="text-right">
-                      <div className={`font-semibold text-sm ${
-                        movement.type === "in"
-                          ? "text-green-600"
-                          : movement.type === "out"
+                      <div className={`font-semibold text-sm ${movement.type === "in"
+                        ? "text-green-600"
+                        : movement.type === "out"
                           ? "text-red-600"
                           : "text-blue-600"
-                      }`}>
+                        }`}>
                         {movement.type === "in" ? "+" : ""}{movement.quantity}
                       </div>
                       <div className="text-xs text-gray-500">{movement.date}</div>
@@ -343,9 +376,8 @@ export default function InventoryManagerDashboard() {
                 )}
               </div>
               <div className="text-lg font-semibold text-gray-900">{product.value}</div>
-              <div className={`text-xs mt-1 ${
-                product.trend === "up" ? "text-green-600" : "text-red-600"
-              }`}>
+              <div className={`text-xs mt-1 ${product.trend === "up" ? "text-green-600" : "text-red-600"
+                }`}>
                 {product.trend === "up" ? "↑ Increasing" : "↓ Decreasing"}
               </div>
             </div>

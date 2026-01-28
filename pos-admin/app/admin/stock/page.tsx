@@ -257,7 +257,7 @@ export default function StockPage() {
             </Button>
           </Link>
         </div>
-        <Button onClick={loadStock} disabled={loading} variant="secondary">
+        <Button onClick={loadStock} disabled={loading} variant="danger">
           <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>

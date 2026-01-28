@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsCard } from "@/components/ui/stats-card";
+import { Button } from "@/components/ui/button";
 import {
   DollarSign,
   ShoppingCart,
@@ -40,7 +41,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
-  
+
   type ChangeType = "increase" | "decrease" | "neutral";
   const [stats, setStats] = useState({
     todaySales: { value: "$0", change: "+0%", changeType: "increase" as ChangeType },
@@ -57,7 +58,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    
+
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadDashboardData, 30000);
     return () => clearInterval(interval);
@@ -92,13 +93,13 @@ export default function AdminDashboard() {
         const orderCount = summary.totalSales || 0;
         const previousDaySales = summary.previousDayAmount || 0;
         const previousOrderCount = summary.previousDayOrders || summary.previousDaySales || 0;
-        
-        const salesChange = previousDaySales > 0 
+
+        const salesChange = previousDaySales > 0
           ? ((totalSales - previousDaySales) / previousDaySales * 100)
           : totalSales > 0 ? 100 : 0;
-        
+
         const orderChange = orderCount - previousOrderCount;
-        
+
         setStats(prev => ({
           ...prev,
           todaySales: {
@@ -139,7 +140,7 @@ export default function AdminDashboard() {
           stock: item.quantity || 0,
           min: item.product?.minStockLevel || 10,
         })));
-        
+
         setStats(prev => ({
           ...prev,
           lowStock: {
@@ -160,7 +161,7 @@ export default function AdminDashboard() {
         const repairsData: any = receivedRepairsRes.value;
         allRepairs.push(...(repairsData.data?.repairs || []));
       }
-      
+
       setPendingRepairs(allRepairs.map((repair: any) => ({
         id: repair.jobNumber || repair._id,
         customer: repair.customer?.name || "Unknown",
@@ -175,7 +176,7 @@ export default function AdminDashboard() {
         const inProgress = repairData.data?.inProgress || 0;
         const received = repairData.data?.received || 0;
         const ready = repairData.data?.ready || 0;
-        
+
         setStats(prev => ({
           ...prev,
           inProgressRepairs: {
@@ -227,21 +228,14 @@ export default function AdminDashboard() {
           description="Complete system overview and controls"
         />
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/admin/repairs?tab=create')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus size={16} />
-            <span className="text-sm font-medium">Create Job</span>
-          </button>
-          <button
+          <Button
             onClick={loadDashboardData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+            variant="danger"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            <span className="text-sm font-medium">Refresh</span>
-          </button>
+            Refresh
+          </Button>
         </div>
       </div>
 
@@ -320,11 +314,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="text-xs text-gray-500">{sale.product}</div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      sale.status === "completed"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}>
+                    <span className={`text-xs px-2 py-1 rounded-full ${sale.status === "completed"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                      }`}>
                       {sale.status}
                     </span>
                   </div>
@@ -409,11 +402,10 @@ export default function AdminDashboard() {
                       {repair.device} - {repair.issue}
                     </div>
                   </div>
-                  <span className={`text-xs px-3 py-1 rounded-full ${
-                    repair.status === "in-progress"
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}>
+                  <span className={`text-xs px-3 py-1 rounded-full ${repair.status === "in-progress"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-yellow-100 text-yellow-700"
+                    }`}>
                     {repair.status.replace("-", " ")}
                   </span>
                 </div>

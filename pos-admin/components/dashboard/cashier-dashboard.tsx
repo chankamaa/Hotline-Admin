@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsCard } from "@/components/ui/stats-card";
+import { Button } from "@/components/ui/button";
 import {
   DollarSign,
   ShoppingCart,
@@ -27,7 +28,7 @@ export default function CashierDashboard() {
   const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
-  
+
   type ChangeType = "increase" | "decrease" | "neutral";
   const [stats, setStats] = useState({
     todaySales: { value: "$0", change: "+0%", changeType: "increase" as ChangeType },
@@ -40,7 +41,7 @@ export default function CashierDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    
+
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadDashboardData, 30000);
     return () => clearInterval(interval);
@@ -63,13 +64,13 @@ export default function CashierDashboard() {
         const orderCount = summary.totalSales || 0;
         const previousDaySales = summary.previousDayAmount || 0;
         const previousOrderCount = summary.previousDayOrders || 0;
-        
-        const salesChange = previousDaySales > 0 
+
+        const salesChange = previousDaySales > 0
           ? ((totalSales - previousDaySales) / previousDaySales * 100)
           : totalSales > 0 ? 100 : 0;
-        
+
         const orderChange = orderCount - previousOrderCount;
-        
+
         setStats(prev => ({
           ...prev,
           todaySales: {
@@ -162,14 +163,14 @@ export default function CashierDashboard() {
             <Plus size={16} />
             <span className="text-sm font-medium">Create Job</span>
           </button>
-          <button
+          <Button
             onClick={loadDashboardData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+            variant="danger"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            <span className="text-sm font-medium">Refresh</span>
-          </button>
+            Refresh
+          </Button>
         </div>
       </div>
 
@@ -274,20 +275,18 @@ export default function CashierDashboard() {
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-gray-500">{sale.items} items</div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      sale.paymentMethod === "cash"
-                        ? "bg-green-100 text-green-700"
-                        : sale.paymentMethod === "card"
+                    <span className={`text-xs px-2 py-1 rounded-full ${sale.paymentMethod === "cash"
+                      ? "bg-green-100 text-green-700"
+                      : sale.paymentMethod === "card"
                         ? "bg-blue-100 text-blue-700"
                         : "bg-purple-100 text-purple-700"
-                    }`}>
+                      }`}>
                       {sale.paymentMethod}
                     </span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      sale.status === "completed"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}>
+                    <span className={`text-xs px-2 py-1 rounded-full ${sale.status === "completed"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                      }`}>
                       {sale.status}
                     </span>
                   </div>

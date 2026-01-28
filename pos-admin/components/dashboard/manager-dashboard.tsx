@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsCard } from "@/components/ui/stats-card";
+import { Button } from "@/components/ui/button";
 import {
   DollarSign,
   ShoppingCart,
@@ -34,12 +35,13 @@ import {
   getCustomerCount,
 } from "@/lib/api/dashboardApi";
 import { repairApi } from "@/lib/api/repairApi";
+import { reportApi } from "@/lib/api/reportApi";
 
 export default function ManagerDashboard() {
   const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
-  
+
   type ChangeType = "increase" | "decrease" | "neutral";
   const [stats, setStats] = useState({
     todaySales: { value: "$0", change: "+0%", changeType: "increase" as ChangeType },
@@ -55,7 +57,7 @@ export default function ManagerDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    
+
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadDashboardData, 30000);
     return () => clearInterval(interval);
@@ -71,6 +73,7 @@ export default function ManagerDashboard() {
         pendingRepairsRes,
         customerCountRes,
         repairDashboardRes,
+        cashierSalesRes,
       ] = await Promise.allSettled([
         getTodaysSales(),
         getRecentSales(5),
@@ -78,6 +81,7 @@ export default function ManagerDashboard() {
         getPendingRepairs(10),
         getCustomerCount(),
         repairApi.getDashboard(),
+        reportApi.getSalesByCashier({ period: 'day' }),
       ]);
 
       // Process sales data
@@ -88,13 +92,13 @@ export default function ManagerDashboard() {
         const orderCount = summary.totalSales || 0;
         const previousDaySales = summary.previousDayAmount || 0;
         const previousOrderCount = summary.previousDayOrders || 0;
-        
-        const salesChange = previousDaySales > 0 
+
+        const salesChange = previousDaySales > 0
           ? ((totalSales - previousDaySales) / previousDaySales * 100)
           : totalSales > 0 ? 100 : 0;
-        
+
         const orderChange = orderCount - previousOrderCount;
-        
+
         setStats(prev => ({
           ...prev,
           todaySales: {
@@ -138,7 +142,7 @@ export default function ManagerDashboard() {
           stock: item.quantity || 0,
           min: item.product?.minStockLevel || 10,
         })));
-        
+
         setStats(prev => ({
           ...prev,
           lowStock: {
@@ -154,7 +158,7 @@ export default function ManagerDashboard() {
         const repairData: any = repairDashboardRes.value;
         const inProgress = repairData.data?.inProgress || 0;
         const received = repairData.data?.received || 0;
-        
+
         setStats(prev => ({
           ...prev,
           activeRepairs: {
@@ -165,21 +169,38 @@ export default function ManagerDashboard() {
         }));
       }
 
-      // Mock team performance data
-      setTeamPerformance([
-        { name: "John Doe", role: "Cashier", sales: 12, revenue: "$3,450" },
-        { name: "Jane Smith", role: "Technician", repairs: 5, revenue: "$890" },
-        { name: "Mike Johnson", role: "Cashier", sales: 8, revenue: "$2,100" },
-      ]);
+      // Process team performance from cashier sales report
+      if (cashierSalesRes.status === "fulfilled") {
+        const cashierData: any = cashierSalesRes.value;
+        const cashiers = cashierData.data?.cashiers || [];
 
-      setStats(prev => ({
-        ...prev,
-        activeStaff: {
-          value: "5",
-          change: "Online now",
-          changeType: "neutral",
-        },
-      }));
+        setTeamPerformance(cashiers.slice(0, 5).map((c: any) => ({
+          name: c.username || "Unknown",
+          role: "Cashier",
+          sales: c.salesCount || 0,
+          revenue: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(c.totalRevenue || 0),
+        })));
+
+        setStats(prev => ({
+          ...prev,
+          activeStaff: {
+            value: cashiers.length.toString(),
+            change: "Active today",
+            changeType: "neutral",
+          },
+        }));
+      } else {
+        // Fallback if no data
+        setTeamPerformance([]);
+        setStats(prev => ({
+          ...prev,
+          activeStaff: {
+            value: "0",
+            change: "No data",
+            changeType: "neutral",
+          },
+        }));
+      }
 
     } catch (error) {
       console.error("Error loading manager dashboard:", error);
@@ -215,14 +236,14 @@ export default function ManagerDashboard() {
             <Plus size={16} />
             <span className="text-sm font-medium">Create Job</span>
           </button>
-          <button
+          <Button
             onClick={loadDashboardData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+            variant="danger"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            <span className="text-sm font-medium">Refresh</span>
-          </button>
+            Refresh
+          </Button>
         </div>
       </div>
 

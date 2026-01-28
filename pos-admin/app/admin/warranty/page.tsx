@@ -1,21 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  ShieldCheck, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
+import {
+  ShieldCheck,
+  FileText,
+  Clock,
+  CheckCircle,
   XCircle,
   AlertCircle,
   Package,
-  TrendingUp
+  TrendingUp,
+  RefreshCw
 } from "lucide-react";
+import { useToast } from "@/providers/toast-provider";
+import { fetchWarranties, fetchWarrantyStats, fetchExpiringSoon } from "@/lib/api/warrantyApi";
 
 // Type Definitions
 interface WarrantySetup {
@@ -62,12 +65,26 @@ interface WarrantyClaim {
 }
 
 export default function WarrantyPage() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<"registration" | "claims" | "supplier" | "reports">("registration");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"setup" | "activate" | "claim" | null>(null);
   const [searchSerial, setSearchSerial] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Mock Data
+  // Data state - loaded from API
+  const [registrations, setRegistrations] = useState<WarrantyRegistration[]>([]);
+  const [claims, setClaims] = useState<WarrantyClaim[]>([]);
+  const [analytics, setAnalytics] = useState({
+    totalActive: 0,
+    expiringNext30Days: 0,
+    totalClaims: 0,
+    approvalRate: 0,
+    rejectionRate: 0,
+    supplierSuccessRate: 0
+  });
+
+  // Static warranty setup (could be loaded from category-based API if available)
   const warrantySetups: WarrantySetup[] = [
     {
       id: "1",
@@ -88,75 +105,101 @@ export default function WarrantyPage() {
     },
   ];
 
-  const registrations: WarrantyRegistration[] = [
-    {
-      id: "1",
-      registrationNumber: "WR-2024-001",
-      productName: "iPhone 15 Pro",
-      serialNumber: "IMEI123456789",
-      saleId: "INV-001",
-      customerId: "C001",
-      customerName: "John Doe",
-      startDate: new Date("2024-01-01"),
-      endDate: new Date("2025-01-01"),
-      status: "Active",
-      certificateGenerated: true
-    },
-    {
-      id: "2",
-      registrationNumber: "WR-2024-002",
-      productName: "Samsung Galaxy S24",
-      serialNumber: "IMEI987654321",
-      saleId: "INV-002",
-      customerId: "C002",
-      customerName: "Jane Smith",
-      startDate: new Date("2024-02-15"),
-      endDate: new Date("2025-02-15"),
-      status: "Active",
-      certificateGenerated: true
-    },
-  ];
+  // Load warranty data from API
+  useEffect(() => {
+    loadWarrantyData();
+  }, []);
 
-  const claims: WarrantyClaim[] = [
-    {
-      id: "1",
-      claimNumber: "WC-2024-001",
-      registrationId: "1",
-      serialNumber: "IMEI123456789",
-      productName: "iPhone 15 Pro",
-      customerName: "John Doe",
-      customerComplaint: "Screen not responding properly",
-      claimDate: new Date("2024-06-15"),
-      status: "Under Review",
-      supportingDocs: ["photo1.jpg", "invoice.pdf"],
-      supplierClaimForwarded: false
-    },
-    {
-      id: "2",
-      claimNumber: "WC-2024-002",
-      registrationId: "2",
-      serialNumber: "IMEI987654321",
-      productName: "Samsung Galaxy S24",
-      customerName: "Jane Smith",
-      customerComplaint: "Battery draining quickly",
-      claimDate: new Date("2024-07-01"),
-      status: "Approved",
-      supportingDocs: ["photo2.jpg"],
-      repairJobId: "REP-001",
-      supplierClaimForwarded: true,
-      supplierApprovalStatus: "Approved",
-      supplierResponse: "Credit approved for parts replacement"
-    },
-  ];
+  const loadWarrantyData = async () => {
+    setLoading(true);
+    try {
+      const [warrantiesRes, statsRes, expiringRes] = await Promise.allSettled([
+        fetchWarranties({ limit: 100 }),
+        fetchWarrantyStats(),
+        fetchExpiringSoon(30),
+      ]);
 
-  // Analytics
-  const analytics = {
-    totalActive: registrations.filter(r => r.status === "Active").length,
-    expiringNext30Days: 5,
-    totalClaims: claims.length,
-    approvalRate: 75,
-    rejectionRate: 15,
-    supplierSuccessRate: 85
+      // Process warranties
+      if (warrantiesRes.status === "fulfilled") {
+        const warranties = warrantiesRes.value.data?.warranties || [];
+
+        // Map API warranty data to local WarrantyRegistration format
+        const mappedRegistrations: WarrantyRegistration[] = warranties.map((w: any) => ({
+          id: w._id,
+          registrationNumber: w.warrantyNumber,
+          productName: w.product?.name || "Unknown Product",
+          serialNumber: w.serialNumber || "N/A",
+          saleId: w.sale?._id || w.sale || "",
+          customerId: "",
+          customerName: w.customer?.name || "Unknown Customer",
+          startDate: new Date(w.startDate),
+          endDate: new Date(w.endDate),
+          status: w.status === "ACTIVE" ? "Active" : w.status === "EXPIRED" ? "Expired" : "Claimed",
+          certificateGenerated: true
+        }));
+        setRegistrations(mappedRegistrations);
+
+        // Extract claims from warranties
+        const allClaims: WarrantyClaim[] = [];
+        warranties.forEach((w: any) => {
+          if (w.claims && w.claims.length > 0) {
+            w.claims.forEach((c: any) => {
+              allClaims.push({
+                id: c._id,
+                claimNumber: c.claimNumber,
+                registrationId: w._id,
+                serialNumber: w.serialNumber || "N/A",
+                productName: w.product?.name || "Unknown Product",
+                customerName: w.customer?.name || "Unknown Customer",
+                customerComplaint: c.issue,
+                claimDate: new Date(c.claimDate),
+                status: c.resolution === "REJECTED" ? "Rejected" :
+                  c.resolution === "REPAIR" || c.resolution === "REPLACE" || c.resolution === "REFUND" ? "Approved" :
+                    "Under Review",
+                supportingDocs: [],
+                repairJobId: c.repairJob?._id,
+                supplierClaimForwarded: false
+              });
+            });
+          }
+        });
+        setClaims(allClaims);
+      }
+
+      // Process statistics
+      if (statsRes.status === "fulfilled") {
+        const stats = statsRes.value.data;
+        const summary = stats?.summary;
+        if (summary) {
+          const approvedClaims = summary.claimedWarranties || 0;
+          const totalClaims = summary.totalClaims || 0;
+          const approvalRate = totalClaims > 0 ? Math.round((approvedClaims / totalClaims) * 100) : 0;
+
+          setAnalytics(prev => ({
+            ...prev,
+            totalActive: summary.activeWarranties || 0,
+            totalClaims: summary.totalClaims || 0,
+            approvalRate: approvalRate,
+            rejectionRate: 100 - approvalRate,
+          }));
+        }
+      }
+
+      // Process expiring warranties
+      if (expiringRes.status === "fulfilled") {
+        const expiringCount = expiringRes.value.results || 0;
+        setAnalytics(prev => ({
+          ...prev,
+          expiringNext30Days: expiringCount,
+        }));
+      }
+
+    } catch (error) {
+      console.error("Error loading warranty data:", error);
+      toast.error("Failed to load warranty data");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Columns for Warranty Setup
@@ -184,7 +227,7 @@ export default function WarrantyPage() {
       key: "actions",
       label: "Actions",
       render: (item) => (
-        <Button size="sm" variant="outline" onClick={() => {}}>
+        <Button size="sm" variant="outline" onClick={() => { }}>
           Edit
         </Button>
       )
@@ -222,11 +265,10 @@ export default function WarrantyPage() {
       key: "status",
       label: "Status",
       render: (item) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${
-          item.status === "Active" ? "bg-green-100 text-green-700" :
+        <span className={`px-2 py-1 rounded-full text-xs ${item.status === "Active" ? "bg-green-100 text-green-700" :
           item.status === "Expired" ? "bg-red-100 text-red-700" :
-          "bg-yellow-100 text-yellow-700"
-        }`}>
+            "bg-yellow-100 text-yellow-700"
+          }`}>
           {item.status}
         </span>
       )
@@ -235,7 +277,7 @@ export default function WarrantyPage() {
       key: "actions",
       label: "Actions",
       render: (item) => (
-        <Button size="sm" variant="outline" onClick={() => {}}>
+        <Button size="sm" variant="outline" onClick={() => { }}>
           Certificate
         </Button>
       )
@@ -273,13 +315,12 @@ export default function WarrantyPage() {
       key: "status",
       label: "Status",
       render: (item) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${
-          item.status === "Registered" ? "bg-gray-100 text-gray-700" :
+        <span className={`px-2 py-1 rounded-full text-xs ${item.status === "Registered" ? "bg-gray-100 text-gray-700" :
           item.status === "Under Review" ? "bg-blue-100 text-blue-700" :
-          item.status === "Approved" ? "bg-green-100 text-green-700" :
-          item.status === "Rejected" ? "bg-red-100 text-red-700" :
-          "bg-purple-100 text-purple-700"
-        }`}>
+            item.status === "Approved" ? "bg-green-100 text-green-700" :
+              item.status === "Rejected" ? "bg-red-100 text-red-700" :
+                "bg-purple-100 text-purple-700"
+          }`}>
           {item.status}
         </span>
       )
@@ -289,11 +330,11 @@ export default function WarrantyPage() {
       label: "Actions",
       render: (item) => (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => {}}>
+          <Button size="sm" variant="outline" onClick={() => { }}>
             View
           </Button>
           {item.status === "Approved" && !item.supplierClaimForwarded && (
-            <Button size="sm" variant="outline" onClick={() => {}}>
+            <Button size="sm" variant="outline" onClick={() => { }}>
               Forward to Supplier
             </Button>
           )}
@@ -313,41 +354,37 @@ export default function WarrantyPage() {
       <div className="mb-6 flex gap-2 border-b">
         <button
           onClick={() => setActiveTab("registration")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "registration"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-black hover:text-blue-600"
-          }`}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "registration"
+            ? "border-b-2 border-blue-600 text-blue-600"
+            : "text-black hover:text-blue-600"
+            }`}
         >
           Warranty Registration
         </button>
         <button
           onClick={() => setActiveTab("claims")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "claims"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-black hover:text-blue-600"
-          }`}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "claims"
+            ? "border-b-2 border-blue-600 text-blue-600"
+            : "text-black hover:text-blue-600"
+            }`}
         >
           Warranty Claims
         </button>
         <button
           onClick={() => setActiveTab("supplier")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "supplier"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-black hover:text-blue-600"
-          }`}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "supplier"
+            ? "border-b-2 border-blue-600 text-blue-600"
+            : "text-black hover:text-blue-600"
+            }`}
         >
           Supplier Claims
         </button>
         <button
           onClick={() => setActiveTab("reports")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "reports"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-black hover:text-blue-600"
-          }`}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "reports"
+            ? "border-b-2 border-blue-600 text-blue-600"
+            : "text-black hover:text-blue-600"
+            }`}
         >
           Warranty Reports
         </button>
@@ -373,7 +410,7 @@ export default function WarrantyPage() {
               data={warrantySetups}
               columns={setupColumns}
               searchPlaceholder="Search categories..."
-              onSearch={() => {}}
+              onSearch={() => { }}
             />
           </div>
 
@@ -384,7 +421,7 @@ export default function WarrantyPage() {
               data={registrations}
               columns={registrationColumns}
               searchPlaceholder="Search by serial number, customer..."
-              onSearch={() => {}}
+              onSearch={() => { }}
             />
           </div>
         </div>
@@ -429,7 +466,7 @@ export default function WarrantyPage() {
               data={claims}
               columns={claimColumns}
               searchPlaceholder="Search claims..."
-              onSearch={() => {}}
+              onSearch={() => { }}
             />
           </div>
         </div>

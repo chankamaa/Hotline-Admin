@@ -357,7 +357,7 @@ export default function CategoriesPage() {
           Add Main Category
         </Button>
 
-        <Button onClick={() => loadCategories()} disabled={loading} variant="secondary">
+        <Button onClick={() => loadCategories()} disabled={loading} variant="danger">
           <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>

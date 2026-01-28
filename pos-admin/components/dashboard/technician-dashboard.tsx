@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatsCard } from "@/components/ui/stats-card";
+import { Button } from "@/components/ui/button";
 import {
   Wrench,
   Clock,
@@ -153,14 +154,14 @@ export default function TechnicianDashboard() {
             <Plus size={16} />
             <span className="text-sm font-medium">Create Job</span>
           </button>
-          <button
+          <Button
             onClick={loadDashboardData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+            variant="danger"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            <span className="text-sm font-medium">Refresh</span>
-          </button>
+            Refresh
+          </Button>
         </div>
       </div>
 

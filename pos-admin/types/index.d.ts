@@ -17,6 +17,22 @@ interface Category {
 }
 
 // ============ PRODUCT TYPES ============
+interface ProductSupplier {
+  name?: string;
+  contact?: string;
+  phone?: string;
+  email?: string;
+}
+
+interface ProductOffer {
+  isActive: boolean;
+  type: "PERCENTAGE" | "FIXED";
+  value: number;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+}
+
 interface Product {
   _id: string;
   name: string;
@@ -24,6 +40,7 @@ interface Product {
   sku?: string;
   barcode?: string;
   category: string | Category;
+  subcategory?: string | Category | null;
   costPrice: number;
   sellingPrice: number;
   wholesalePrice?: number;
@@ -32,13 +49,22 @@ interface Product {
   warrantyDuration: number;
   warrantyType: "NONE" | "MANUFACTURER" | "SHOP" | "BOTH";
   warrantyDescription?: string;
-  image?: string;
+  supplier?: ProductSupplier;
   minStockLevel: number;
+  image?: string;
+  offer?: ProductOffer;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  // Stock fields (populated when includeStock=true)
+  stock?: number;
+  stockStatus?: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
+  // Virtuals from backend
   profitMargin?: number;
   sellingPriceWithTax?: number;
+  hasActiveOffer?: boolean;
+  effectivePrice?: number;
+  discountAmount?: number;
 }
 
 // ============ USER TYPES ============

@@ -2,7 +2,7 @@
 
 interface InputProps {
   label?: string;
-  name: string;
+  name?: string;
   type?: string;
   value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
@@ -33,23 +33,25 @@ export function Input({
   max,
   maxLength,
 }: InputProps) {
-  const inputClasses = `w-full px-3 py-2 rounded-lg border ${
-    error ? "border-red-500" : "border-gray-300"
-  } focus:outline-none focus:ring-2 focus:ring-black/10 disabled:bg-gray-100 disabled:cursor-not-allowed`;
+  // Generate a unique id from label or use name, fallback to random id
+  const inputId = name || label?.toLowerCase().replace(/\s+/g, '-') || `input-${Math.random().toString(36).substr(2, 9)}`;
+
+  const inputClasses = `w-full px-3 py-2 rounded-lg border ${error ? "border-red-500" : "border-gray-300"
+    } focus:outline-none focus:ring-2 focus:ring-black/10 disabled:bg-gray-100 disabled:cursor-not-allowed`;
 
   return (
     <div className="mb-4">
       {label && (
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      
+
       {type === "textarea" ? (
         <textarea
-          id={name}
-          name={name}
+          id={inputId}
+          name={inputId}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
@@ -61,8 +63,8 @@ export function Input({
         />
       ) : type === "select" ? (
         <select
-          id={name}
-          name={name}
+          id={inputId}
+          name={inputId}
           value={value}
           onChange={onChange}
           required={required}
@@ -78,8 +80,8 @@ export function Input({
         </select>
       ) : (
         <input
-          id={name}
-          name={name}
+          id={inputId}
+          name={inputId}
           type={type}
           value={value}
           onChange={onChange}
@@ -92,7 +94,7 @@ export function Input({
           className={inputClasses}
         />
       )}
-      
+
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>
   );
