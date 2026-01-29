@@ -234,16 +234,6 @@ export const adminNav = [
     roles: ["admin", "manager"],
   },
 
-  {
-    label: "Reports",
-    icon: BarChart3,
-    items: [
-      { title: "Reports", href: "/admin/reports", icon: BarChart3, permission: PERMISSIONS.VIEW_SALES_REPORT },
-      { title: "Custom Report Builder", href: "/admin/reports/builder", icon: Database, permission: PERMISSIONS.VIEW_SALES_REPORT },
-    ],
-    roles: ["admin", "manager", "cashier"],
-  },
-
   /*{
     label: "Employees",
     icon: UserCog,

@@ -18,7 +18,9 @@ import {
   Plus,
   Trash2,
   Minus,
+  Download,
 } from "lucide-react";
+import Link from "next/link";
 
 /* ======================================================
    TYPES (Backend-aligned)
@@ -330,6 +332,15 @@ export default function SalesPage() {
         title="Sales"
         description="Manage all sales transactions"
       />
+
+      <div className="flex justify-end gap-2 mb-4">
+        <Link href="/admin/sales/export">
+          <Button variant="secondary">
+            <Download size={16} className="mr-2" />
+            Export PDF
+          </Button>
+        </Link>
+      </div>
 
       <DataTable
         data={filteredSales}

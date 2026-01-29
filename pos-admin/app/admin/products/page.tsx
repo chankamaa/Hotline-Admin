@@ -17,7 +17,8 @@ import {
 } from "@/lib/api/productApi";
 
 import { fetchCategories } from "@/lib/api/categoryApi";
-import { Edit, Trash2, Package, RefreshCw, Barcode, Eye } from "lucide-react";
+import { Edit, Trash2, Package, RefreshCw, Barcode, Eye, Download } from "lucide-react";
+import Link from "next/link";
 
 /* --------------------------------------------------
    Helpers
@@ -379,7 +380,13 @@ export default function ProductsPage() {
     <div className="p-6">
       <PageHeader title={`Products (${products.length})`} description="Manage your product catalog" />
 
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
+        <Link href="/admin/products/export">
+          <Button variant="secondary">
+            <Download size={16} className="mr-2" />
+            Export PDF
+          </Button>
+        </Link>
         <Button onClick={() => loadProducts()} disabled={loading} variant="danger">
           <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""} `} />
           Refresh
