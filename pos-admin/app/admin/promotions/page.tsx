@@ -674,6 +674,67 @@ export default function PromotionsPage() {
                         </div>
                     )}
 
+                    {/* Limits & Settings */}
+                    <div className="border-t pt-4 mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Limits & Settings
+                        </label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1">
+                                    Min Purchase Amount ($)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.minPurchase || ''}
+                                    onChange={(e) => setFormData({ ...formData, minPurchase: parseFloat(e.target.value) || 0 })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
+                                    min="0"
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1">
+                                    Max Discount Amount ($)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.maxDiscount || ''}
+                                    onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value ? parseFloat(e.target.value) : null })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
+                                    min="0"
+                                    placeholder="No limit"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1">
+                                    Usage Limit
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.usageLimit || ''}
+                                    onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value ? parseInt(e.target.value) : null })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
+                                    min="0"
+                                    placeholder="Unlimited"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1">
+                                    Priority (Higher runs first)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.priority || ''}
+                                    onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
+                                    min="0"
+                                    placeholder="0"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Active Toggle */}
                     <div className="flex items-center gap-2">
                         <input
@@ -715,7 +776,7 @@ export default function PromotionsPage() {
             >
                 {selectedPromotion && (
                     <div className="space-y-4">
-                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-6 text-white">
+                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-6 text-blue-500">
                             <h3 className="text-2xl font-bold">{selectedPromotion.name}</h3>
                             <p className="text-purple-100 mt-1">{selectedPromotion.description}</p>
                             <div className="mt-4 text-3xl font-bold">{getDiscountDisplay(selectedPromotion)}</div>
@@ -747,11 +808,21 @@ export default function PromotionsPage() {
                                 <span className="ml-2 text-gray-900">${selectedPromotion.minPurchase}</span>
                             </div>
                             <div>
+                                <span className="text-gray-500">Max Discount:</span>
+                                <span className="ml-2 text-gray-900">
+                                    {selectedPromotion.maxDiscount ? `$${selectedPromotion.maxDiscount}` : 'No limit'}
+                                </span>
+                            </div>
+                            <div>
                                 <span className="text-gray-500">Usage:</span>
                                 <span className="ml-2 text-gray-900">
                                     {selectedPromotion.usedCount}
                                     {selectedPromotion.usageLimit && ` / ${selectedPromotion.usageLimit}`}
                                 </span>
+                            </div>
+                            <div>
+                                <span className="text-gray-500">Priority:</span>
+                                <span className="ml-2 text-gray-900">{selectedPromotion.priority}</span>
                             </div>
                         </div>
 

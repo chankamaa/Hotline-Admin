@@ -194,15 +194,14 @@ export const adminNav = [
     label: "Warranty",
     icon: ShieldCheck,
     items: [
-      { title: "Warranty Setup", href: "/admin/warranty/setup", icon: ShieldCheck },
-      { title: "Registrations", href: "/admin/warranty/registrations", icon: ClipboardList },
-      { title: "Claims & Analytics", href: "/admin/warranty/claims", icon: BarChart3 },
+      { title: "Warranty Management", href: "/admin/warranty", icon: ShieldCheck, permission: PERMISSIONS.VIEW_WARRANTIES },
+      
     ],
-    roles: ["admin", "", "cashier", "technician"],
+    roles: ["admin", "manager", "cashier", "technician"],
   },
 
-  {
-    label: "Customers",
+  /*{
+    /*label: "Customers",
     icon: Users,
     items: [
       { title: "Customers", href: "/admin/customers", icon: Users },
@@ -221,15 +220,15 @@ export const adminNav = [
       { title: "Supplier Directory", href: "/admin/suppliers", icon: Truck },
     ],
     roles: ["admin", ""],
-  },
+  },*/
 
   {
     label: "Pricing & Promotions",
     icon: Percent,
     items: [
       { title: "Promotions", href: "/admin/promotions", icon: Tag, permission: PERMISSIONS.VIEW_PROMOTIONS },
-      { title: "Price History", href: "/admin/pricing/history", icon: Tags },
-      { title: "Bulk Price Updates", href: "/admin/pricing/bulk", icon: Percent },
+     /* { title: "Price History", href: "/admin/pricing/history", icon: Tags },*/
+      /*{ title: "Bulk Price Updates", href: "/admin/pricing/bulk", icon: Percent },*/
       { title: "Discount Rules", href: "/admin/discounts", icon: Percent },
     ],
     roles: ["admin", "manager"],
@@ -245,7 +244,7 @@ export const adminNav = [
     roles: ["admin", "manager", "cashier"],
   },
 
-  {
+  /*{
     label: "Employees",
     icon: UserCog,
     items: [
@@ -255,7 +254,7 @@ export const adminNav = [
       { title: "Audit Logs", href: "/admin/audit-logs", icon: ShieldCheck },
     ],
     roles: ["admin", ""],
-  },
+  },*/
 
   {
     label: "Permissions",

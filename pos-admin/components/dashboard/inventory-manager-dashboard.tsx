@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
 import { getLowStockItems } from "@/lib/api/dashboardApi";
-import { fetchAllAdjustments, fetchInventoryValue, fetchStock } from "@/lib/api/inventoryApi";
+import { fetchInventoryValue, fetchStock } from "@/lib/api/inventoryApi";
 
 export default function InventoryManagerDashboard() {
   const toast = useToast();
@@ -53,9 +53,9 @@ export default function InventoryManagerDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [lowStockRes, adjustmentsRes, inventoryValueRes, stockRes] = await Promise.allSettled([
+      // Note: Global adjustments endpoint not available - would need product-specific queries
+      const [lowStockRes, inventoryValueRes, stockRes] = await Promise.allSettled([
         getLowStockItems(),
-        fetchAllAdjustments({ limit: 10 }),
         fetchInventoryValue(),
         fetchStock({ limit: 100 }),
       ]);
@@ -84,38 +84,9 @@ export default function InventoryManagerDashboard() {
         }));
       }
 
-      // Process stock adjustments (recent movements)
-      if (adjustmentsRes.status === "fulfilled") {
-        const adjustData: any = adjustmentsRes.value;
-        const adjustments = adjustData.data?.adjustments || [];
-
-        setRecentMovements(adjustments.map((adj: any) => {
-          const typeMap: Record<string, string> = {
-            'ADDITION': 'in',
-            'PURCHASE': 'in',
-            'RETURN': 'in',
-            'TRANSFER_IN': 'in',
-            'REDUCTION': 'out',
-            'SALE': 'out',
-            'DAMAGE': 'out',
-            'THEFT': 'out',
-            'TRANSFER_OUT': 'out',
-            'CORRECTION': 'adjustment',
-          };
-
-          const timeDiff = Date.now() - new Date(adj.createdAt).getTime();
-          const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-          const dateStr = hours < 1 ? 'Just now' : hours < 24 ? `${hours} hours ago` : `${Math.floor(hours / 24)} days ago`;
-
-          return {
-            product: adj.product?.name || "Unknown Product",
-            type: typeMap[adj.type] || 'adjustment',
-            quantity: adj.quantity,
-            from: adj.reason || adj.referenceType || adj.type,
-            date: dateStr,
-          };
-        }));
-      }
+      // Note: Recent movements would require a global adjustments endpoint
+      // Currently backend only supports per-product history: GET /inventory/:productId/history
+      // setRecentMovements([]); // Already empty by default
 
       // Process inventory value
       if (inventoryValueRes.status === "fulfilled") {

@@ -1,4 +1,4 @@
-import {api} from "./api";
+import { api } from "./api";
 
 /* =====================================================
    STOCK OVERVIEW
@@ -49,16 +49,16 @@ export const fetchLowStock = () => {
 export const adjustStock = (data: {
   productId: string;
   type:
-    | "ADDITION"
-    | "REDUCTION"
-    | "PURCHASE"
-    | "SALE"
-    | "RETURN"
-    | "DAMAGE"
-    | "THEFT"
-    | "CORRECTION"
-    | "TRANSFER_IN"
-    | "TRANSFER_OUT";
+  | "ADDITION"
+  | "REDUCTION"
+  | "PURCHASE"
+  | "SALE"
+  | "RETURN"
+  | "DAMAGE"
+  | "THEFT"
+  | "CORRECTION"
+  | "TRANSFER_IN"
+  | "TRANSFER_OUT";
   quantity: number;
   reason?: string;
   reference?: string;
@@ -82,22 +82,6 @@ export const fetchStockHistory = (
   }
 ) => {
   return api.get(`/api/v1/inventory/${productId}/history`, {
-    params,
-  });
-};
-
-/**
- * Get all stock adjustments (recent history)
- * GET /api/v1/inventory/adjustments
- */
-export const fetchAllAdjustments = (params?: {
-  type?: string;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-}) => {
-  return api.get("/api/v1/inventory/adjustments", {
     params,
   });
 };

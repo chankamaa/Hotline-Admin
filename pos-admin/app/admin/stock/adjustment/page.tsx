@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/ui/data-table";
-import { Plus, TrendingUp, TrendingDown, Eye, User, X, Package, RefreshCw, Calendar } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Eye, User, X, Package, RefreshCw, Calendar, Search, Filter } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
 
 import { fetchProducts } from "@/lib/api/productApi";
-import { adjustStock, fetchAdjustmentTypes, fetchProductStock, fetchAllAdjustments } from "@/lib/api/inventoryApi";
+import { adjustStock, fetchAdjustmentTypes, fetchProductStock, fetchStockHistory } from "@/lib/api/inventoryApi";
 
 /* --------------------------------------------------
    Component
@@ -22,7 +22,21 @@ export default function StockAdjustmentPage() {
   const [viewing, setViewing] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
-  /* Product autocomplete */
+  /* Product selection for viewing history */
+  const [historyProductSearch, setHistoryProductSearch] = useState("");
+  const [historyProductOptions, setHistoryProductOptions] = useState<any[]>([]);
+  const [selectedHistoryProduct, setSelectedHistoryProduct] = useState<any | null>(null);
+  const [showHistorySuggestions, setShowHistorySuggestions] = useState(false);
+
+  /* Filter states */
+  const [filterType, setFilterType] = useState("");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
+
+  /* Pagination */
+  const [pagination, setPagination] = useState<any>(null);
+
+  /* Product autocomplete for creating adjustment */
   const [productSearch, setProductSearch] = useState("");
   const [productOptions, setProductOptions] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
@@ -55,31 +69,85 @@ export default function StockAdjustmentPage() {
   }, []);
 
   /* --------------------------------------------------
-     Load all adjustments on mount
+     Load adjustments for selected product
   -------------------------------------------------- */
   const loadAdjustments = async () => {
+    if (!selectedHistoryProduct) {
+      setAdjustments([]);
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetchAllAdjustments({ limit: 100 }) as any;
+      const params: any = { limit: 50 };
+      if (filterType) params.type = filterType;
+      if (filterStartDate) params.startDate = filterStartDate;
+      if (filterEndDate) params.endDate = filterEndDate;
+
+      const response = await fetchStockHistory(selectedHistoryProduct._id, params) as any;
+      // Backend returns: { status, product, results, pagination, data: { adjustments } }
       const data = response?.data?.adjustments || response?.adjustments || [];
       setAdjustments(data);
+      setPagination(response?.pagination || null);
     } catch (error: any) {
       console.error("Failed to load adjustments:", error);
-      // If endpoint doesn't exist, show empty state gracefully
-      if (error?.status !== 404) {
-        toast.error(error?.message || "Failed to load adjustments");
-      }
+      toast.error(error?.message || "Failed to load adjustment history");
     } finally {
       setLoading(false);
     }
   };
 
+  // Load adjustments when product or filters change
   useEffect(() => {
-    loadAdjustments();
-  }, []);
+    if (selectedHistoryProduct) {
+      loadAdjustments();
+    }
+  }, [selectedHistoryProduct, filterType, filterStartDate, filterEndDate]);
 
   /* --------------------------------------------------
-     Product autocomplete search with stock fetching
+     Product search for history view
+  -------------------------------------------------- */
+  useEffect(() => {
+    if (!historyProductSearch || historyProductSearch.length < 2) {
+      setHistoryProductOptions([]);
+      setShowHistorySuggestions(false);
+      return;
+    }
+
+    const loadProducts = async () => {
+      try {
+        const res = await fetchProducts({ search: historyProductSearch });
+        setHistoryProductOptions(res.data.products);
+        setShowHistorySuggestions(true);
+      } catch (error) {
+        console.error("Failed to search products:", error);
+      }
+    };
+
+    loadProducts();
+  }, [historyProductSearch]);
+
+  const handleSelectHistoryProduct = (product: any) => {
+    setSelectedHistoryProduct(product);
+    setHistoryProductSearch(`${product.name} (${product.sku || 'N/A'})`);
+    setHistoryProductOptions([]);
+    setShowHistorySuggestions(false);
+  };
+
+  const handleClearHistoryProduct = () => {
+    setSelectedHistoryProduct(null);
+    setHistoryProductSearch("");
+    setAdjustments([]);
+    setHistoryProductOptions([]);
+    setShowHistorySuggestions(false);
+    // Clear filters too
+    setFilterType("");
+    setFilterStartDate("");
+    setFilterEndDate("");
+  };
+
+  /* --------------------------------------------------
+     Product autocomplete search for creating adjustment
   -------------------------------------------------- */
   useEffect(() => {
     if (!productSearch || productSearch.length < 2) {
@@ -111,7 +179,7 @@ export default function StockAdjustmentPage() {
     // Fetch current stock level from backend
     try {
       const response = await fetchProductStock(product._id);
-      const stockData = response.data; // Backend returns { status: "success", data: {...} }
+      const stockData = response.data;
       setCurrentStock(stockData);
       setPreviousQuantity(stockData.quantity);
     } catch (error) {
@@ -168,25 +236,6 @@ export default function StockAdjustmentPage() {
     newQuantity >= 0 &&
     form.reason.length <= 500;
 
-  // Debug validation
-  useEffect(() => {
-    console.log('Form Validation Debug:', {
-      productId: form.productId,
-      hasProductId: !!form.productId,
-      type: form.type,
-      hasType: !!form.type,
-      typeNotEmpty: form.type !== "",
-      quantity: form.quantity,
-      hasQuantity: !!form.quantity,
-      quantityValid: parseInt(form.quantity) >= 1,
-      newQuantity,
-      newQuantityValid: newQuantity >= 0,
-      reasonLength: form.reason.length,
-      reasonValid: form.reason.length <= 500,
-      isValid
-    });
-  }, [form, newQuantity, isValid]);
-
   /* --------------------------------------------------
      Create adjustment
   -------------------------------------------------- */
@@ -209,17 +258,10 @@ export default function StockAdjustmentPage() {
 
       toast.success("Stock adjustment created successfully");
 
-      // Backend returns { status: "success", data: { stock: {...}, adjustment: {...} } }
-      const { data } = response;
-
-      // Add new adjustment to the list
-      setAdjustments((prev) => [
-        {
-          ...data.adjustment,
-          stock: data.stock,
-        },
-        ...prev,
-      ]);
+      // If viewing the same product, refresh its history
+      if (selectedHistoryProduct && selectedHistoryProduct._id === form.productId) {
+        loadAdjustments();
+      }
 
       resetForm();
       setIsModalOpen(false);
@@ -255,20 +297,10 @@ export default function StockAdjustmentPage() {
       render: (a: any) => new Date(a.createdAt).toLocaleDateString() + ' ' + new Date(a.createdAt).toLocaleTimeString(),
     },
     {
-      key: "product",
-      label: "Product",
-      render: (a: any) => (
-        <div>
-          <div className="font-medium">{a.stock?.product?.name || a.product?.name}</div>
-          <div className="text-xs text-gray-500">{a.stock?.product?.sku || a.product?.sku}</div>
-        </div>
-      ),
-    },
-    {
       key: "type",
       label: "Type",
       render: (a: any) => {
-        const change = a.stock?.change || (a.newQuantity - a.previousQuantity);
+        const change = a.newQuantity - a.previousQuantity;
         return (
           <div className="flex items-center gap-2">
             {change > 0 ? (
@@ -287,18 +319,16 @@ export default function StockAdjustmentPage() {
       key: "quantity",
       label: "Change",
       render: (a: any) => {
-        const change = a.stock?.change || (a.newQuantity - a.previousQuantity);
-        const previous = a.stock?.previousQuantity || a.previousQuantity;
-        const newQty = a.stock?.newQuantity || a.newQuantity;
+        const change = a.newQuantity - a.previousQuantity;
 
         return (
           <div>
             <div className={`font-bold ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
               {change > 0 ? "+" : ""}
-              {a.quantity}
+              {change}
             </div>
             <div className="text-xs text-gray-500">
-              {previous} → {newQty}
+              {a.previousQuantity} → {a.newQuantity}
             </div>
           </div>
         );
@@ -341,59 +371,161 @@ export default function StockAdjustmentPage() {
     <div className="p-6 text-gray-700">
       <PageHeader
         title="Stock Adjustments"
-        description="Inventory adjustment audit trail"
+        description="View and create inventory adjustments"
       />
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border rounded-lg p-4">
-          <div className="text-sm text-gray-500">Total Adjustments</div>
-          <div className="text-2xl font-bold">{adjustments.length}</div>
-        </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="text-sm text-green-600 flex items-center gap-1">
-            <TrendingUp size={14} /> Stock In
+      {/* Product Selection for Viewing History */}
+      <div className="bg-white border rounded-lg p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Search size={20} />
+          View Adjustment History
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Product Search */}
+          <div className="relative md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Select Product
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={historyProductSearch}
+                onChange={(e) => setHistoryProductSearch(e.target.value)}
+                onFocus={() => historyProductOptions.length > 0 && setShowHistorySuggestions(true)}
+                placeholder="Search product by name or SKU..."
+                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={!!selectedHistoryProduct}
+              />
+              {selectedHistoryProduct && (
+                <button
+                  onClick={handleClearHistoryProduct}
+                  className="absolute right-2 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                  type="button"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* Autocomplete dropdown */}
+            {showHistorySuggestions && historyProductOptions.length > 0 && !selectedHistoryProduct && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {historyProductOptions.map((p) => (
+                  <div
+                    key={p._id}
+                    className="px-4 py-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    onClick={() => handleSelectHistoryProduct(p)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center shrink-0">
+                        <Package size={16} className="text-gray-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate">{p.name}</div>
+                        <div className="text-xs text-gray-500">
+                          SKU: {p.sku || "N/A"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="text-2xl font-bold text-green-700">
-            {adjustments.filter((a) => {
-              const change = a.stock?.change || (a.newQuantity - a.previousQuantity);
-              return change > 0;
-            }).length}
+
+          {/* Filter: Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Adjustment Type
+            </label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={!selectedHistoryProduct}
+            >
+              <option value="">All Types</option>
+              {adjustmentTypes.map((t) => (
+                <option key={t.value} value={t.value}>{t.value}</option>
+              ))}
+            </select>
           </div>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="text-sm text-red-600 flex items-center gap-1">
-            <TrendingDown size={14} /> Stock Out
-          </div>
-          <div className="text-2xl font-bold text-red-700">
-            {adjustments.filter((a) => {
-              const change = a.stock?.change || (a.newQuantity - a.previousQuantity);
-              return change < 0;
-            }).length}
-          </div>
-        </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="text-sm text-blue-600 flex items-center gap-1">
-            <Calendar size={14} /> Today
-          </div>
-          <div className="text-2xl font-bold text-blue-700">
-            {adjustments.filter((a) => {
-              const today = new Date().toDateString();
-              return new Date(a.createdAt).toDateString() === today;
-            }).length}
+
+          {/* Filter: Date Range */}
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => setFilterStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={!selectedHistoryProduct}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => setFilterEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={!selectedHistoryProduct}
+              />
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Stats Summary - only shown when a product is selected */}
+      {selectedHistoryProduct && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border rounded-lg p-4">
+            <div className="text-sm text-gray-500">Product</div>
+            <div className="text-lg font-bold truncate">{selectedHistoryProduct.name}</div>
+            <div className="text-xs text-gray-500">SKU: {selectedHistoryProduct.sku}</div>
+          </div>
+          <div className="bg-white border rounded-lg p-4">
+            <div className="text-sm text-gray-500">Total Adjustments</div>
+            <div className="text-2xl font-bold">{pagination?.total || adjustments.length}</div>
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="text-sm text-green-600 flex items-center gap-1">
+              <TrendingUp size={14} /> Stock In
+            </div>
+            <div className="text-2xl font-bold text-green-700">
+              {adjustments.filter((a) => (a.newQuantity - a.previousQuantity) > 0).length}
+            </div>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="text-sm text-red-600 flex items-center gap-1">
+              <TrendingDown size={14} /> Stock Out
+            </div>
+            <div className="text-2xl font-bold text-red-700">
+              {adjustments.filter((a) => (a.newQuantity - a.previousQuantity) < 0).length}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-4 flex justify-between items-center">
         <div className="text-sm text-gray-500">
-          Showing {adjustments.length} adjustment{adjustments.length !== 1 ? 's' : ''}
+          {selectedHistoryProduct
+            ? `Showing ${adjustments.length} adjustment${adjustments.length !== 1 ? 's' : ''} for ${selectedHistoryProduct.name}`
+            : 'Select a product to view its adjustment history'}
         </div>
         <div className="flex gap-2">
-          <Button onClick={loadAdjustments} disabled={loading} variant="danger">
-            <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+          {selectedHistoryProduct && (
+            <Button onClick={loadAdjustments} disabled={loading} variant="secondary">
+              <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          )}
           <Button onClick={() => setIsModalOpen(true)}>
             <Plus size={16} className="mr-2" />
             New Adjustment
@@ -401,11 +533,22 @@ export default function StockAdjustmentPage() {
         </div>
       </div>
 
-      <DataTable
-        data={adjustments}
-        columns={columns}
-        emptyMessage="No stock adjustments found. Create one using the button above."
-      />
+      {selectedHistoryProduct ? (
+        <DataTable
+          data={adjustments}
+          columns={columns}
+          emptyMessage="No adjustments found for this product. Create one using the button above."
+        />
+      ) : (
+        <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-12 text-center">
+          <Package size={48} className="mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-700 mb-2">Select a Product</h3>
+          <p className="text-gray-500 max-w-md mx-auto">
+            Search and select a product above to view its stock adjustment history.
+            You can also filter by adjustment type and date range.
+          </p>
+        </div>
+      )}
 
       {/* Create Modal */}
       <Modal
@@ -474,7 +617,7 @@ export default function StockAdjustmentPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-blue-600 font-medium">Previous Quantity</div>
+                  <div className="text-sm text-blue-600 font-medium">Current Stock</div>
                   <div className="text-2xl font-bold text-blue-900">
                     {previousQuantity}
                   </div>
@@ -628,17 +771,17 @@ export default function StockAdjustmentPage() {
             <div className="border-t pt-4">
               <div className="text-sm text-gray-500 mb-2">Product</div>
               <div className="font-medium">
-                {viewing.stock?.product?.name || viewing.product?.name}
+                {viewing.product?.name || selectedHistoryProduct?.name}
               </div>
               <div className="text-xs text-gray-500">
-                SKU: {viewing.stock?.product?.sku || viewing.product?.sku}
+                SKU: {viewing.product?.sku || selectedHistoryProduct?.sku}
               </div>
             </div>
 
             <div className="border-t pt-4">
               <div className="text-sm text-gray-500 mb-2">Adjustment Type</div>
               <div className="flex items-center gap-2">
-                {(viewing.stock?.change || (viewing.newQuantity - viewing.previousQuantity)) > 0 ? (
+                {(viewing.newQuantity - viewing.previousQuantity) > 0 ? (
                   <TrendingUp className="text-green-600" size={20} />
                 ) : (
                   <TrendingDown className="text-red-600" size={20} />
@@ -651,23 +794,23 @@ export default function StockAdjustmentPage() {
               <div>
                 <div className="text-sm text-gray-500">Previous</div>
                 <div className="text-xl font-bold text-gray-700">
-                  {viewing.stock?.previousQuantity || viewing.previousQuantity}
+                  {viewing.previousQuantity}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Change</div>
-                <div className={`text-xl font-bold ${(viewing.stock?.change || (viewing.newQuantity - viewing.previousQuantity)) > 0
+                <div className={`text-xl font-bold ${(viewing.newQuantity - viewing.previousQuantity) > 0
                   ? 'text-green-600'
                   : 'text-red-600'
                   }`}>
-                  {(viewing.stock?.change || (viewing.newQuantity - viewing.previousQuantity)) > 0 ? '+' : ''}
-                  {viewing.quantity}
+                  {(viewing.newQuantity - viewing.previousQuantity) > 0 ? '+' : ''}
+                  {viewing.newQuantity - viewing.previousQuantity}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">New</div>
                 <div className="text-xl font-bold text-blue-600">
-                  {viewing.stock?.newQuantity || viewing.newQuantity}
+                  {viewing.newQuantity}
                 </div>
               </div>
             </div>
