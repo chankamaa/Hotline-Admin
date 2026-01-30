@@ -40,6 +40,8 @@ export default function TechnicianDashboard() {
 
   const [myRepairs, setMyRepairs] = useState<any[]>([]);
   const [pendingRepairs, setPendingRepairs] = useState<any[]>([]);
+  const [startingJobId, setStartingJobId] = useState<string | null>(null);
+  const myActiveRepairsRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -86,6 +88,7 @@ export default function TechnicianDashboard() {
         receivedCount = repairs.length;
 
         setPendingRepairs(repairs.slice(0, 5).map((repair: any) => ({
+          _id: repair._id, // Store MongoDB _id for API calls
           id: repair.jobNumber || repair._id,
           customer: repair.customer?.name || "Unknown",
           device: `${repair.device?.brand || ""} ${repair.device?.model || ""}`.trim() || "Unknown Device",
@@ -124,6 +127,39 @@ export default function TechnicianDashboard() {
       toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Handle starting a repair job
+   * Calls PUT /api/v1/repairs/:id/start to update status to IN_PROGRESS
+   */
+  const handleStartJob = async (repairId: string, jobNumber: string) => {
+    setStartingJobId(repairId);
+    try {
+      // Call the backend API to start the repair
+      await repairApi.start(repairId);
+      
+      // Show success message
+      toast.success(`Started working on ${jobNumber}. Status updated to IN_PROGRESS.`);
+      
+      // Reload dashboard data to reflect changes
+      await loadDashboardData();
+      
+      // Scroll to My Active Repairs section after a brief delay
+      setTimeout(() => {
+        myActiveRepairsRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 300);
+      
+    } catch (error: any) {
+      console.error("Error starting repair job:", error);
+      const errorMessage = error.response?.data?.message || "Failed to start repair job";
+      toast.error(errorMessage);
+    } finally {
+      setStartingJobId(null);
     }
   };
 
@@ -198,7 +234,7 @@ export default function TechnicianDashboard() {
       </div>
 
       {/* My Active Repairs */}
-      <div className="mb-6 bg-white rounded-xl border">
+      <div ref={myActiveRepairsRef} className="mb-6 bg-white rounded-xl border">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Wrench size={18} className="text-blue-500" />
@@ -307,8 +343,21 @@ export default function TechnicianDashboard() {
                   </div>
                   <div className="text-right">
                     <div className="text-xs text-gray-500 mb-2">{repair.createdAt}</div>
-                    <button className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
-                      Take Job
+                    <button 
+                      onClick={() => handleStartJob(repair._id, repair.id)}
+                      disabled={startingJobId === repair._id}
+                      className={`text-xs px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 ${
+                        startingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {startingJobId === repair._id ? (
+                        <span className="flex items-center gap-1.5">
+                          <RefreshCw size={12} className="animate-spin" />
+                          Starting...
+                        </span>
+                      ) : (
+                        'Start'
+                      )}
                     </button>
                   </div>
                 </div>
