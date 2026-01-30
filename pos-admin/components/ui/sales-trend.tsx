@@ -125,7 +125,7 @@ export default function SalesTrendChart({}: {}) {
   }, [labels, range]);
 
   return (
-    <div className="bg-white rounded-xl border p-4">
+    <div className="bg-white rounded-2xl border border-blue-600 p-4">
       <div className="flex items-start justify-between mb-3  text-black">
         <h3 className="font-semibold text-gray-900">Sales Trend</h3>
         <div className="flex items-center gap-2">

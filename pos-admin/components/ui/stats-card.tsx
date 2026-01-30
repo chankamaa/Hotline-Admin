@@ -16,7 +16,7 @@ export function StatsCard({ title, value, change, changeType = "neutral", icon }
   };
 
   return (
-    <div className="bg-white rounded-xl border p-6">
+    <div className="bg-white rounded-2xl border border-blue-600 p-6">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-gray-500">{title}</p>
         {icon && <div className="text-gray-400">{icon}</div>}

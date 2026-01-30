@@ -69,10 +69,19 @@ async function refresh() {
   return refreshPromise;
 }
 
+// Retry configuration for resilient API calls
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+const RETRYABLE_STATUS_CODES = [500, 502, 503, 504];
+
+async function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function api<T>(
   path: string,
   options: RequestInit = {},
-  retry = true
+  retryCount = 0
 ): Promise<T> {
   const token = getAccessToken();
 
@@ -87,15 +96,21 @@ export async function api<T>(
       body: options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined,
     });
 
-    if (res.status === 401 && retry) {
-      // token expired → try refresh once
+    // Handle 401 - token expired
+    if (res.status === 401 && retryCount === 0) {
       try {
         await refresh();
-        return api<T>(path, options, false);
+        return api<T>(path, options, retryCount + 1);
       } catch (error) {
-        // Refresh failed, don't retry
         throw error;
       }
+    }
+
+    // Handle 5xx server errors - retry with exponential backoff
+    if (RETRYABLE_STATUS_CODES.includes(res.status) && retryCount < MAX_RETRIES) {
+      console.warn(`Server error ${res.status} on ${path}, retrying in ${RETRY_DELAY_MS * (retryCount + 1)}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+      await delay(RETRY_DELAY_MS * (retryCount + 1));
+      return api<T>(path, options, retryCount + 1);
     }
 
     let data: any = null;
@@ -116,7 +131,14 @@ export async function api<T>(
 
     return data;
   } catch (error: any) {
-    // Network error or fetch failed
+    // Network error (connection refused, DNS failure, etc.) - retry
+    if (error.name === 'TypeError' && retryCount < MAX_RETRIES) {
+      console.warn(`Network error on ${path}, retrying in ${RETRY_DELAY_MS * (retryCount + 1)}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+      await delay(RETRY_DELAY_MS * (retryCount + 1));
+      return api<T>(path, options, retryCount + 1);
+    }
+    
+    // Final failure
     if (error.message && error.message !== "Request failed") {
       throw error;
     }

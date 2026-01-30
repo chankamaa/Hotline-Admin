@@ -201,9 +201,23 @@ export default function AdminDashboard() {
         }));
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading admin dashboard:", error);
-      toast.error("Failed to load dashboard data");
+      
+      // Check if it's a connection error
+      const isConnectionError = error.message?.includes("Failed to connect") || 
+                                error.message?.includes("NetworkError") ||
+                                error.message?.includes("fetch");
+      
+      if (isConnectionError) {
+        toast.error("Connection lost. Retrying automatically...");
+        // Auto-retry after 5 seconds on connection errors
+        setTimeout(() => {
+          loadDashboardData();
+        }, 5000);
+      } else {
+        toast.error("Failed to load dashboard data");
+      }
     } finally {
       setLoading(false);
     }
@@ -221,7 +235,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="bg-gray-100 p-6 w-full">
+    <div className="bg-gray-200 p-6 w-full">
       <div className="flex items-center justify-between mb-6">
         <PageHeader
           title="Administrator Dashboard"
@@ -295,7 +309,7 @@ export default function AdminDashboard() {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Sales */}
-        <div className="bg-white rounded-xl border">
+        <div className="bg-white rounded-xl border border-blue-600">
           <div className="p-4 border-b">
             <h3 className="font-semibold text-gray-900">Recent Sales</h3>
           </div>
@@ -333,7 +347,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Low Stock Alerts */}
-        <div className="bg-white rounded-xl border">
+        <div className="bg-white rounded-xl border  border-blue-600">
           <div className="p-4 border-b flex items-center gap-2">
             <AlertTriangle size={18} className="text-orange-500" />
             <h3 className="font-semibold text-gray-900">Low Stock Alerts</h3>
@@ -372,7 +386,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Pending Repairs */}
-        <div className="bg-white rounded-xl border lg:col-span-2">
+        <div className="bg-white rounded-xl border border-blue-600 lg:col-span-2">
           <div className="p-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Wrench size={18} className="text-blue-500" />
@@ -393,7 +407,7 @@ export default function AdminDashboard() {
             ) : (
               pendingRepairs.map((repair) => (
                 <div key={repair.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
-                  <div className="flex-1">
+                  <div className="flex-1 text-gray-500">
                     <div className="flex items-center gap-3 mb-1">
                       <div className="font-medium text-sm">{repair.id}</div>
                       <div className="text-sm text-gray-600">{repair.customer}</div>
@@ -421,7 +435,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* System Analytics Section */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mt-6 grid grid-cols-1  md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl border p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 bg-blue-100 rounded-lg">
