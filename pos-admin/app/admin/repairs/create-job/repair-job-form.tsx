@@ -376,22 +376,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
     return userRole === 'technician';
   };
 
-  // Check if field is editable by technician
-  const isFieldEditable = (fieldName: string): boolean => {
-    if (!isTechnician()) return true; // Admin/Manager can edit all
-    
-    // Technician can only edit these fields
-    const technicianEditableFields = [
-      'diagnosisNotes',
-      'repairNotes',
-      'laborCost',
-      'status',
-      'parts' // Parts used
-    ];
-    
-    return technicianEditableFields.includes(fieldName);
-  };
-
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -576,7 +560,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 name="deviceType"
                 value={formData.deviceType}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500  text-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500"
               >
                 {DEVICE_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -740,7 +724,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           <div className="flex items-center gap-2 mb-4 text-gray-700">
             <PackageIcon className="w-5 h-5 text-gray-500" />
             <h3 className="text-lg font-semibold">Parts Used</h3>
-            {isTechnician() && <span className="text-green-600 text-sm">(Required for Completion)</span>}
           </div>
           {errors.parts && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -876,7 +859,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
             {!isTechnician() && (
               <div className="relative" ref={technicianRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Assign to Technician {!isFieldEditable('assignedTo') && <span className="text-gray-400">(Read-only)</span>}
+                  Assign to Technician
                 </label>
                 <Input
                   value={technicianSearchTerm || technicians.find(t => t._id === formData.assignedTo)?.username || ''}
@@ -886,9 +869,8 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                     setFilteredTechnicians(technicians);
                   }}
                   placeholder="Search active technicians..."
-                  disabled={!isFieldEditable('assignedTo')}
                 />
-                {showTechnicianSuggestions && isFieldEditable('assignedTo') && (
+                {showTechnicianSuggestions && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                     {filteredTechnicians.length > 0 ? (
                       filteredTechnicians.map((tech) => (
@@ -909,14 +891,12 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                     )}
                   </div>
                 )}
-                {isFieldEditable('assignedTo') && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {technicians.length > 0 
-                      ? `${technicians.length} active technician${technicians.length !== 1 ? 's' : ''} from User Management`
-                      : 'No active technicians with TECHNICIAN role found'
-                    }
-                  </p>
-                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  {technicians.length > 0 
+                    ? `${technicians.length} active technician${technicians.length !== 1 ? 's' : ''} from User Management`
+                    : 'No active technicians with TECHNICIAN role found'
+                  }
+                </p>
               </div>
             )}
             
@@ -934,14 +914,13 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status {isTechnician() && <span className="text-green-600">(Editable)</span>}
+                Status
               </label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                disabled={!isFieldEditable('status')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {Object.entries(REPAIR_STATUS).map(([key, value]) => (
                   <option key={key} value={value}>
@@ -953,14 +932,13 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Priority {!isFieldEditable('priority') && <span className="text-gray-400">(Read-only)</span>}
+                Priority
               </label>
               <select
                 name="priority"
                 value={formData.priority}
                 onChange={handleInputChange}
-                disabled={!isFieldEditable('priority')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {PRIORITIES.map((priority) => (
                   <option key={priority} value={priority}>
@@ -972,14 +950,13 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Expected Completion {!isFieldEditable('expectedCompletionDate') && <span className="text-gray-400">(Read-only)</span>}
+                Expected Completion
               </label>
               <Input
                 type="datetime-local"
                 name="expectedCompletionDate"
                 value={formData.expectedCompletionDate}
                 onChange={handleInputChange}
-                disabled={!isFieldEditable('expectedCompletionDate')}
               />
             </div>
           </div>
@@ -991,7 +968,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Labor Cost {isTechnician() && <span className="text-green-600">(Required for Completion)</span>}
+                Labor Cost ($)
               </label>
               <Input
                 type="number"
@@ -1001,7 +978,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 placeholder="0.00"
                 step="0.01"
                 min="0"
-                disabled={!isFieldEditable('laborCost')}
               />
               {errors.laborCost && (
                 <p className="text-red-500 text-sm mt-1">{errors.laborCost}</p>
@@ -1010,7 +986,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estimated Total Cost {!isFieldEditable('estimatedCost') && <span className="text-gray-400">(Read-only)</span>}
+                Estimated Total Cost ($)
               </label>
               <Input
                 type="number"
@@ -1020,13 +996,12 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 placeholder="0.00"
                 step="0.01"
                 min="0"
-                disabled={!isFieldEditable('estimatedCost')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Advance Payment {!isFieldEditable('advancePayment') && <span className="text-gray-400">(Read-only)</span>}
+                Advance Payment ($)
               </label>
               <Input
                 type="number"
@@ -1036,7 +1011,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 placeholder="0.00"
                 step="0.01"
                 min="0"
-                disabled={!isFieldEditable('advancePayment')}
               />
             </div>
           </div>

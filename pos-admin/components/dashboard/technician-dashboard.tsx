@@ -21,6 +21,7 @@ import {
   RefreshCw,
   Settings,
   Plus,
+  X,
 } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
 import { repairApi } from "@/lib/api/repairApi";
@@ -41,7 +42,18 @@ export default function TechnicianDashboard() {
   const [myRepairs, setMyRepairs] = useState<any[]>([]);
   const [pendingRepairs, setPendingRepairs] = useState<any[]>([]);
   const [startingJobId, setStartingJobId] = useState<string | null>(null);
+  const [completingJobId, setCompletingJobId] = useState<string | null>(null);
   const myActiveRepairsRef = React.useRef<HTMLDivElement>(null);
+
+  // Complete Job Modal State
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [selectedRepair, setSelectedRepair] = useState<any>(null);
+  const [completeFormData, setCompleteFormData] = useState({
+    laborCost: 0,
+    diagnosisNotes: "",
+    repairNotes: "",
+  });
+  const [submittingComplete, setSubmittingComplete] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -69,13 +81,15 @@ export default function TechnicianDashboard() {
         inProgressCount = repairs.length;
 
         setMyRepairs(repairs.map((repair: any) => ({
+          _id: repair._id, // Store MongoDB _id for API calls
           id: repair.jobNumber || repair._id,
           customer: repair.customer?.name || "Unknown",
           device: `${repair.device?.brand || ""} ${repair.device?.model || ""}`.trim() || "Unknown Device",
           issue: repair.problemDescription || "Not specified",
           priority: repair.priority || "normal",
-          estimatedCost: repair.estimatedCost ? `$${repair.estimatedCost}` : "N/A",
-          status: repair.status?.toLowerCase().replace(/_/g, "-") || "in-progress",
+          estimatedCost: repair.estimatedCost || 0,
+          estimatedCostDisplay: repair.estimatedCost ? `$${repair.estimatedCost}` : "N/A",
+          status: repair.status || "IN_PROGRESS",
           createdAt: new Date(repair.createdAt).toLocaleDateString(),
         })));
       }
@@ -160,6 +174,75 @@ export default function TechnicianDashboard() {
       toast.error(errorMessage);
     } finally {
       setStartingJobId(null);
+    }
+  };
+
+  /**
+   * Open the Complete Job modal
+   */
+  const handleOpenCompleteModal = (repair: any) => {
+    setSelectedRepair(repair);
+    setCompleteFormData({
+      laborCost: 0,
+      diagnosisNotes: "",
+      repairNotes: "",
+    });
+    setShowCompleteModal(true);
+  };
+
+  /**
+   * Close the Complete Job modal
+   */
+  const handleCloseCompleteModal = () => {
+    setShowCompleteModal(false);
+    setSelectedRepair(null);
+    setCompleteFormData({
+      laborCost: 0,
+      diagnosisNotes: "",
+      repairNotes: "",
+    });
+  };
+
+  /**
+   * Handle completing a repair job
+   * Calls PUT /api/v1/repairs/:id/complete to update status to READY
+   */
+  const handleCompleteJob = async () => {
+    if (!selectedRepair) return;
+
+    // Validate form
+    if (!completeFormData.diagnosisNotes.trim()) {
+      toast.error("Please enter diagnosis notes");
+      return;
+    }
+    if (!completeFormData.repairNotes.trim()) {
+      toast.error("Please enter repair notes");
+      return;
+    }
+
+    setSubmittingComplete(true);
+    try {
+      // Call the backend API to complete the repair
+      await repairApi.complete(selectedRepair._id, {
+        laborCost: completeFormData.laborCost,
+        diagnosisNotes: completeFormData.diagnosisNotes.trim(),
+        repairNotes: completeFormData.repairNotes.trim(),
+        partsUsed: [] // Parts can be added in future enhancement
+      });
+      
+      // Show success message
+      toast.success(`${selectedRepair.id} marked as complete. Status updated to READY.`);
+      
+      // Close modal and reload dashboard
+      handleCloseCompleteModal();
+      await loadDashboardData();
+      
+    } catch (error: any) {
+      console.error("Error completing repair job:", error);
+      const errorMessage = error.response?.data?.message || "Failed to complete repair job";
+      toast.error(errorMessage);
+    } finally {
+      setSubmittingComplete(false);
     }
   };
 
@@ -281,10 +364,20 @@ export default function TechnicianDashboard() {
                   <span className="font-medium">Issue:</span> {repair.issue}
                 </div>
                 <div className="flex gap-2">
-                  <button className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Update Status
+                  <button 
+                    onClick={() => handleOpenCompleteModal(repair)}
+                    disabled={completingJobId === repair._id}
+                    className={`text-xs px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 flex items-center gap-1.5 ${
+                      completingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <CheckCircle size={12} />
+                    Complete
                   </button>
-                  <button className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                  <button 
+                    onClick={() => router.push(`/admin/repairs/${repair._id}`)}
+                    className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 font-medium"
+                  >
                     View Details
                   </button>
                 </div>
@@ -438,6 +531,145 @@ export default function TechnicianDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Complete Job Modal */}
+      {showCompleteModal && selectedRepair && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Complete Repair Job</h3>
+                <p className="text-sm text-gray-500">{selectedRepair.id}</p>
+              </div>
+              <button
+                onClick={handleCloseCompleteModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 space-y-4">
+              {/* Job Summary */}
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">Customer:</span>
+                    <p className="font-medium text-gray-900">{selectedRepair.customer}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Device:</span>
+                    <p className="font-medium text-gray-900">{selectedRepair.device}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-500">Issue:</span>
+                    <p className="font-medium text-gray-900">{selectedRepair.issue}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Estimated Cost:</span>
+                    <p className="font-medium text-gray-900">${selectedRepair.estimatedCost}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Labor Cost */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Labor Cost ($)
+                </label>
+                <input
+                  type="number"
+                  min=""
+                  step="10"
+                  value={completeFormData.laborCost}
+                  onChange={(e) => setCompleteFormData(prev => ({
+                    ...prev,
+                    laborCost: parseFloat(e.target.value) 
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="0.00"
+                />
+              </div>
+
+              {/* Diagnosis Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Diagnosis Notes <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={completeFormData.diagnosisNotes}
+                  onChange={(e) => setCompleteFormData(prev => ({
+                    ...prev,
+                    diagnosisNotes: e.target.value
+                  }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="Describe the diagnosis findings..."
+                />
+              </div>
+
+              {/* Repair Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Repair Notes <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={completeFormData.repairNotes}
+                  onChange={(e) => setCompleteFormData(prev => ({
+                    ...prev,
+                    repairNotes: e.target.value
+                  }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="Describe the repair work performed..."
+                />
+              </div>
+
+              {/* Info Note */}
+              <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+                <AlertCircle size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-blue-700">
+                  After completion, the job status will change to <strong>READY</strong> for customer pickup and payment collection.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 border-t bg-gray-50">
+              <button
+                onClick={handleCloseCompleteModal}
+                disabled={submittingComplete}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCompleteJob}
+                disabled={submittingComplete || !completeFormData.diagnosisNotes.trim() || !completeFormData.repairNotes.trim()}
+                className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 ${
+                  submittingComplete || !completeFormData.diagnosisNotes.trim() || !completeFormData.repairNotes.trim()
+                    ? 'opacity-60 cursor-not-allowed'
+                    : ''
+                }`}
+              >
+                {submittingComplete ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    Completing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={14} />
+                    Mark as Complete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

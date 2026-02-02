@@ -120,7 +120,7 @@ export function AdminSidebar({
               {!collapsed && hasMultipleItems && (
                 <button
                   onClick={() => toggleSection(section.label)}
-                  className="w-full px-3 py-2.5 text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-200 group"
+                  className="w-full px-3 py-2.5 text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-200 group"
                 >
                   <div className="flex items-center gap-3">
                     {/** Render section-level icon if provided */}
@@ -128,15 +128,15 @@ export function AdminSidebar({
                       (section as any).icon &&
                       (() => {
                         const SectionIcon = (section as any).icon as any;
-                        return <SectionIcon size={16} className="shrink-0 text-blue-600 group-hover:text-indigo-600 transition-colors" />;
+                        return <SectionIcon size={18} className="shrink-0 text-blue-600 group-hover:text-indigo-600 transition-colors" />;
                       })()
                     )}
-                    <span className="group-hover:text-slate-900  text-amber-200transition-colors">{section.label}</span>
+                    <span className="text-slate-700 group-hover:text-slate-900 transition-colors">{section.label}</span>
                   </div>
                   <ChevronDown
                     size={16}
                     className={cx(
-                      "transition-all duration-300 text-slate-500 group-hover:text-slate-700",
+                      "transition-all duration-300 text-slate-600 group-hover:text-slate-800",
                       isExpanded ? "rotate-180" : ""
                     )}
                   />
@@ -159,22 +159,25 @@ export function AdminSidebar({
                         <Link
                           href={item.href}
                           className={cx(
-                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 group",
-                            "hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-50 hover:shadow-sm",
-                            "focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:shadow-md",
+                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-base font-medium transition-all duration-200 group",
+                            "hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:shadow-sm",
+                            "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:shadow-md",
                             isActive 
-                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md" 
-                              : "text-slate-600 hover:text-slate-900"
+                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md font-semibold" 
+                              : "text-slate-700 hover:text-slate-900"
                           )}
                           aria-current={isActive ? "page" : undefined}
                         >
-                          <Icon size={18} className={cx(
+                          <Icon size={20} className={cx(
                             "shrink-0 transition-colors",
-                            isActive ? "text-white" : "text-slate-500 group-hover:text-blue-600"
+                            isActive ? "text-white" : item.href === "/admin/warranty" ? "text-blue-600" : "text-slate-600 group-hover:text-blue-600"
                           )} />
                           {!collapsed && (
                             <>
-                              <span className="flex-1 group-hover:font-semibold transition-all">{item.title}</span>
+                              <span className={cx(
+                                "flex-1 group-hover:font-semibold transition-all",
+                                item.href === "/admin/warranty" && "font-bold"
+                              )}>{item.title}</span>
                               {badge && (
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white font-medium shadow-sm">
                                   {badge}

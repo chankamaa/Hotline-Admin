@@ -1,5 +1,10 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL!;
+const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || "";
+
+if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL) {
+  console.warn("⚠️ NEXT_PUBLIC_API_URL is not configured. Using default: http://localhost:5000");
+  console.warn("⚠️ Please set NEXT_PUBLIC_API_URL in your .env.local file");
+}
 
 const ACCESS_KEY = "accessToken";
 const REFRESH_KEY = "refreshToken";
