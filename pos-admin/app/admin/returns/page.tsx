@@ -3,48 +3,105 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
-import {
-    returnApi,
-    Return,
-    RETURN_TYPES,
-    RETURN_STATUS
-} from '@/lib/api/returnApi';
+import { returnApi, Return } from '@/lib/api/returnApi';
 import { useToast } from '@/providers/toast-provider';
 import {
     RotateCcw,
     ArrowRightLeft,
     Eye,
     Calendar,
-    Clock,
     DollarSign,
     Package,
-    Search
+    Search,
+    RefreshCw,
+    AlertCircle,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 
 export default function ReturnsPage() {
     const toast = useToast();
     const [returns, setReturns] = useState<Return[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'REFUND' | 'EXCHANGE'>('all');
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedReturn, setSelectedReturn] = useState<Return | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [pageLimit] = useState(20);
+    
+    // Date filter state
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         loadReturns();
-    }, []);
+    }, [currentPage, filter, startDate, endDate]);
 
     const loadReturns = async () => {
         try {
             setLoading(true);
-            const response = await returnApi.getAll();
+            setError(null);
+            
+            const params: any = {
+                page: currentPage,
+                limit: pageLimit
+            };
+            
+            if (filter !== 'all') {
+                params.returnType = filter;
+            }
+            
+            if (startDate) {
+                params.startDate = startDate;
+            }
+            
+            if (endDate) {
+                params.endDate = endDate;
+            }
+            
+            const response = await returnApi.getAll(params);
             setReturns(response.data.returns || []);
+            
+            if (response.pagination) {
+                setTotalPages(response.pagination.pages);
+                setTotalRecords(response.pagination.total);
+            }
         } catch (error: any) {
             console.error('Error loading returns:', error);
-            toast.error(error?.message || 'Failed to load returns');
+            const errorMessage = error?.response?.data?.message || error?.message || 'Failed to load returns';
+            setError(errorMessage);
+            toast.error(errorMessage);
+            setReturns([]);
         } finally {
             setLoading(false);
         }
+    };
+    
+    const handleRefresh = () => {
+        setCurrentPage(1);
+        loadReturns();
+    };
+    
+    const handleFilterChange = (newFilter: 'all' | 'REFUND' | 'EXCHANGE') => {
+        setFilter(newFilter);
+        setCurrentPage(1);
+    };
+    
+    const handleDateFilter = () => {
+        setCurrentPage(1);
+        loadReturns();
+    };
+    
+    const clearDateFilter = () => {
+        setStartDate('');
+        setEndDate('');
+        setCurrentPage(1);
     };
 
     const filteredReturns = returns.filter((ret) => {
@@ -96,6 +153,76 @@ export default function ReturnsPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Returns & Exchanges</h1>
                     <p className="text-gray-600">Manage product returns and exchanges</p>
                 </div>
+                <Button 
+                    onClick={handleRefresh} 
+                    variant="secondary"
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                >
+                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                </Button>
+            </div>
+
+            {/* Error Display */}
+            {error && !loading && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <h3 className="text-red-800 font-medium">Error Loading Returns</h3>
+                        <p className="text-red-700 text-sm mt-1">{error}</p>
+                    </div>
+                    <Button 
+                        onClick={handleRefresh} 
+                        variant="secondary"
+                        size="sm"
+                    >
+                        Try Again
+                    </Button>
+                </div>
+            )}
+
+            {/* Date Filter */}
+            <div className="bg-white rounded-lg border p-4">
+                <div className="flex flex-wrap items-end gap-3">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Start Date
+                        </label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                        />
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            End Date
+                        </label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                        />
+                    </div>
+                    <Button 
+                        onClick={handleDateFilter}
+                        disabled={loading}
+                    >
+                        Apply Filter
+                    </Button>
+                    {(startDate || endDate) && (
+                        <Button 
+                            onClick={clearDateFilter}
+                            variant="secondary"
+                            disabled={loading}
+                        >
+                            Clear
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Stats Cards */}
@@ -103,18 +230,18 @@ export default function ReturnsPage() {
                 <div
                     className={`p-4 rounded-lg border cursor-pointer transition ${filter === 'all' ? 'bg-blue-50 border-blue-300' : 'bg-white'
                         }`}
-                    onClick={() => setFilter('all')}
+                    onClick={() => handleFilterChange('all')}
                 >
                     <div className="text-sm text-gray-600 flex items-center gap-1">
                         <Package className="w-4 h-4" />
                         All Transactions
                     </div>
-                    <div className="text-2xl font-bold">{stats.total}</div>
+                    <div className="text-2xl font-bold">{totalRecords || stats.total}</div>
                 </div>
                 <div
                     className={`p-4 rounded-lg border cursor-pointer transition ${filter === 'REFUND' ? 'bg-red-50 border-red-300' : 'bg-white'
                         }`}
-                    onClick={() => setFilter('REFUND')}
+                    onClick={() => handleFilterChange('REFUND')}
                 >
                     <div className="text-sm text-red-600 flex items-center gap-1">
                         <RotateCcw className="w-4 h-4" />
@@ -125,7 +252,7 @@ export default function ReturnsPage() {
                 <div
                     className={`p-4 rounded-lg border cursor-pointer transition ${filter === 'EXCHANGE' ? 'bg-blue-50 border-blue-300' : 'bg-white'
                         }`}
-                    onClick={() => setFilter('EXCHANGE')}
+                    onClick={() => handleFilterChange('EXCHANGE')}
                 >
                     <div className="text-sm text-blue-600 flex items-center gap-1">
                         <ArrowRightLeft className="w-4 h-4" />
@@ -139,7 +266,7 @@ export default function ReturnsPage() {
                         Total Refunds
                     </div>
                     <div className="text-2xl font-bold text-green-700">
-                        ${stats.totalValue.toFixed(2)}
+                        ₹{stats.totalValue.toFixed(2)}
                     </div>
                 </div>
             </div>
@@ -218,7 +345,7 @@ export default function ReturnsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className="font-semibold text-red-600">
-                                            ${ret.totalRefund?.toFixed(2) || '0.00'}
+                                            ₹{ret.totalRefund?.toFixed(2) || '0.00'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
@@ -250,6 +377,64 @@ export default function ReturnsPage() {
                     </tbody>
                 </table>
             </div>
+            
+            {/* Pagination */}
+            {!loading && filteredReturns.length > 0 && totalPages > 1 && (
+                <div className="bg-white rounded-lg border p-4 flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                        Showing page {currentPage} of {totalPages} ({totalRecords} total records)
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1 || loading}
+                            variant="secondary"
+                            size="sm"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                        </Button>
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                let pageNum;
+                                if (totalPages <= 5) {
+                                    pageNum = i + 1;
+                                } else if (currentPage <= 3) {
+                                    pageNum = i + 1;
+                                } else if (currentPage >= totalPages - 2) {
+                                    pageNum = totalPages - 4 + i;
+                                } else {
+                                    pageNum = currentPage - 2 + i;
+                                }
+                                
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        disabled={loading}
+                                        className={`px-3 py-1 rounded text-sm ${
+                                            currentPage === pageNum
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                                        }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <Button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages || loading}
+                            variant="secondary"
+                            size="sm"
+                        >
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Details Modal */}
             <Modal
@@ -270,7 +455,7 @@ export default function ReturnsPage() {
                                 {getTypeBadge(selectedReturn.returnType)}
                             </div>
                             <div className="mt-4 text-3xl font-bold">
-                                ${selectedReturn.totalRefund?.toFixed(2)}
+                                ₹{selectedReturn.totalRefund?.toFixed(2)}
                             </div>
                         </div>
 
@@ -297,7 +482,7 @@ export default function ReturnsPage() {
                                         </div>
                                         <div className="text-right">
                                             <div className="text-red-600 font-semibold">
-                                                -${item.refundAmount?.toFixed(2)}
+                                                -₹{item.refundAmount?.toFixed(2)}
                                             </div>
                                         </div>
                                     </div>
@@ -319,14 +504,14 @@ export default function ReturnsPage() {
                                     <div>
                                         <span className="text-gray-500">New Sale Total:</span>
                                         <span className="ml-2 text-gray-900 font-medium">
-                                            ${selectedReturn.exchangeSale.grandTotal?.toFixed(2)}
+                                            ₹{selectedReturn.exchangeSale.grandTotal?.toFixed(2)}
                                         </span>
                                     </div>
                                     {selectedReturn.exchangeAmountDue !== undefined && (
                                         <div>
                                             <span className="text-gray-500">Amount Due:</span>
                                             <span className="ml-2 text-green-600 font-medium">
-                                                ${selectedReturn.exchangeAmountDue?.toFixed(2)}
+                                                ₹{selectedReturn.exchangeAmountDue?.toFixed(2)}
                                             </span>
                                         </div>
                                     )}
