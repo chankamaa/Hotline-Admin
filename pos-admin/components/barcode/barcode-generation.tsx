@@ -92,7 +92,7 @@ export default function BarcodeGeneration() {
         <select
           value={barcodeFormat}
           onChange={(e) => setBarcodeFormat(e.target.value as BarcodeFormat)}
-          className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full md:w-64 px-3 text-blue-800 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="EAN-13">EAN-13 (European Article Number)</option>
           <option value="UPC">UPC (Universal Product Code)</option>
@@ -102,7 +102,7 @@ export default function BarcodeGeneration() {
 
       {/* Single Barcode Generation */}
       <div className="border-t pt-6">
-        <h3 className="text-lg font-semibold mb-4">Single Product Barcode</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-500">Single Product Barcode</h3>
         
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
@@ -113,7 +113,7 @@ export default function BarcodeGeneration() {
                 onChange={() => setAutoGenerate(true)}
                 className="mr-2"
               />
-              <span className="text-sm">Auto-generate barcode</span>
+              <span className="text-sm text-gray-500">Auto-generate barcode</span>
             </label>
             <label className="flex items-center">
               <input
@@ -122,7 +122,7 @@ export default function BarcodeGeneration() {
                 onChange={() => setAutoGenerate(false)}
                 className="mr-2"
               />
-              <span className="text-sm">Custom barcode assignment</span>
+              <span className="text-sm text-gray-500">Custom barcode assignment</span>
             </label>
           </div>
 
