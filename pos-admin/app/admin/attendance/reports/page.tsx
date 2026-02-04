@@ -141,21 +141,21 @@ export default function AttendanceReportsPage() {
           <div className="flex gap-2">
             <Button 
               size="sm" 
-              variant={reportType === "daily" ? "default" : "outline"}
+              variant={reportType === "daily" ? "primary" : "ghost"}
               onClick={() => setReportType("daily")}
             >
               Daily
             </Button>
             <Button 
               size="sm" 
-              variant={reportType === "weekly" ? "default" : "outline"}
+              variant={reportType === "weekly" ? "primary" : "ghost"}
               onClick={() => setReportType("weekly")}
             >
               Weekly
             </Button>
             <Button 
               size="sm" 
-              variant={reportType === "monthly" ? "default" : "outline"}
+              variant={reportType === "monthly" ? "primary" : "ghost"}
               onClick={() => setReportType("monthly")}
             >
               Monthly
@@ -180,17 +180,17 @@ export default function AttendanceReportsPage() {
             ))}
           </select>
 
-          <Button variant="outline">
+          <Button variant="ghost">
             <Filter size={18} className="mr-2" />
             More Filters
           </Button>
 
           <div className="ml-auto flex gap-2">
-            <Button variant="outline">
+            <Button variant="ghost">
               <Download size={18} className="mr-2" />
               Export Excel
             </Button>
-            <Button variant="outline">
+            <Button variant="ghost">
               <Download size={18} className="mr-2" />
               Export PDF
             </Button>

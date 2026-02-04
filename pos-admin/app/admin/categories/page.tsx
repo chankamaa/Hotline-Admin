@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/providers/toast-provider";
+import { Category } from "@/types";
 import {
   fetchCategories,
   createCategory,

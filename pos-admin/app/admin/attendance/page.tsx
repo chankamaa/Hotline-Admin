@@ -47,6 +47,7 @@ export default function AttendancePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isClockingIn, setIsClockingIn] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [notes, setNotes] = useState("");
 
   // Mock attendance data
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([
@@ -247,7 +248,7 @@ export default function AttendancePage() {
       key: "actions",
       label: "Actions",
       render: (record: AttendanceRecord) => (
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="ghost">
           <Eye size={14} />
         </Button>
       )
@@ -279,16 +280,16 @@ export default function AttendancePage() {
           <span>Clock In/Out</span>
         </Button>
         <Link href="/admin/attendance/reports">
-          <Button variant="outline" className="h-auto py-4 flex flex-col gap-2 w-full">
+          <Button variant="ghost" className="h-auto py-4 flex flex-col gap-2 w-full">
             <FileText size={24} />
             <span>View Reports</span>
           </Button>
         </Link>
-        <Button variant="outline" className="h-auto py-4 flex flex-col gap-2">
+        <Button variant="ghost" className="h-auto py-4 flex flex-col gap-2">
           <Download size={24} />
           <span>Export to Excel</span>
         </Button>
-        <Button variant="outline" className="h-auto py-4 flex flex-col gap-2">
+        <Button variant="ghost" className="h-auto py-4 flex flex-col gap-2">
           <BarChart3 size={24} />
           <span>Monthly Summary</span>
         </Button>
@@ -363,21 +364,21 @@ export default function AttendancePage() {
           <div className="flex gap-2">
             <Button 
               size="sm" 
-              variant={viewMode === "daily" ? "default" : "outline"}
+              variant={viewMode === "daily" ? "primary" : "ghost"}
               onClick={() => setViewMode("daily")}
             >
               Daily
             </Button>
             <Button 
               size="sm" 
-              variant={viewMode === "weekly" ? "default" : "outline"}
+              variant={viewMode === "weekly" ? "primary" : "ghost"}
               onClick={() => setViewMode("weekly")}
             >
               Weekly
             </Button>
             <Button 
               size="sm" 
-              variant={viewMode === "monthly" ? "default" : "outline"}
+              variant={viewMode === "monthly" ? "primary" : "ghost"}
               onClick={() => setViewMode("monthly")}
             >
               Monthly
@@ -417,7 +418,7 @@ export default function AttendancePage() {
             <option value="On Leave">On Leave</option>
           </select>
 
-          <Button variant="outline">
+          <Button variant="ghost">
             <Download size={18} className="mr-2" />
             Export
           </Button>
@@ -500,12 +501,18 @@ export default function AttendancePage() {
             </select>
           </div>
 
-          <Input
-            label="Notes (Optional)"
-            type="textarea"
-            placeholder="Any notes about this session..."
-            rows={2}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Notes (Optional)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any notes about this session..."
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+          </div>
         </div>
       </Modal>
     </div>

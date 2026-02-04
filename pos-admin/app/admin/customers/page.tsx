@@ -6,7 +6,7 @@ import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Customer } from "@/lib/types";
+import { Customer } from "@/types";
 import { Edit, Trash2, Eye, Mail, Phone, MapPin } from "lucide-react";
 
 export default function CustomersPage() {
@@ -163,7 +163,7 @@ export default function CustomersPage() {
       label: "Total Purchases",
       render: (customer) => (
         <div className="font-semibold text-green-600">
-          {customer.totalPurchases.toFixed(2)}
+          {customer.totalPurchases?.toFixed(2) || "0.00"}
         </div>
       ),
     },
@@ -172,7 +172,7 @@ export default function CustomersPage() {
       label: "Points",
       render: (customer) => (
         <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
-          {customer.loyaltyPoints} pts
+          {customer.loyaltyPoints || 0} pts
         </span>
       ),
     },
@@ -239,7 +239,7 @@ export default function CustomersPage() {
         <div className="bg-white rounded-xl border p-4">
           <div className="text-sm text-gray-500 mb-1">Total Revenue</div>
           <div className="text-2xl font-bold text-green-600">
-            ${customers.reduce((sum, c) => sum + c.totalPurchases, 0).toFixed(0)}
+            ${customers.reduce((sum, c) => sum + (c.totalPurchases || 0), 0).toFixed(0)}
           </div>
         </div>
         <div className="bg-white rounded-xl border p-4">
@@ -248,7 +248,7 @@ export default function CustomersPage() {
             $
             {customers.length > 0
               ? (
-                  customers.reduce((sum, c) => sum + c.totalPurchases, 0) / customers.length
+                  customers.reduce((sum, c) => sum + (c.totalPurchases || 0), 0) / customers.length
                 ).toFixed(0)
               : 0}
           </div>
@@ -398,7 +398,7 @@ export default function CustomersPage() {
               <div className="p-4 bg-green-50 rounded-lg">
                 <div className="text-sm text-gray-700 mb-1">Total Purchases</div>
                 <div className="text-2xl font-bold text-green-600">
-                  {currentCustomer.totalPurchases.toFixed(2)}
+                  {currentCustomer.totalPurchases?.toFixed(2) || "0.00"}
                 </div>
               </div>
               <div className="p-4 bg-blue-50 rounded-lg">

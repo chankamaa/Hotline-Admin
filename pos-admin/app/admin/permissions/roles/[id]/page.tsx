@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
 import { Save, ArrowLeft, Shield, AlertCircle, Lock, CheckCircle, Info } from "lucide-react";
 import { roleApi, Role } from "@/lib/api/roleApi";
 import { permissionApi, Permission, PermissionsByCategory } from "@/lib/api/permissionApi";
 import RequirePerm from "@/components/RequirePerm";
-import { PERMISSIONS, PERMISSION_CATEGORIES, ROLE_DEFINITIONS, getPermissionDisplayName } from "@/lib/permissions";
+import { PERMISSIONS } from "@/lib/permissions";
 import { useAuth } from "@/providers/providers";
 import { can } from "@/lib/acl";
 
@@ -128,28 +129,29 @@ export default function RoleEditPage() {
     setHasChanges(true);
   };
   
-  const applyRoleTemplate = (templateRole: string) => {
-    if (!canManagePermissions) {
-      alert("You don't have permission to modify role permissions");
-      return;
-    }
-    
-    const roleDefinition = ROLE_DEFINITIONS[templateRole.toUpperCase()];
-    if (!roleDefinition) return;
-    
-    const newSelected = new Set<string>();
-    
-    // Map permission codes from template to permission IDs
-    roleDefinition.permissions.forEach(permCode => {
-      const permId = permissionCodeToId[permCode];
-      if (permId) {
-        newSelected.add(permId);
-      }
-    });
-    
-    setSelectedPermissions(newSelected);
-    setHasChanges(true);
-  };
+  // Role templates feature temporarily disabled - ROLE_DEFINITIONS not available
+  // const applyRoleTemplate = (templateRole: string) => {
+  //   if (!canManagePermissions) {
+  //     alert("You don't have permission to modify role permissions");
+  //     return;
+  //   }
+  //   
+  //   const roleDefinition = ROLE_DEFINITIONS[templateRole.toUpperCase()];
+  //   if (!roleDefinition) return;
+  //   
+  //   const newSelected = new Set<string>();
+  //   
+  //   // Map permission codes from template to permission IDs
+  //   roleDefinition.permissions.forEach(permCode => {
+  //     const permId = permissionCodeToId[permCode];
+  //     if (permId) {
+  //       newSelected.add(permId);
+  //     }
+  //   });
+  //   
+  //   setSelectedPermissions(newSelected);
+  //   setHasChanges(true);
+  // };
 
   const handleSave = async () => {
     if (!role) return;
@@ -251,8 +253,8 @@ export default function RoleEditPage() {
           </div>
         </div>
 
-        {/* Role Templates */}
-        {canManagePermissions && (
+        {/* Role Templates - Temporarily disabled until ROLE_DEFINITIONS is added */}
+        {/* canManagePermissions && (
           <div className="bg-linear-to-r from-sky-50 to-blue-50 rounded-lg border border-sky-200 p-6 mb-6">\n            <div className="flex items-start gap-3 mb-4">
               <Info className="text-sky-600 shrink-0 mt-0.5" size={20} />
               <div className="flex-1">
@@ -262,22 +264,8 @@ export default function RoleEditPage() {
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              {Object.entries(ROLE_DEFINITIONS).map(([key, roleDef]) => (
-                <button
-                  key={key}
-                  onClick={() => applyRoleTemplate(key)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-sky-200 rounded-lg hover:border-sky-400 hover:bg-sky-50 transition-all"
-                  title={roleDef.description}
-                >
-                  <Shield size={16} className={`text-${roleDef.color || 'gray'}-600`} />
-                  <span className="font-medium text-gray-900">{roleDef.name}</span>
-                  <span className="text-xs text-gray-500">({roleDef.permissions.length} perms)</span>
-                </button>
-              ))}
-            </div>
           </div>
-        )}
+        ) */}
 
         {/* Save Button */}
         {hasChanges && canManagePermissions && (
@@ -297,11 +285,11 @@ export default function RoleEditPage() {
           </div>
         )}
 
-        {/* Permissions by Category - Using PERMISSION_CATEGORIES structure */}
+        {/* Permissions by Category */}
         <div className="space-y-6">
-          {Object.entries(PERMISSION_CATEGORIES).map(([categoryKey, categoryData]) => {
-            // Get permissions for this category from backend grouped permissions
-            const categoryPerms = groupedPermissions[categoryKey] || [];
+          {Object.entries(groupedPermissions).map(([categoryKey, categoryPerms]) => {
+            // Get permissions for this category from backend
+            if (!categoryPerms || categoryPerms.length === 0) return null;
             
             if (categoryPerms.length === 0) return null;
             
@@ -325,9 +313,8 @@ export default function RoleEditPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <Shield size={18} className="opacity-70" />
-                      <h3 className="text-lg font-semibold">{categoryData.name}</h3>
+                      <h3 className="text-lg font-semibold">{categoryKey}</h3>
                     </div>
-                    <p className="text-sm opacity-80 mb-2">{categoryData.description}</p>
                     <div className="flex items-center gap-2 text-xs font-medium">
                       <span className="bg-white/40 px-2 py-0.5 rounded">
                         {selectedCount} of {categoryPerms.length} selected
@@ -362,10 +349,7 @@ export default function RoleEditPage() {
                 <div className="divide-y divide-gray-100">
                   {categoryPerms.map((perm) => {
                     const isSelected = selectedPermissions.has(perm._id);
-                    
-                    // Try to get enhanced description from PERMISSION_CATEGORIES
-                    const permDetail = categoryData.permissions.find(p => p.code === perm.code);
-                    const description = permDetail?.description || perm.description;
+                    const description = perm.description;
 
                     return (
                       <div

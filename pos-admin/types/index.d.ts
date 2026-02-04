@@ -3,7 +3,7 @@
  */
 
 // ============ CATEGORY TYPES ============
-interface Category {
+export interface Category {
   _id: string;
   name: string;
   description?: string;
@@ -17,14 +17,14 @@ interface Category {
 }
 
 // ============ PRODUCT TYPES ============
-interface ProductSupplier {
+export interface ProductSupplier {
   name?: string;
   contact?: string;
   phone?: string;
   email?: string;
 }
 
-interface ProductOffer {
+export interface ProductOffer {
   isActive: boolean;
   type: "PERCENTAGE" | "FIXED";
   value: number;
@@ -33,7 +33,7 @@ interface ProductOffer {
   description?: string;
 }
 
-interface Product {
+export interface Product {
   _id: string;
   name: string;
   description?: string;
@@ -68,7 +68,7 @@ interface Product {
 }
 
 // ============ USER TYPES ============
-interface User {
+export interface User {
   _id: string;
   name: string;
   email: string;
@@ -80,7 +80,7 @@ interface User {
 }
 
 // ============ ROLE TYPES ============
-interface Role {
+export interface Role {
   _id: string;
   name: string;
   description?: string;
@@ -91,7 +91,7 @@ interface Role {
 }
 
 // ============ REPAIR TYPES ============
-interface RepairJob {
+export interface RepairJob {
   _id: string;
   customerName: string;
   customerPhone: string;
@@ -105,8 +105,23 @@ interface RepairJob {
   updatedAt: string;
 }
 
+// ============ CUSTOMER TYPES ============
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  city?: string;
+  totalPurchases?: number;
+  lastVisit?: Date;
+  loyaltyPoints?: number;
+  createdAt: Date;
+  notes?: string;
+}
+
 // ============ API RESPONSE TYPES ============
-interface ApiResponse<T = any> {
+export interface ApiResponse<T = any> {
   status: "success" | "error" | "fail";
   data?: T;
   message?: string;
@@ -114,7 +129,7 @@ interface ApiResponse<T = any> {
 }
 
 // ============ FORM TYPES ============
-interface SelectOption {
+export interface SelectOption {
   value: string;
   label: string;
 }
