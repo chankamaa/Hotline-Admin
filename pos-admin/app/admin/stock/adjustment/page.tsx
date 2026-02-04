@@ -62,7 +62,7 @@ export default function StockAdjustmentPage() {
      Load adjustment types
   -------------------------------------------------- */
   useEffect(() => {
-    fetchAdjustmentTypes().then((res) =>
+    fetchAdjustmentTypes().then((res: any) =>
       setAdjustmentTypes(res.data.types)
     ).catch((err) => {
       console.error("Failed to fetch adjustment types:", err);
@@ -179,7 +179,7 @@ export default function StockAdjustmentPage() {
 
     // Fetch current stock level from backend
     try {
-      const response = await fetchProductStock(product._id);
+      const response: any = await fetchProductStock(product._id);
       const stockData = response.data;
       setCurrentStock(stockData);
       setPreviousQuantity(stockData.quantity);
@@ -250,7 +250,7 @@ export default function StockAdjustmentPage() {
     try {
       const response = await adjustStock({
         productId: form.productId,
-        type: form.type,
+        type: form.type as any,
         quantity: parseInt(form.quantity),
         reason: form.reason || undefined,
         reference: form.reference || undefined,

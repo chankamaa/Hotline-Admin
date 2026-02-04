@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ChevronRight, ChevronDown, Folder, FolderOpen } from "lucide-react";
+import { Category } from "@/types/index.d";
 
 interface CategorySelectorProps {
   value: string;

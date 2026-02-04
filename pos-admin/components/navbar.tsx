@@ -4,6 +4,8 @@ import { Menu, Bell, Search, Plus, LogOut, User, ChevronDown, AlertCircle, Packa
 import { useAuth } from "@/providers/providers";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { LowStockItem, AppNotification } from "@/types/index.d";
+import { getNotifications, getLowStockAlerts, markAsRead, markAllAsRead } from "@/lib/api/notificationApi";
 
 
 export function AdminNavbar({
@@ -17,7 +19,7 @@ export function AdminNavbar({
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -107,7 +109,7 @@ export function AdminNavbar({
   // Mark notification as read
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await markNotificationAsRead(notificationId);
+      await markAsRead(notificationId);
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
       );
@@ -120,7 +122,7 @@ export function AdminNavbar({
   // Mark all as read
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllNotificationsAsRead();
+      await markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (err) {
@@ -129,7 +131,7 @@ export function AdminNavbar({
   };
 
   // Get icon for notification type
-  const getNotificationIcon = (type: Notification["type"]) => {
+  const getNotificationIcon = (type: AppNotification["type"]) => {
     const iconClass = "h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0";
     switch (type) {
       case "sale":
@@ -170,8 +172,12 @@ export function AdminNavbar({
         return { color: "bg-red-500", label: "Critical", textColor: "text-red-600" };
       case "warning":
         return { color: "bg-amber-500", label: "Warning", textColor: "text-amber-600" };
+      case "medium":
+        return { color: "bg-orange-500", label: "Medium", textColor: "text-orange-600" };
       case "low":
         return { color: "bg-yellow-500", label: "Low", textColor: "text-yellow-600" };
+      default:
+        return { color: "bg-slate-500", label: "Unknown", textColor: "text-slate-600" };
     }
   };
 
@@ -310,7 +316,7 @@ export function AdminNavbar({
                         const urgency = getUrgencyBadge(item.urgencyLevel);
                         return (
                           <div
-                            key={item.id}
+                            key={item._id}
                             className="px-4 py-3 hover:bg-amber-50/50 transition-colors border-b border-slate-100 cursor-pointer group"
                           >
                             <div className="flex items-start gap-3">
@@ -320,7 +326,7 @@ export function AdminNavbar({
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <p className="text-sm font-semibold text-slate-800 group-hover:text-amber-600 transition-colors">
-                                    {item.productName}
+                                    {item.name}
                                   </p>
                                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${urgency.color} text-white font-bold uppercase`}>
                                     {urgency.label}
@@ -331,21 +337,21 @@ export function AdminNavbar({
                                 </p>
                                 <div className="flex items-center gap-3 text-xs">
                                   <span className={`font-semibold ${urgency.textColor}`}>
-                                    Current: {item.currentQuantity}
+                                    Current: {item.stock}
                                   </span>
                                   <span className="text-slate-400">•</span>
                                   <span className="text-slate-500">
-                                    Min: {item.minimumThreshold}
+                                    Min: {item.minStockLevel}
                                   </span>
                                   {item.category && (
                                     <>
                                       <span className="text-slate-400">•</span>
-                                      <span className="text-slate-500">{item.category}</span>
+                                      <span className="text-slate-500">{item.category.name}</span>
                                     </>
                                   )}
                                 </div>
                                 <p className="text-xs text-slate-400 mt-1">
-                                  {formatTimestamp(item.lastUpdated)}
+                                  Low stock alert
                                 </p>
                               </div>
                             </div>

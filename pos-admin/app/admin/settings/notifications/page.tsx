@@ -183,7 +183,6 @@ export default function NotificationSettingsPage() {
                     type="number"
                     value={formData.defaultLowStockThreshold}
                     onChange={(e) => handleInputChange("defaultLowStockThreshold", parseInt(e.target.value))}
-                    min={0}
                   />
                   <p className="text-xs text-gray-500 mt-1">Alert when stock falls below this level</p>
                 </div>
@@ -196,7 +195,6 @@ export default function NotificationSettingsPage() {
                     type="number"
                     value={formData.criticalStockThreshold}
                     onChange={(e) => handleInputChange("criticalStockThreshold", parseInt(e.target.value))}
-                    min={0}
                   />
                   <p className="text-xs text-gray-500 mt-1">Urgent alert threshold</p>
                 </div>
@@ -354,7 +352,6 @@ export default function NotificationSettingsPage() {
                     type="number"
                     value={formData.warrantyAlertDaysBefore}
                     onChange={(e) => handleInputChange("warrantyAlertDaysBefore", parseInt(e.target.value))}
-                    min={1}
                   />
                   <p className="text-xs text-gray-500 mt-1">Send alert this many days before warranty expires</p>
                 </div>

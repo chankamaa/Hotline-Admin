@@ -156,7 +156,6 @@ export default function FinancialReportsPage({
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="w-48"
               />
             </div>
             <Button>

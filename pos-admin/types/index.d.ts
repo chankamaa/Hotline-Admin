@@ -120,6 +120,42 @@ export interface Customer {
   notes?: string;
 }
 
+// ============ SUPPLIER TYPES ============
+export interface Supplier {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  email: string;
+  phone: string;
+  address?: string;
+  website?: string;
+  paymentTerms?: string;
+  notes?: string;
+  createdAt: Date;
+}
+
+// ============ STOCK TYPES ============
+export interface LowStockItem {
+  _id: string;
+  name: string;
+  sku: string;
+  stock: number;
+  minStockLevel: number;
+  category?: { name: string };
+  urgencyLevel?: "critical" | "warning" | "medium" | "low";
+}
+
+// ============ NOTIFICATION TYPES ============
+export interface AppNotification {
+  id: string;
+  type: "info" | "warning" | "error" | "success" | "repair" | "low_stock" | "sale" | "stock" | "warranty" | "system";
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  link?: string;
+}
+
 // ============ API RESPONSE TYPES ============
 export interface ApiResponse<T = any> {
   status: "success" | "error" | "fail";

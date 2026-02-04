@@ -213,8 +213,13 @@ export default function ReportBuilderPage() {
                     </div>
                     <div className="col-span-4">
                       <Input
+                        value={filter.value || ""}
+                        onChange={(e) => {
+                          const newFilters = [...filters];
+                          newFilters[index].value = e.target.value;
+                          setFilters(newFilters);
+                        }}
                         placeholder="Value"
-                        className="text-sm"
                       />
                     </div>
                     <div className="col-span-1">

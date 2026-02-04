@@ -101,7 +101,7 @@ export default function SalesPage() {
     try {
       const res = await getSales({ limit: 50 });
       // Handle different response structures
-      const salesData = res?.data?.data?.sales || res?.data?.sales || [];
+      const salesData = (res as any)?.data?.data?.sales || (res as any)?.data?.sales || [];
       setSales(salesData);
     } catch (error: any) {
       console.error("Error loading sales:", error);
@@ -153,7 +153,7 @@ export default function SalesPage() {
   const handleView = async (saleId: string) => {
     try {
       const res = await getSaleById(saleId);
-      const saleData = res?.data?.data?.sale || res?.data?.sale;
+      const saleData = (res as any)?.data?.data?.sale || (res as any)?.data?.sale;
       if (saleData) {
         setViewSale(saleData);
         setIsViewOpen(true);
@@ -345,12 +345,10 @@ export default function SalesPage() {
       <DataTable
         data={filteredSales}
         columns={columns}
-        loading={loading}
         onSearch={handleSearch}
         searchPlaceholder="Search by invoice, customer, product..."
         onAdd={() => setIsCreateOpen(true)}
         addButtonLabel="New Sale"
-        className="mt-6 text-gray-900"
       />
 
 

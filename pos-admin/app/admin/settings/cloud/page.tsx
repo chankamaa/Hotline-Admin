@@ -327,8 +327,6 @@ export default function CloudStoragePage() {
                       type="number"
                       value={cloudConfig.retentionDays}
                       onChange={(e) => handleInputChange("retentionDays", parseInt(e.target.value))}
-                      min={1}
-                      max={365}
                     />
                   </div>
                 </div>
@@ -417,8 +415,6 @@ export default function CloudStoragePage() {
                     type="number"
                     value={cloudConfig.maxStorageGB}
                     onChange={(e) => handleInputChange("maxStorageGB", parseInt(e.target.value))}
-                    min={1}
-                    max={10000}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Alert when storage usage exceeds this limit

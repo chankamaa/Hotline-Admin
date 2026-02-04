@@ -378,9 +378,6 @@ export default function StoreSettingsPage() {
                 type="number"
                 value={formData.defaultTaxRate}
                 onChange={(e) => handleInputChange("defaultTaxRate", parseFloat(e.target.value))}
-                min={0}
-                max={100}
-                step={0.1}
               />
             </div>
 

@@ -231,8 +231,6 @@ export default function HardwareIntegrationsPage() {
                       type="number"
                       value={printerConfig.printCopies}
                       onChange={(e) => setPrinterConfig({ ...printerConfig, printCopies: parseInt(e.target.value) })}
-                      min={1}
-                      max={5}
                     />
                   </div>
                 </div>

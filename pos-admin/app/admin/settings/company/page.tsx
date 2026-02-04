@@ -21,7 +21,7 @@ import {
 export default function CompanySettingsPage() {
   const [formData, setFormData] = useState({
     companyName: "Hotline Electronics",
-    companyLogo: null,
+    companyLogo: null as File | null,
     businessAddress: "123 Main Street, Tech Plaza, Floor 5",
     city: "New York",
     state: "NY",
@@ -145,10 +145,10 @@ export default function CompanySettingsPage() {
                     onChange={handleLogoUpload}
                   />
                   <label htmlFor="logo-upload">
-                    <Button variant="ghost" size="sm" className="cursor-pointer" as="span">
+                    <span className="cursor-pointer inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm">
                       <Upload size={16} className="mr-2" />
                       Upload Logo
-                    </Button>
+                    </span>
                   </label>
                   <p className="text-xs text-gray-500 mt-2">
                     Recommended size: 500x500px. Max file size: 2MB. Formats: JPG, PNG, SVG

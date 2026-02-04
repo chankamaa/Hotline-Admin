@@ -158,7 +158,7 @@ export default function CreateUserPage() {
   };
 
   return (
-    <RequirePerm perm={PERMISSIONS.USER_CREATE}>
+    <RequirePerm perm={PERMISSIONS.CREATE_USER}>
       <div className="p-6">
         <div className="mb-4">
           <Link

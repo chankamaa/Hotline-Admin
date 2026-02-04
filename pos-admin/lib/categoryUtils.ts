@@ -2,6 +2,7 @@
  * Category Utilities
  * Helper functions for category management operations
  */
+import { Category } from "@/types/index.d";
 
 /**
  * Count all subcategories recursively

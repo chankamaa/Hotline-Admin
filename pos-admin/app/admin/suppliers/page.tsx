@@ -6,7 +6,7 @@ import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Supplier } from "@/lib/types";
+import { Supplier } from "@/types/index.d";
 import { Edit, Trash2, Eye, Mail, Phone, Globe, RefreshCw } from "lucide-react";
 
 export default function SuppliersPage() {
@@ -76,10 +76,10 @@ export default function SuppliersPage() {
     setCurrentSupplier(supplier);
     setFormData({
       name: supplier.name,
-      contactPerson: supplier.contactPerson,
+      contactPerson: supplier.contactPerson || "",
       email: supplier.email,
       phone: supplier.phone,
-      address: supplier.address,
+      address: supplier.address || "",
       website: supplier.website || "",
       paymentTerms: supplier.paymentTerms || "",
       notes: supplier.notes || "",
@@ -207,7 +207,7 @@ export default function SuppliersPage() {
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
       supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      supplier.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      supplier.contactPerson?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       supplier.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

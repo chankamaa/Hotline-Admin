@@ -51,14 +51,14 @@ export function AdminSidebar({
     return adminNav
       .map((section) => {
         // Check if section has role restrictions
-        if (section.roles && !hasRole(user, section.roles)) {
+        if (section.roles && !hasRole(user, section.roles as any)) {
           return null;
         }
 
         // Filter items based on permissions
         const filteredItems = section.items.filter((item) => {
           // If item has permission requirement, check it
-          if (item.permission && !can(user, item.permission)) {
+          if ((item as any).permission && !can(user, (item as any).permission)) {
             return false;
           }
           return true;
@@ -145,7 +145,7 @@ export function AdminSidebar({
               {/* Show items only if single item OR expanded */}
               {(!hasMultipleItems || isExpanded) && (
                 <ul className="space-y-1 mt-2">
-                  {section.items.map((item) => {
+                  {section.items.map((item: any) => {
                     const isActive =
                       normalizedPath === item.href ||
                       normalizedPath.startsWith(item.href + "/");

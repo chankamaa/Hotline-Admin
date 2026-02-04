@@ -8,6 +8,7 @@ import { fetchCategories } from "@/lib/api/categoryApi";
 import { generateProductsPDF } from "@/lib/pdf-utils";
 import { useToast } from "@/providers/toast-provider";
 import { Download, FileText, Loader2, Filter } from "lucide-react";
+import { Category } from "@/types/index.d";
 
 interface ProductPDFDownloadProps {
   /** Optional: pre-selected category ID */

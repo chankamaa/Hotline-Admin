@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { Category } from "@/types/index.d";
 
 
 /* =====================================================
@@ -80,7 +81,7 @@ export async function createCategory(payload: {
     "/api/v1/categories",
     {
       method: "POST",
-      body: payload,
+      body: payload as any,
     }
   );
 }
@@ -104,7 +105,7 @@ export async function updateCategory(
     `/api/v1/categories/${categoryId}`,
     {
       method: "PUT",
-      body: payload,
+      body: payload as any,
     }
   );
 }

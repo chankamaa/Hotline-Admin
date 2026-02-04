@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { Product } from "@/types/index.d";
 
 
 /* =====================================================
@@ -158,7 +159,7 @@ export async function createProduct(payload: {
     "/api/v1/products",
     {
       method: "POST",
-      body: payload,
+      body: payload as any,
     }
   );
 }
@@ -208,7 +209,7 @@ export async function updateProduct(
     `/api/v1/products/${productId}`,
     {
       method: "PUT",
-      body: payload,
+      body: payload as any,
     }
   );
 }

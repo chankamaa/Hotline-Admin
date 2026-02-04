@@ -275,8 +275,6 @@ export default function PaymentGatewayPage() {
                     type="number"
                     value={paymentConfig.minimumAmount}
                     onChange={(e) => handleInputChange("minimumAmount", parseFloat(e.target.value))}
-                    min={0}
-                    step={0.01}
                   />
                 </div>
 
@@ -288,8 +286,6 @@ export default function PaymentGatewayPage() {
                     type="number"
                     value={paymentConfig.maximumAmount}
                     onChange={(e) => handleInputChange("maximumAmount", parseFloat(e.target.value))}
-                    min={0}
-                    step={0.01}
                   />
                 </div>
               </div>

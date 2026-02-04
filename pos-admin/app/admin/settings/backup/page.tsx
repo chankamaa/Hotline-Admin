@@ -37,6 +37,9 @@ export default function BackupConfigurationPage() {
     backupLocation: "local",
     cloudBackupEnabled: false,
     cloudProvider: "aws-s3",
+    cloudAccessKey: "",
+    cloudSecretKey: "",
+    cloudBucketName: "",
     compressBackups: true,
     encryptBackups: true,
     notifyOnCompletion: true,
@@ -242,7 +245,6 @@ export default function BackupConfigurationPage() {
                 type="number"
                 value={formData.retentionPeriod}
                 onChange={(e) => handleInputChange("retentionPeriod", parseInt(e.target.value))}
-                min={1}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Backups older than {formData.retentionPeriod} days ({Math.floor(formData.retentionPeriod / 365)} years) will be automatically deleted
@@ -360,12 +362,25 @@ export default function BackupConfigurationPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Input placeholder="Access Key / API Key" />
-                  <Input type="password" placeholder="Secret Key" />
+                  <Input 
+                    placeholder="Access Key / API Key" 
+                    value={formData.cloudAccessKey}
+                    onChange={(e) => handleInputChange("cloudAccessKey", e.target.value)}
+                  />
+                  <Input 
+                    type="password" 
+                    placeholder="Secret Key" 
+                    value={formData.cloudSecretKey}
+                    onChange={(e) => handleInputChange("cloudSecretKey", e.target.value)}
+                  />
                 </div>
 
                 <div>
-                  <Input placeholder="Bucket Name / Container Name" />
+                  <Input 
+                    placeholder="Bucket Name / Container Name" 
+                    value={formData.cloudBucketName}
+                    onChange={(e) => handleInputChange("cloudBucketName", e.target.value)}
+                  />
                 </div>
 
                 <Button variant="ghost" size="sm">
@@ -390,7 +405,6 @@ export default function BackupConfigurationPage() {
                 id="notifyOnCompletion"
                 checked={formData.notifyOnCompletion}
                 onChange={(e) => handleInputChange("notifyOnCompletion", e.target.checked)}
-                className="w-5 h-5"
               />
             </div>
 
