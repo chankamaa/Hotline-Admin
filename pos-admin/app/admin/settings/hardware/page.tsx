@@ -250,7 +250,7 @@ export default function HardwareIntegrationsPage() {
                   </label>
                 </div>
 
-                <Button variant="outline" onClick={() => handleTest("printer")}>
+                <Button variant="ghost" onClick={() => handleTest("printer")}>
                   <TestTube size={16} className="mr-2" />
                   Test Printer Connection
                 </Button>
@@ -357,7 +357,7 @@ export default function HardwareIntegrationsPage() {
                   </div>
                 </div>
 
-                <Button variant="outline" onClick={() => handleTest("barcode")}>
+                <Button variant="ghost" onClick={() => handleTest("barcode")}>
                   <TestTube size={16} className="mr-2" />
                   Test Scanner
                 </Button>
@@ -376,7 +376,7 @@ export default function HardwareIntegrationsPage() {
             <p className="text-sm text-gray-600 mb-4">
               Configure label printer for product labels and barcodes
             </p>
-            <Button variant="outline">
+            <Button variant="ghost">
               <Settings size={16} className="mr-2" />
               Configure Label Printer
             </Button>
@@ -390,7 +390,7 @@ export default function HardwareIntegrationsPage() {
             <p className="text-sm text-gray-600 mb-4">
               Configure automatic cash drawer opening
             </p>
-            <Button variant="outline">
+            <Button variant="ghost">
               <Settings size={16} className="mr-2" />
               Configure Cash Drawer
             </Button>
@@ -517,7 +517,7 @@ export default function HardwareIntegrationsPage() {
                   </div>
                 </div>
 
-                <Button variant="outline" onClick={() => handleTest("payment")}>
+                <Button variant="ghost" onClick={() => handleTest("payment")}>
                   <TestTube size={16} className="mr-2" />
                   Test Payment Gateway
                 </Button>
@@ -624,7 +624,7 @@ export default function HardwareIntegrationsPage() {
             </label>
           </div>
 
-          <Button variant="outline" className="mt-4" onClick={() => handleTest("email")}>
+          <Button variant="ghost" className="mt-4" onClick={() => handleTest("email")}>
             <TestTube size={16} className="mr-2" />
             Send Test Email
           </Button>
@@ -712,7 +712,7 @@ export default function HardwareIntegrationsPage() {
                   </div>
                 </div>
 
-                <Button variant="outline" onClick={() => handleTest("sms")}>
+                <Button variant="ghost" onClick={() => handleTest("sms")}>
                   <TestTube size={16} className="mr-2" />
                   Send Test SMS
                 </Button>
@@ -847,7 +847,7 @@ export default function HardwareIntegrationsPage() {
                   </label>
                 </div>
 
-                <Button variant="outline" onClick={() => handleTest("cloud")}>
+                <Button variant="ghost" onClick={() => handleTest("cloud")}>
                   <TestTube size={16} className="mr-2" />
                   Test Connection
                 </Button>
@@ -859,7 +859,7 @@ export default function HardwareIntegrationsPage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Link href="/admin/settings">
-            <Button variant="outline">
+            <Button variant="ghost">
               Cancel
             </Button>
           </Link>

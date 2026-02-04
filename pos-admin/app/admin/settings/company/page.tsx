@@ -145,7 +145,7 @@ export default function CompanySettingsPage() {
                     onChange={handleLogoUpload}
                   />
                   <label htmlFor="logo-upload">
-                    <Button variant="outline" size="sm" className="cursor-pointer" as="span">
+                    <Button variant="ghost" size="sm" className="cursor-pointer" as="span">
                       <Upload size={16} className="mr-2" />
                       Upload Logo
                     </Button>
@@ -155,7 +155,7 @@ export default function CompanySettingsPage() {
                   </p>
                   {logoPreview && (
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       className="mt-2"
                       onClick={() => {
@@ -383,7 +383,7 @@ export default function CompanySettingsPage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Link href="/admin/settings">
-            <Button variant="outline">
+            <Button variant="ghost">
               Cancel
             </Button>
           </Link>

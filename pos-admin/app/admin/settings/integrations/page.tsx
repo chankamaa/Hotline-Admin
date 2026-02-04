@@ -238,15 +238,15 @@ export default function IntegrationsPage() {
         <div className="bg-white rounded-xl border p-6">
           <h3 className="font-semibold text-black mb-4">Quick Actions</h3>
           <div className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="ghost" className="w-full justify-start">
               <HardDrive size={16} className="mr-2" />
               Test All Connections
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="ghost" className="w-full justify-start">
               <Database size={16} className="mr-2" />
               View API Logs
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="ghost" className="w-full justify-start">
               <Send size={16} className="mr-2" />
               Resend Failed Requests
             </Button>

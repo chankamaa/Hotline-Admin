@@ -283,7 +283,7 @@ export default function StockMovementsPage() {
       key: "actions",
       label: "Actions",
       render: (movement: StockMovement) => (
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="ghost">
           <Eye size={14} />
         </Button>
       )
@@ -424,7 +424,7 @@ export default function StockMovementsPage() {
             onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
           />
 
-          <Button variant="outline">
+          <Button variant="ghost">
             <Download size={18} className="mr-2" />
             Export
           </Button>

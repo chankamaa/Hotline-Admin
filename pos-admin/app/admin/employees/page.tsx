@@ -285,15 +285,15 @@ export default function EmployeesPage() {
       render: (item) => (
         <div className="flex gap-2">
           <Link href={`/admin/employees/${item.id}`}>
-            <Button size="sm" variant="outline" title="View Details">
+            <Button size="sm" variant="ghost">
               <Eye size={14} />
             </Button>
           </Link>
-          <Button size="sm" variant="outline" onClick={() => handleEditEmployee(item)} title="Edit">
+          <Button size="sm" variant="ghost" onClick={() => handleEditEmployee(item)}>
             <Edit size={14} />
           </Button>
           {item.status !== "Inactive" && (
-            <Button size="sm" variant="outline" onClick={() => handleDeactivate(item)} title="Deactivate">
+            <Button size="sm" variant="ghost" onClick={() => handleDeactivate(item)}>
               <UserX size={14} />
             </Button>
           )}
@@ -312,7 +312,7 @@ export default function EmployeesPage() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <PageHeader
-        title="Employee Management"
+        title="Employees"
         description="Manage employee profiles, roles, and status"
       />
 
@@ -435,17 +435,17 @@ export default function EmployeesPage() {
 
               <div className="flex gap-2 pt-4 border-t">
                 <Link href={`/admin/employees/${employee.id}`} className="flex-1">
-                  <Button size="sm" variant="outline" className="w-full">
+                  <Button size="sm" variant="ghost" className="w-full">
                     <Eye size={14} className="mr-1" />
                     View
                   </Button>
                 </Link>
-                <Button size="sm" variant="outline" onClick={() => handleEditEmployee(employee)}>
+                <Button size="sm" variant="ghost" onClick={() => handleEditEmployee(employee)}>
                   <Edit size={14} className="mr-1" />
                   Edit
                 </Button>
                 {employee.status !== "Inactive" && (
-                  <Button size="sm" variant="outline" onClick={() => handleDeactivate(employee)}>
+                  <Button size="sm" variant="ghost" onClick={() => handleDeactivate(employee)}>
                     <UserX size={14} />
                   </Button>
                 )}

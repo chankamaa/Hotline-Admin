@@ -150,7 +150,7 @@ export default function UsersManagementPage() {
   };
 
   return (
-    <RequirePerm perm={PERMISSIONS.USER_READ}>
+    <RequirePerm perm={PERMISSIONS.VIEW_USERS}>
       <div className="p-6">
         <div className="mb-4">
           <Link

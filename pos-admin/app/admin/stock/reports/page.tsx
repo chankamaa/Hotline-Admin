@@ -102,17 +102,17 @@ export default function StockReportsPage() {
             onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
           />
 
-          <Button variant="outline">
+          <Button variant="ghost">
             <Filter size={18} className="mr-2" />
             Apply Filters
           </Button>
 
-          <Button variant="outline">
+          <Button variant="ghost">
             <Download size={18} className="mr-2" />
             Export PDF
           </Button>
 
-          <Button variant="outline">
+          <Button variant="ghost">
             <Download size={18} className="mr-2" />
             Export Excel
           </Button>

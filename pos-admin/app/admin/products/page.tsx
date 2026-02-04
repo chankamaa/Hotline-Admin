@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/providers/toast-provider";
 import { CategorySelector } from "@/components/categories/category-selector";
+import { Product, Category } from "@/types";
 
 import {
   fetchProducts,
@@ -401,7 +402,6 @@ export default function ProductsPage() {
       <DataTable
         data={products}
         columns={columns}
-        loading={loading}
         onAdd={handleAdd}
         onSearch={(q) => {
           setSearchQuery(q);

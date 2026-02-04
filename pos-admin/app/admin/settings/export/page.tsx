@@ -223,10 +223,10 @@ export default function DataExportPage() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-black">Select Tables</h3>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={handleSelectAll}>
+                <Button size="sm" variant="ghost" onClick={handleSelectAll}>
                   Select All
                 </Button>
-                <Button size="sm" variant="outline" onClick={handleDeselectAll}>
+                <Button size="sm" variant="ghost" onClick={handleDeselectAll}>
                   Deselect All
                 </Button>
               </div>
@@ -440,7 +440,7 @@ export default function DataExportPage() {
                     <div className="text-xs text-gray-500">{exp.date} • {exp.size}</div>
                   </div>
                 </div>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="ghost">
                   <Download size={14} className="mr-1" />
                   Download
                 </Button>

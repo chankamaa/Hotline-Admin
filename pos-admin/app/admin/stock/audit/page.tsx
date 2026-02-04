@@ -343,7 +343,7 @@ export default function StockAuditPage() {
       key: "actions",
       label: "Actions",
       render: (log: AuditLog) => (
-        <Button size="sm" variant="outline" onClick={() => handleViewLog(log)}>
+        <Button size="sm" variant="ghost" onClick={() => handleViewLog(log)}>
           <Eye size={14} />
         </Button>
       )
@@ -492,7 +492,7 @@ export default function StockAuditPage() {
             onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
           />
 
-          <Button variant="outline">
+          <Button variant="ghost">
             <Download size={18} className="mr-2" />
             Export
           </Button>
@@ -519,7 +519,7 @@ export default function StockAuditPage() {
               <Button variant="secondary" onClick={() => setIsViewingLog(false)}>
                 Close
               </Button>
-              <Button variant="outline">
+              <Button variant="ghost">
                 <Download size={16} className="mr-2" />
                 Export Log
               </Button>

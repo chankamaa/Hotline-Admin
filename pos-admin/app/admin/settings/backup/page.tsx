@@ -368,7 +368,7 @@ export default function BackupConfigurationPage() {
                   <Input placeholder="Bucket Name / Container Name" />
                 </div>
 
-                <Button variant="outline" size="sm">
+                <Button variant="ghost" size="sm">
                   Test Connection
                 </Button>
               </div>
@@ -437,7 +437,7 @@ export default function BackupConfigurationPage() {
               <Database size={20} />
               Backup History
             </h3>
-            <Button variant="outline" size="sm">
+            <Button variant="ghost" size="sm">
               View All
             </Button>
           </div>
@@ -484,7 +484,7 @@ export default function BackupConfigurationPage() {
                       <div className="flex gap-2 justify-center">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => handleDownloadBackup(backup.id)}
                           disabled={backup.status === "Failed"}
                         >
@@ -493,7 +493,7 @@ export default function BackupConfigurationPage() {
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => handleRestoreBackup(backup.id)}
                           disabled={backup.status === "Failed"}
                         >
@@ -512,7 +512,7 @@ export default function BackupConfigurationPage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Link href="/admin/settings">
-            <Button variant="outline">
+            <Button variant="ghost">
               Cancel
             </Button>
           </Link>

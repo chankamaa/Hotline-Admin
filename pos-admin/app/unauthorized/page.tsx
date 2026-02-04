@@ -27,7 +27,7 @@ export default function UnauthorizedPage() {
         <div className="flex gap-3 justify-center">
           <Button
             onClick={() => router.back()}
-            variant="outline"
+            variant="ghost"
           >
             Go Back
           </Button>

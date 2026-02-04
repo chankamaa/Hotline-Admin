@@ -312,7 +312,7 @@ export default function BulkPriceUpdatesPage() {
       label: "Actions",
       render: (item) => (
         item.status === "Pending" && (
-          <Button size="sm" variant="outline" onClick={() => alert("Cancel scheduled change")}>
+          <Button size="sm" variant="ghost" onClick={() => alert("Cancel scheduled change")}>
             Cancel
           </Button>
         )
@@ -365,8 +365,6 @@ export default function BulkPriceUpdatesPage() {
               value={updateValue}
               onChange={(e) => setUpdateValue(e.target.value)}
               placeholder={updateType === "percentage" ? "e.g., 10" : "e.g., 50"}
-              min="0"
-              step={updateType === "percentage" ? "0.1" : "0.01"}
             />
           </div>
 
@@ -385,7 +383,6 @@ export default function BulkPriceUpdatesPage() {
                 type="date"
                 value={scheduleDate}
                 onChange={(e) => setScheduleDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
               />
             )}
           </div>
@@ -424,14 +421,14 @@ export default function BulkPriceUpdatesPage() {
           <div className="flex gap-2">
             <Button 
               size="sm" 
-              variant="outline"
+              variant="ghost"
               onClick={() => setSelectedProducts(products.map(p => p.id))}
             >
               Select All
             </Button>
             <Button 
               size="sm" 
-              variant="outline"
+              variant="ghost"
               onClick={() => setSelectedProducts([])}
             >
               Clear Selection

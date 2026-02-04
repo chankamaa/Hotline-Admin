@@ -212,7 +212,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             </div>
 
             <div className="mt-6 pt-6 border-t">
-              <Button className="w-full" variant="outline">
+              <Button className="w-full" variant="ghost">
                 <Edit size={16} className="mr-2" />
                 Edit Profile Photo
               </Button>
@@ -223,15 +223,15 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           <div className="bg-white rounded-xl border p-6">
             <h3 className="text-lg font-semibold text-black mb-4">Quick Actions</h3>
             <div className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start">
                 <Shield size={16} className="mr-2" />
                 Manage Permissions
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start">
                 <Calendar size={16} className="mr-2" />
                 View Attendance
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start">
                 <FileText size={16} className="mr-2" />
                 Performance Report
               </Button>
@@ -245,7 +245,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           <div className="bg-white rounded-xl border p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-black">Personal Information</h3>
-              <Button size="sm" variant="outline" onClick={() => setIsEditingPersonal(true)}>
+              <Button size="sm" variant="ghost" onClick={() => setIsEditingPersonal(true)}>
                 <Edit size={14} className="mr-1" />
                 Edit
               </Button>
@@ -291,7 +291,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           <div className="bg-white rounded-xl border p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-black">Role & Permissions</h3>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="ghost">
                 <Shield size={14} className="mr-1" />
                 Manage
               </Button>
@@ -350,7 +350,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           <div className="bg-white rounded-xl border p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-black">Emergency Contacts</h3>
-              <Button size="sm" variant="outline" onClick={() => setIsAddingContact(true)}>
+              <Button size="sm" variant="ghost" onClick={() => setIsAddingContact(true)}>
                 <Plus size={14} className="mr-1" />
                 Add Contact
               </Button>
@@ -368,7 +368,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                         <div className="text-xs text-gray-500">{contact.relationship}</div>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="ghost">
                       <Edit size={12} />
                     </Button>
                   </div>
@@ -393,7 +393,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           <div className="bg-white rounded-xl border p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-black">Documents & Certifications</h3>
-              <Button size="sm" variant="outline" onClick={() => setIsUploadingDoc(true)}>
+              <Button size="sm" variant="ghost" onClick={() => setIsUploadingDoc(true)}>
                 <Upload size={14} className="mr-1" />
                 Upload
               </Button>
@@ -412,7 +412,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                       </div>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="ghost">
                     <Download size={14} />
                   </Button>
                 </div>

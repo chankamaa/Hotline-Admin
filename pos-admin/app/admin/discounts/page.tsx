@@ -492,7 +492,6 @@ export default function DiscountsPage() {
         <DataTable
           data={filteredPromotions}
           columns={columns}
-          loading={loading}
           searchPlaceholder="Search discount rules..."
           onSearch={() => { }}
         />

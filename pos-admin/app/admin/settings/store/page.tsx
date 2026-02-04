@@ -180,7 +180,7 @@ export default function StoreSettingsPage() {
                 <Button size="sm" onClick={handleAddLocation}>
                   Add Location
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setShowAddLocation(false)}>
+                <Button size="sm" variant="ghost" onClick={() => setShowAddLocation(false)}>
                   Cancel
                 </Button>
               </div>
@@ -217,13 +217,13 @@ export default function StoreSettingsPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="ghost">
                       <Edit size={14} className="mr-1" />
                       Edit
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => toggleLocationStatus(location.id)}
                     >
                       {location.isActive ? "Deactivate" : "Activate"}
@@ -523,7 +523,7 @@ export default function StoreSettingsPage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Link href="/admin/settings">
-            <Button variant="outline">
+            <Button variant="ghost">
               Cancel
             </Button>
           </Link>

@@ -178,7 +178,7 @@ export default function ReportBuilderPage() {
           <div className="bg-white rounded-xl border p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-black">Filters & Conditions</h3>
-              <Button size="sm" variant="outline" onClick={handleAddFilter}>
+              <Button size="sm" variant="ghost" onClick={handleAddFilter}>
                 <Plus size={14} className="mr-1" />
                 Add Filter
               </Button>
@@ -220,7 +220,7 @@ export default function ReportBuilderPage() {
                     <div className="col-span-1">
                       <Button 
                         size="sm" 
-                        variant="outline" 
+                        variant="ghost" 
                         onClick={() => handleRemoveFilter(index)}
                         className="w-full"
                       >
@@ -315,15 +315,15 @@ export default function ReportBuilderPage() {
               <div>
                 <label className="block text-sm font-medium text-black mb-2">Export Format</label>
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1">
+                  <Button variant="ghost" className="flex-1">
                     <FileText size={16} className="mr-2" />
                     Excel (.xlsx)
                   </Button>
-                  <Button variant="outline" className="flex-1">
+                  <Button variant="ghost" className="flex-1">
                     <FileText size={16} className="mr-2" />
                     PDF
                   </Button>
-                  <Button variant="outline" className="flex-1">
+                  <Button variant="ghost" className="flex-1">
                     <FileText size={16} className="mr-2" />
                     CSV
                   </Button>
@@ -338,7 +338,7 @@ export default function ReportBuilderPage() {
               <Download size={16} className="mr-2" />
               Generate Report
             </Button>
-            <Button onClick={handleSaveTemplate} variant="outline" className="flex-1">
+            <Button onClick={handleSaveTemplate} variant="ghost" className="flex-1">
               <Save size={16} className="mr-2" />
               Save as Template
             </Button>
@@ -389,10 +389,10 @@ export default function ReportBuilderPage() {
                     </div>
                   )}
                   <div className="flex gap-2 mt-2">
-                    <Button size="sm" variant="outline" className="flex-1 text-xs">
+                    <Button size="sm" variant="ghost" className="flex-1 text-xs">
                       Load
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 text-xs">
+                    <Button size="sm" variant="ghost" className="flex-1 text-xs">
                       Run
                     </Button>
                   </div>

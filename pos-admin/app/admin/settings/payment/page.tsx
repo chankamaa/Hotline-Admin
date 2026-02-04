@@ -329,7 +329,7 @@ export default function PaymentGatewayPage() {
               <p className="text-sm text-gray-600 mb-4">
                 Test your payment gateway connection to ensure everything is configured correctly.
               </p>
-              <Button variant="outline" onClick={handleTest}>
+              <Button variant="ghost" onClick={handleTest}>
                 <TestTube size={16} className="mr-2" />
                 Test Payment Gateway Connection
               </Button>
@@ -356,7 +356,7 @@ export default function PaymentGatewayPage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Link href="/admin/settings">
-            <Button variant="outline">
+            <Button variant="ghost">
               Cancel
             </Button>
           </Link>

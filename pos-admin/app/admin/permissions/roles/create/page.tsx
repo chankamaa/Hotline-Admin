@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { ArrowLeft, Shield, Plus, X, Loader2 } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
-import { PERMISSIONS, PERMISSION_CATEGORIES } from "@/lib/permissions";
+import { PERMISSIONS } from "@/lib/permissions";
 import roleApi from "@/lib/api/roleApi";
 import Link from "next/link";
 

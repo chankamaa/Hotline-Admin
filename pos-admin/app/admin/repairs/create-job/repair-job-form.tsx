@@ -495,7 +495,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.customerName}
                 onChange={handleInputChange}
                 placeholder="Enter customer name"
-                className={errors.customerName ? 'border-red-500' : ''}
               />
               {errors.customerName && (
                 <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>
@@ -511,7 +510,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.customerPhone}
                 onChange={handleInputChange}
                 placeholder="Enter phone number"
-                className={errors.customerPhone ? 'border-red-500' : ''}
               />
               {errors.customerPhone && (
                 <p className="text-red-500 text-sm mt-1">{errors.customerPhone}</p>
@@ -579,7 +577,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.brand}
                 onChange={handleInputChange}
                 placeholder="e.g., Apple, Samsung"
-                className={errors.brand ? 'border-red-500' : ''}
               />
               {errors.brand && (
                 <p className="text-red-500 text-sm mt-1">{errors.brand}</p>
@@ -595,7 +592,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.model}
                 onChange={handleInputChange}
                 placeholder="e.g., iPhone 14 Pro"
-                className={errors.model ? 'border-red-500' : ''}
               />
               {errors.model && (
                 <p className="text-red-500 text-sm mt-1">{errors.model}</p>
@@ -738,7 +734,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                   value={searchTerm}
                   onChange={(e) => handleProductSearch(e.target.value)}
                   placeholder="Search product name..."
-                  onFocus={() => setShowSuggestions(true)}
                 />
                 {showSuggestions && productSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -769,7 +764,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                     setNewPart({ ...newPart, quantity: parseInt(e.target.value) || 1 })
                   }
                   placeholder="Qty"
-                  min="1"
                 />
               </div>
               <div className="md:col-span-3">
@@ -780,8 +774,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                     setNewPart({ ...newPart, unitPrice: parseFloat(e.target.value) || 0 })
                   }
                   placeholder="Unit Price"
-                  step="0.01"
-                  min="0"
                 />
               </div>
               <div className="md:col-span-2">
@@ -864,10 +856,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 <Input
                   value={technicianSearchTerm || technicians.find(t => t._id === formData.assignedTo)?.username || ''}
                   onChange={(e) => handleTechnicianSearch(e.target.value)}
-                  onFocus={() => {
-                    setShowTechnicianSuggestions(true);
-                    setFilteredTechnicians(technicians);
-                  }}
                   placeholder="Search active technicians..."
                 />
                 {showTechnicianSuggestions && (
@@ -976,8 +964,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.laborCost}
                 onChange={handleInputChange}
                 placeholder="0.00"
-                step="0.01"
-                min="0"
               />
               {errors.laborCost && (
                 <p className="text-red-500 text-sm mt-1">{errors.laborCost}</p>
@@ -994,8 +980,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.estimatedCost}
                 onChange={handleInputChange}
                 placeholder="0.00"
-                step="0.01"
-                min="0"
               />
             </div>
 
@@ -1009,8 +993,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.advancePayment}
                 onChange={handleInputChange}
                 placeholder="0.00"
-                step="0.01"
-                min="0"
               />
             </div>
           </div>
@@ -1038,7 +1020,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
       <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={onCancel}
           disabled={loading}
         >

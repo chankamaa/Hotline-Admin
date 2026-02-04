@@ -222,7 +222,7 @@ export default function PriceHistoryPage() {
       key: "actions",
       label: "Actions",
       render: (item) => (
-        <Button size="sm" variant="outline" onClick={() => handleViewTimeline(item)}>
+        <Button size="sm" variant="ghost" onClick={() => handleViewTimeline(item)}>
           <History size={14} className="mr-1" />
           Timeline
         </Button>

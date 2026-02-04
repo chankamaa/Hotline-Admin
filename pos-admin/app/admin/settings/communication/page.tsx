@@ -292,7 +292,7 @@ export default function CommunicationSettingsPage() {
                   </div>
                 </div>
 
-                <Button variant="outline" onClick={() => handleTest("email")}>
+                <Button variant="ghost" onClick={() => handleTest("email")}>
                   <TestTube size={16} className="mr-2" />
                   Send Test Email
                 </Button>
@@ -426,7 +426,7 @@ export default function CommunicationSettingsPage() {
                   </div>
                 </div>
 
-                <Button variant="outline" onClick={() => handleTest("sms")}>
+                <Button variant="ghost" onClick={() => handleTest("sms")}>
                   <TestTube size={16} className="mr-2" />
                   Send Test SMS
                 </Button>
@@ -460,7 +460,7 @@ export default function CommunicationSettingsPage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Link href="/admin/settings">
-            <Button variant="outline">
+            <Button variant="ghost">
               Cancel
             </Button>
           </Link>

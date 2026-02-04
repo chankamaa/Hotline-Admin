@@ -463,7 +463,7 @@ export default function NotificationSettingsPage() {
         <div className="bg-white rounded-xl border p-6">
           <h3 className="font-semibold text-black mb-3">Test Email Configuration</h3>
           <p className="text-sm text-gray-600 mb-4">Send a test email to verify your notification settings</p>
-          <Button variant="outline">
+          <Button variant="ghost">
             <Mail size={16} className="mr-2" />
             Send Test Email
           </Button>
@@ -472,7 +472,7 @@ export default function NotificationSettingsPage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Link href="/admin/settings">
-            <Button variant="outline">
+            <Button variant="ghost">
               Cancel
             </Button>
           </Link>

@@ -28,6 +28,7 @@ export const PERMISSIONS = {
   // Role Management
   MANAGE_ROLES: "MANAGE_ROLES",
   ASSIGN_ROLES: "ASSIGN_ROLES",
+  VIEW_ROLES: "VIEW_ROLES",
 
   // Permission Management
   MANAGE_PERMISSIONS: "MANAGE_PERMISSIONS",

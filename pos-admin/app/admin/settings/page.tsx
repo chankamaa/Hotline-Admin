@@ -160,7 +160,7 @@ export default function SettingsPage() {
                   <p className="text-xs text-gray-500">{action.description}</p>
                 </div>
               </div>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="ghost">
                 {action.action}
               </Button>
             </div>

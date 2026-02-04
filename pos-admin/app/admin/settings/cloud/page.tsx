@@ -272,7 +272,7 @@ export default function CloudStoragePage() {
                     </div>
                   </div>
 
-                  <Button variant="outline" className="mt-4" onClick={handleTest}>
+                  <Button variant="ghost" className="mt-4" onClick={handleTest}>
                     <TestTube size={16} className="mr-2" />
                     Test Connection
                   </Button>
@@ -491,7 +491,7 @@ export default function CloudStoragePage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Link href="/admin/settings">
-            <Button variant="outline">
+            <Button variant="ghost">
               Cancel
             </Button>
           </Link>
