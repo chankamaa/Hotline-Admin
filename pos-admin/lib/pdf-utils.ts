@@ -675,3 +675,1125 @@ export function generateSalesSummaryPDF(
   // Download
   doc.save(filename);
 }
+
+/* ================================================
+   WARRANTY PDF GENERATION
+================================================ */
+
+export interface WarrantyForPDF {
+  _id: string;
+  warrantyNumber: string;
+  productName: string;
+  serialNumber?: string;
+  customer: {
+    name: string;
+    phone: string;
+    email?: string;
+  };
+  warrantyType: "MANUFACTURER" | "SHOP" | "EXTENDED" | "REPAIR";
+  durationMonths: number;
+  startDate: string;
+  endDate: string;
+  status: "ACTIVE" | "EXPIRED" | "CLAIMED" | "VOID";
+  claims?: Array<{
+    claimNumber: string;
+    issue: string;
+    resolution?: string;
+    claimDate: string;
+  }>;
+  notes?: string;
+  createdAt: string;
+}
+
+/**
+ * Generate and download a PDF containing warranty list
+ */
+export function generateWarrantyReportPDF(
+  warranties: WarrantyForPDF[],
+  filterLabel?: string
+): void {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Title
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("Warranty Report", pageWidth / 2, 20, { align: "center" });
+
+  // Subtitle with filter info
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  const subtitle = filterLabel || "All Warranties";
+  doc.text(subtitle, pageWidth / 2, 28, { align: "center" });
+
+  // Date generated
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(
+    `Generated on: ${new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`,
+    pageWidth / 2,
+    35,
+    { align: "center" }
+  );
+
+  // Summary statistics
+  doc.setTextColor(0);
+  doc.setFontSize(11);
+  doc.text(`Total Warranties: ${warranties.length}`, 14, 45);
+
+  const activeCount = warranties.filter((w) => w.status === "ACTIVE").length;
+  doc.text(`Active: ${activeCount}`, 14, 52);
+
+  const expiredCount = warranties.filter((w) => w.status === "EXPIRED").length;
+  doc.text(`Expired: ${expiredCount}`, 70, 52);
+
+  const claimedCount = warranties.filter((w) => w.status === "CLAIMED").length;
+  doc.text(`Claimed: ${claimedCount}`, 120, 52);
+
+  // Table data
+  const tableData = warranties.map((warranty) => [
+    warranty.warrantyNumber,
+    warranty.productName.length > 25
+      ? warranty.productName.substring(0, 22) + "..."
+      : warranty.productName,
+    warranty.customer.name,
+    warranty.warrantyType,
+    `${warranty.durationMonths} mo`,
+    formatDate(warranty.startDate),
+    formatDate(warranty.endDate),
+    warranty.status,
+  ]);
+
+  // Generate table
+  autoTable(doc, {
+    startY: 60,
+    head: [
+      [
+        "Warranty #",
+        "Product",
+        "Customer",
+        "Type",
+        "Duration",
+        "Start Date",
+        "End Date",
+        "Status",
+      ],
+    ],
+    body: tableData,
+    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 8,
+    },
+    bodyStyles: {
+      fontSize: 7,
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245],
+    },
+    columnStyles: {
+      0: { cellWidth: 25 }, // Warranty #
+      1: { cellWidth: 35 }, // Product
+      2: { cellWidth: 28 }, // Customer
+      3: { cellWidth: 22 }, // Type
+      4: { cellWidth: 18, halign: "center" }, // Duration
+      5: { cellWidth: 22 }, // Start Date
+      6: { cellWidth: 22 }, // End Date
+      7: { cellWidth: 18, halign: "center" }, // Status
+    },
+    margin: { top: 60, left: 14, right: 14 },
+    didDrawPage: (data) => {
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        `Page ${data.pageNumber} of ${pageCount}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: "center" }
+      );
+    },
+  });
+
+  // Generate filename
+  const timestamp = new Date().toISOString().split("T")[0];
+  const filterSlug = filterLabel
+    ? `-${filterLabel.toLowerCase().replace(/\s+/g, "-")}`
+    : "";
+  const filename = `warranty-report${filterSlug}-${timestamp}.pdf`;
+
+  // Download
+  doc.save(filename);
+}
+
+/**
+ * Generate a detailed warranty certificate PDF for a single warranty
+ */
+export function generateWarrantyCertificatePDF(
+  warranty: WarrantyForPDF,
+  companyInfo?: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    website?: string;
+  }
+): void {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Default company info
+  const company = {
+    name: companyInfo?.name || "Hotline POS",
+    phone: companyInfo?.phone || "+1 (555) 123-4567",
+    email: companyInfo?.email || "support@hotlinepos.com",
+    address: companyInfo?.address || "123 Business Street, City, State 12345",
+    website: companyInfo?.website || "www.hotlinepos.com",
+  };
+
+  // Border decoration
+  doc.setDrawColor(0);
+  doc.setLineWidth(2);
+  doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
+  doc.setLineWidth(0.5);
+  doc.rect(14, 14, pageWidth - 28, pageHeight - 28);
+
+  // Header
+  doc.setFontSize(28);
+  doc.setFont("helvetica", "bold");
+  doc.text("WARRANTY CERTIFICATE", pageWidth / 2, 35, { align: "center" });
+
+  // Warranty number
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100);
+  doc.text(`Certificate No: ${warranty.warrantyNumber}`, pageWidth / 2, 45, {
+    align: "center",
+  });
+
+  // Status badge
+  doc.setTextColor(0);
+  const statusColors: Record<string, [number, number, number]> = {
+    ACTIVE: [34, 197, 94],
+    EXPIRED: [239, 68, 68],
+    CLAIMED: [234, 179, 8],
+    VOID: [107, 114, 128],
+  };
+  const statusColor = statusColors[warranty.status] || [0, 0, 0];
+  doc.setFillColor(...statusColor);
+  const statusText = warranty.status;
+  const statusWidth = doc.getTextWidth(statusText) + 16;
+  doc.roundedRect(
+    pageWidth / 2 - statusWidth / 2,
+    50,
+    statusWidth,
+    10,
+    2,
+    2,
+    "F"
+  );
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.text(statusText, pageWidth / 2, 57, { align: "center" });
+
+  doc.setTextColor(0);
+  let yPos = 75;
+  const leftMargin = 25;
+  const rightCol = pageWidth / 2 + 10;
+
+  // Section helper
+  const addSection = (title: string, y: number): number => {
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text(title, leftMargin, y);
+    doc.setLineWidth(0.5);
+    doc.line(leftMargin, y + 2, pageWidth - leftMargin, y + 2);
+    return y + 12;
+  };
+
+  // Field helper
+  const addField = (
+    label: string,
+    value: string,
+    x: number,
+    y: number
+  ): void => {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(80);
+    doc.text(label, x, y);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0);
+    doc.text(value, x, y + 6);
+  };
+
+  // Product Information
+  yPos = addSection("Product Information", yPos);
+  addField("Product Name", warranty.productName, leftMargin, yPos);
+  if (warranty.serialNumber) {
+    addField("Serial Number", warranty.serialNumber, rightCol, yPos);
+  }
+  yPos += 20;
+
+  // Customer Information
+  yPos = addSection("Customer Information", yPos);
+  addField("Customer Name", warranty.customer.name, leftMargin, yPos);
+  addField("Phone", warranty.customer.phone, rightCol, yPos);
+  yPos += 15;
+  if (warranty.customer.email) {
+    addField("Email", warranty.customer.email, leftMargin, yPos);
+    yPos += 15;
+  }
+
+  // Warranty Details
+  yPos = addSection("Warranty Details", yPos);
+  addField("Warranty Type", warranty.warrantyType, leftMargin, yPos);
+  addField("Duration", `${warranty.durationMonths} Months`, rightCol, yPos);
+  yPos += 15;
+  addField(
+    "Start Date",
+    formatDate(warranty.startDate),
+    leftMargin,
+    yPos
+  );
+  addField("End Date", formatDate(warranty.endDate), rightCol, yPos);
+  yPos += 20;
+
+  // Terms and Conditions
+  yPos = addSection("Terms & Conditions", yPos);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(60);
+  const terms = [
+    "1. This warranty covers manufacturing defects and component failures under normal use.",
+    "2. Warranty is void if the product shows signs of physical damage, water damage, or unauthorized repair.",
+    "3. Proof of purchase (this certificate) must be presented when making a warranty claim.",
+    "4. Warranty claims must be filed before the expiration date shown above.",
+    "5. Replacement or repair will be at the sole discretion of the service provider.",
+    "6. This warranty does not cover accessories, consumable parts, or software issues.",
+  ];
+  terms.forEach((term, index) => {
+    const lines = doc.splitTextToSize(term, pageWidth - 50);
+    doc.text(lines, leftMargin, yPos + index * 8);
+  });
+  yPos += terms.length * 8 + 10;
+
+  // Customer Support
+  yPos = addSection("Customer Support", yPos);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0);
+  doc.text(`Phone: ${company.phone}`, leftMargin, yPos);
+  doc.text(`Email: ${company.email}`, leftMargin, yPos + 7);
+  doc.text(`Website: ${company.website}`, leftMargin, yPos + 14);
+  doc.text(`Address: ${company.address}`, leftMargin, yPos + 21);
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(100);
+  doc.text(
+    `Generated on: ${new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })}`,
+    pageWidth / 2,
+    pageHeight - 20,
+    { align: "center" }
+  );
+  doc.text(company.name, pageWidth / 2, pageHeight - 15, { align: "center" });
+
+  // Generate filename
+  const filename = `warranty-certificate-${warranty.warrantyNumber}.pdf`;
+
+  // Download
+  doc.save(filename);
+}
+
+/* ================================================
+   STOCK/INVENTORY PDF GENERATION
+================================================ */
+
+export interface StockItemForPDF {
+  _id: string;
+  productName: string;
+  sku?: string;
+  category?: string;
+  currentQuantity: number;
+  minStockLevel: number;
+  warehouseLocation?: string;
+  lastStockIn?: string;
+  lastStockOut?: string;
+  lastUpdated?: string;
+  isLowStock: boolean;
+  status: "In Stock" | "Low Stock" | "Out of Stock";
+}
+
+export interface StockMovementForPDF {
+  _id: string;
+  productName: string;
+  sku?: string;
+  type: string;
+  quantity: number;
+  previousQuantity: number;
+  newQuantity: number;
+  reason?: string;
+  reference?: string;
+  performedBy?: string;
+  createdAt: string;
+}
+
+/**
+ * Generate and download a PDF containing stock inventory report
+ */
+export function generateStockReportPDF(
+  stockItems: StockItemForPDF[],
+  filterLabel?: string
+): void {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Title
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("Stock Inventory Report", pageWidth / 2, 20, { align: "center" });
+
+  // Subtitle with filter info
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  const subtitle = filterLabel || "All Products";
+  doc.text(subtitle, pageWidth / 2, 28, { align: "center" });
+
+  // Date generated
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(
+    `Generated on: ${new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`,
+    pageWidth / 2,
+    35,
+    { align: "center" }
+  );
+
+  // Summary statistics
+  doc.setTextColor(0);
+  doc.setFontSize(11);
+  doc.text(`Total Products: ${stockItems.length}`, 14, 45);
+
+  const totalQuantity = stockItems.reduce((sum, item) => sum + item.currentQuantity, 0);
+  doc.text(`Total Units: ${totalQuantity.toLocaleString()}`, 14, 52);
+
+  const inStock = stockItems.filter((item) => item.status === "In Stock").length;
+  doc.text(`In Stock: ${inStock}`, 70, 52);
+
+  const lowStock = stockItems.filter((item) => item.status === "Low Stock").length;
+  doc.text(`Low Stock: ${lowStock}`, 120, 52);
+
+  const outOfStock = stockItems.filter((item) => item.status === "Out of Stock").length;
+  doc.text(`Out of Stock: ${outOfStock}`, 170, 52);
+
+  // Table data
+  const tableData = stockItems.map((item) => [
+    item.productName.length > 25
+      ? item.productName.substring(0, 22) + "..."
+      : item.productName,
+    item.sku || "—",
+    item.category || "—",
+    String(item.currentQuantity),
+    String(item.minStockLevel),
+    item.warehouseLocation || "—",
+    item.status,
+    item.lastUpdated ? formatDate(item.lastUpdated) : "—",
+  ]);
+
+  // Generate table
+  autoTable(doc, {
+    startY: 60,
+    head: [
+      [
+        "Product",
+        "SKU",
+        "Category",
+        "Qty",
+        "Min",
+        "Location",
+        "Status",
+        "Last Updated",
+      ],
+    ],
+    body: tableData,
+    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 8,
+    },
+    bodyStyles: {
+      fontSize: 7,
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245],
+    },
+    columnStyles: {
+      0: { cellWidth: 40 }, // Product
+      1: { cellWidth: 22 }, // SKU
+      2: { cellWidth: 28 }, // Category
+      3: { cellWidth: 15, halign: "center" }, // Qty
+      4: { cellWidth: 15, halign: "center" }, // Min
+      5: { cellWidth: 25 }, // Location
+      6: { cellWidth: 22, halign: "center" }, // Status
+      7: { cellWidth: 23 }, // Last Updated
+    },
+    margin: { top: 60, left: 14, right: 14 },
+    didDrawCell: (data) => {
+      // Color code status cells
+      if (data.column.index === 6 && data.section === "body") {
+        const status = data.cell.raw as string;
+        if (status === "Out of Stock") {
+          data.cell.styles.textColor = [220, 38, 38]; // Red
+          data.cell.styles.fontStyle = "bold";
+        } else if (status === "Low Stock") {
+          data.cell.styles.textColor = [202, 138, 4]; // Yellow
+          data.cell.styles.fontStyle = "bold";
+        } else if (status === "In Stock") {
+          data.cell.styles.textColor = [22, 163, 74]; // Green
+          data.cell.styles.fontStyle = "bold";
+        }
+      }
+    },
+    didDrawPage: (data) => {
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        `Page ${data.pageNumber} of ${pageCount}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: "center" }
+      );
+    },
+  });
+
+  // Generate filename
+  const timestamp = new Date().toISOString().split("T")[0];
+  const filterSlug = filterLabel
+    ? `-${filterLabel.toLowerCase().replace(/\s+/g, "-")}`
+    : "";
+  const filename = `stock-inventory${filterSlug}-${timestamp}.pdf`;
+
+  // Download
+  doc.save(filename);
+}
+
+/**
+ * Generate and download a PDF for stock movements/adjustments
+ */
+export function generateStockMovementsReportPDF(
+  movements: StockMovementForPDF[],
+  filters?: {
+    productName?: string;
+    startDate?: string;
+    endDate?: string;
+  }
+): void {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Title
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("Stock Movements Report", pageWidth / 2, 20, { align: "center" });
+
+  // Subtitle with filter info
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  const filterParts: string[] = [];
+  if (filters?.productName) filterParts.push(filters.productName);
+  if (filters?.startDate && filters?.endDate) {
+    filterParts.push(`${filters.startDate} to ${filters.endDate}`);
+  }
+  const subtitle = filterParts.length > 0 ? filterParts.join(" - ") : "All Movements";
+  doc.text(subtitle, pageWidth / 2, 28, { align: "center" });
+
+  // Date generated
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(
+    `Generated on: ${new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`,
+    pageWidth / 2,
+    35,
+    { align: "center" }
+  );
+
+  // Summary statistics
+  doc.setTextColor(0);
+  doc.setFontSize(11);
+  doc.text(`Total Movements: ${movements.length}`, 14, 45);
+
+  const additions = movements.filter((m) =>
+    ["ADDITION", "PURCHASE", "RETURN", "TRANSFER_IN"].includes(m.type)
+  ).length;
+  doc.text(`Stock In: ${additions}`, 14, 52);
+
+  const reductions = movements.filter((m) =>
+    ["REDUCTION", "SALE", "DAMAGE", "THEFT", "TRANSFER_OUT"].includes(m.type)
+  ).length;
+  doc.text(`Stock Out: ${reductions}`, 70, 52);
+
+  // Table data
+  const tableData = movements.map((movement) => {
+    const isAddition = ["ADDITION", "PURCHASE", "RETURN", "TRANSFER_IN"].includes(
+      movement.type
+    );
+    const qtyDisplay = isAddition ? `+${movement.quantity}` : `-${movement.quantity}`;
+
+    return [
+      formatDate(movement.createdAt),
+      movement.productName.length > 22
+        ? movement.productName.substring(0, 19) + "..."
+        : movement.productName,
+      movement.sku || "—",
+      movement.type,
+      qtyDisplay,
+      String(movement.previousQuantity),
+      String(movement.newQuantity),
+      movement.reason || "—",
+      movement.performedBy || "—",
+    ];
+  });
+
+  // Generate table
+  autoTable(doc, {
+    startY: 60,
+    head: [
+      [
+        "Date",
+        "Product",
+        "SKU",
+        "Type",
+        "Qty Change",
+        "Previous",
+        "New",
+        "Reason",
+        "By",
+      ],
+    ],
+    body: tableData,
+    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 7,
+    },
+    bodyStyles: {
+      fontSize: 6,
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245],
+    },
+    columnStyles: {
+      0: { cellWidth: 20 }, // Date
+      1: { cellWidth: 30 }, // Product
+      2: { cellWidth: 18 }, // SKU
+      3: { cellWidth: 22 }, // Type
+      4: { cellWidth: 18, halign: "center" }, // Qty Change
+      5: { cellWidth: 15, halign: "center" }, // Previous
+      6: { cellWidth: 15, halign: "center" }, // New
+      7: { cellWidth: 28 }, // Reason
+      8: { cellWidth: 20 }, // By
+    },
+    margin: { top: 60, left: 14, right: 14 },
+    didDrawCell: (data) => {
+      // Color code quantity changes
+      if (data.column.index === 4 && data.section === "body") {
+        const qty = data.cell.raw as string;
+        if (qty.startsWith("+")) {
+          data.cell.styles.textColor = [22, 163, 74]; // Green
+          data.cell.styles.fontStyle = "bold";
+        } else if (qty.startsWith("-")) {
+          data.cell.styles.textColor = [220, 38, 38]; // Red
+          data.cell.styles.fontStyle = "bold";
+        }
+      }
+    },
+    didDrawPage: (data) => {
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        `Page ${data.pageNumber} of ${pageCount}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: "center" }
+      );
+    },
+  });
+
+  // Generate filename
+  const timestamp = new Date().toISOString().split("T")[0];
+  const filename = `stock-movements-${timestamp}.pdf`;
+
+  // Download
+  doc.save(filename);
+}
+
+/* ================================================
+   REPAIR RECORDS PDF GENERATION
+================================================ */
+
+export interface RepairRecordForPDF {
+  _id: string;
+  jobNumber: string;
+  equipmentName: string;
+  brand?: string;
+  model?: string;
+  customerName: string;
+  customerPhone: string;
+  reportedIssue: string;
+  diagnosisNotes?: string;
+  repairActions?: string;
+  status: string;
+  priority?: string;
+  technicianName?: string;
+  laborCost: number;
+  partsTotal: number;
+  totalCost: number;
+  receivedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+/**
+ * Generate and download a PDF containing repair records report
+ */
+export function generateRepairRecordsReportPDF(
+  repairs: RepairRecordForPDF[],
+  filters?: {
+    status?: string;
+    technician?: string;
+    startDate?: string;
+    endDate?: string;
+  }
+): void {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Title
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("Repair Records Report", pageWidth / 2, 20, { align: "center" });
+
+  // Subtitle with filter info
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  const filterParts: string[] = [];
+  if (filters?.status) filterParts.push(filters.status);
+  if (filters?.technician) filterParts.push(`Tech: ${filters.technician}`);
+  if (filters?.startDate && filters?.endDate) {
+    filterParts.push(`${filters.startDate} to ${filters.endDate}`);
+  }
+  const subtitle = filterParts.length > 0 ? filterParts.join(" | ") : "All Repairs";
+  doc.text(subtitle, pageWidth / 2, 28, { align: "center" });
+
+  // Date generated
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(
+    `Generated on: ${new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`,
+    pageWidth / 2,
+    35,
+    { align: "center" }
+  );
+
+  // Summary statistics
+  doc.setTextColor(0);
+  doc.setFontSize(11);
+  doc.text(`Total Repairs: ${repairs.length}`, 14, 45);
+
+  const totalRevenue = repairs.reduce((sum, r) => sum + r.totalCost, 0);
+  doc.text(`Total Revenue: ${formatCurrency(totalRevenue)}`, 14, 52);
+
+  const completed = repairs.filter((r) => r.status === "COMPLETED").length;
+  doc.text(`Completed: ${completed}`, 100, 52);
+
+  const inProgress = repairs.filter((r) => r.status === "IN_PROGRESS").length;
+  doc.text(`In Progress: ${inProgress}`, 150, 52);
+
+  // Table data
+  const tableData = repairs.map((repair) => [
+    repair.jobNumber,
+    repair.equipmentName.length > 20
+      ? repair.equipmentName.substring(0, 17) + "..."
+      : repair.equipmentName,
+    repair.customerName.length > 18
+      ? repair.customerName.substring(0, 15) + "..."
+      : repair.customerName,
+    repair.reportedIssue.length > 25
+      ? repair.reportedIssue.substring(0, 22) + "..."
+      : repair.reportedIssue,
+    repair.status,
+    repair.technicianName || "—",
+    formatCurrency(repair.totalCost),
+    repair.completedAt ? formatDate(repair.completedAt) : repair.receivedAt ? formatDate(repair.receivedAt) : "—",
+  ]);
+
+  // Generate table
+  autoTable(doc, {
+    startY: 60,
+    head: [
+      [
+        "Job #",
+        "Equipment",
+        "Customer",
+        "Issue",
+        "Status",
+        "Technician",
+        "Cost",
+        "Date",
+      ],
+    ],
+    body: tableData,
+    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 8,
+    },
+    bodyStyles: {
+      fontSize: 7,
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245],
+    },
+    columnStyles: {
+      0: { cellWidth: 22 }, // Job #
+      1: { cellWidth: 28 }, // Equipment
+      2: { cellWidth: 26 }, // Customer
+      3: { cellWidth: 35 }, // Issue
+      4: { cellWidth: 20, halign: "center" }, // Status
+      5: { cellWidth: 24 }, // Technician
+      6: { cellWidth: 20, halign: "right" }, // Cost
+      7: { cellWidth: 20 }, // Date
+    },
+    margin: { top: 60, left: 14, right: 14 },
+    didDrawCell: (data) => {
+      // Color code status cells
+      if (data.column.index === 4 && data.section === "body") {
+        const status = data.cell.raw as string;
+        if (status === "COMPLETED") {
+          data.cell.styles.textColor = [22, 163, 74]; // Green
+          data.cell.styles.fontStyle = "bold";
+        } else if (status === "IN_PROGRESS") {
+          data.cell.styles.textColor = [59, 130, 246]; // Blue
+          data.cell.styles.fontStyle = "bold";
+        } else if (status === "READY") {
+          data.cell.styles.textColor = [202, 138, 4]; // Yellow
+          data.cell.styles.fontStyle = "bold";
+        } else if (status === "CANCELLED") {
+          data.cell.styles.textColor = [220, 38, 38]; // Red
+          data.cell.styles.fontStyle = "bold";
+        }
+      }
+    },
+    didDrawPage: (data) => {
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        `Page ${data.pageNumber} of ${pageCount}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: "center" }
+      );
+    },
+  });
+
+  // Generate filename
+  const timestamp = new Date().toISOString().split("T")[0];
+  const filterSlug = filters?.status
+    ? `-${filters.status.toLowerCase()}`
+    : "";
+  const filename = `repair-records${filterSlug}-${timestamp}.pdf`;
+
+  // Download
+  doc.save(filename);
+}
+
+/**
+ * Generate a detailed repair job PDF for a single repair
+ */
+export function generateSingleRepairJobPDF(
+  repair: RepairRecordForPDF & {
+    serialNumber?: string;
+    imei?: string;
+    color?: string;
+    accessories?: string[];
+    condition?: string;
+    partsUsed?: Array<{
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+      total: number;
+    }>;
+    advancePayment?: number;
+    balanceDue?: number;
+    paymentStatus?: string;
+  }
+): void {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Header
+  doc.setFontSize(22);
+  doc.setFont("helvetica", "bold");
+  doc.text("REPAIR JOB DETAILS", pageWidth / 2, 20, { align: "center" });
+
+  // Job number and status
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Job Number: ${repair.jobNumber}`, pageWidth / 2, 30, {
+    align: "center",
+  });
+
+  // Status badge
+  const statusColors: Record<string, [number, number, number]> = {
+    RECEIVED: [100, 116, 139],
+    IN_PROGRESS: [59, 130, 246],
+    READY: [234, 179, 8],
+    COMPLETED: [22, 163, 74],
+    CANCELLED: [220, 38, 38],
+  };
+  const statusColor = statusColors[repair.status] || [107, 114, 128];
+  doc.setFillColor(...statusColor);
+  const statusText = repair.status;
+  const statusWidth = doc.getTextWidth(statusText) + 16;
+  doc.roundedRect(
+    pageWidth / 2 - statusWidth / 2,
+    35,
+    statusWidth,
+    10,
+    2,
+    2,
+    "F"
+  );
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.text(statusText, pageWidth / 2, 42, { align: "center" });
+
+  doc.setTextColor(0);
+  let yPos = 55;
+  const leftMargin = 20;
+  const rightCol = pageWidth / 2 + 10;
+
+  // Section helper
+  const addSection = (title: string, y: number): number => {
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text(title, leftMargin, y);
+    doc.setLineWidth(0.5);
+    doc.line(leftMargin, y + 2, pageWidth - leftMargin, y + 2);
+    return y + 10;
+  };
+
+  // Field helper
+  const addField = (
+    label: string,
+    value: string,
+    x: number,
+    y: number
+  ): void => {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(80);
+    doc.text(label, x, y);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0);
+    const lines = doc.splitTextToSize(value, 70);
+    doc.text(lines, x, y + 5);
+  };
+
+  // Customer Information
+  yPos = addSection("Customer Information", yPos);
+  addField("Name", repair.customerName, leftMargin, yPos);
+  addField("Phone", repair.customerPhone, rightCol, yPos);
+  yPos += 15;
+
+  // Device/Equipment Information
+  yPos = addSection("Equipment Information", yPos);
+  addField("Equipment", repair.equipmentName, leftMargin, yPos);
+  if (repair.brand && repair.model) {
+    addField("Brand/Model", `${repair.brand} ${repair.model}`, rightCol, yPos);
+  }
+  yPos += 12;
+  if (repair.serialNumber) {
+    addField("Serial Number", repair.serialNumber, leftMargin, yPos);
+    yPos += 12;
+  }
+  if (repair.imei) {
+    addField("IMEI", repair.imei, leftMargin, yPos);
+    yPos += 12;
+  }
+  if (repair.color) {
+    addField("Color", repair.color, leftMargin, yPos);
+    yPos += 12;
+  }
+  if (repair.accessories && repair.accessories.length > 0) {
+    addField("Accessories", repair.accessories.join(", "), leftMargin, yPos);
+    yPos += 12;
+  }
+
+  // Problem & Repair Details
+  yPos = addSection("Problem & Repair Details", yPos);
+  addField("Reported Issue", repair.reportedIssue, leftMargin, yPos);
+  yPos += 18;
+  if (repair.diagnosisNotes) {
+    addField("Diagnosis", repair.diagnosisNotes, leftMargin, yPos);
+    yPos += 18;
+  }
+  if (repair.repairActions) {
+    addField("Repair Actions Taken", repair.repairActions, leftMargin, yPos);
+    yPos += 18;
+  }
+
+  // Technician & Dates
+  yPos = addSection("Service Information", yPos);
+  if (repair.technicianName) {
+    addField("Technician", repair.technicianName, leftMargin, yPos);
+  }
+  if (repair.priority) {
+    addField("Priority", repair.priority, rightCol, yPos);
+  }
+  yPos += 12;
+  if (repair.receivedAt) {
+    addField("Received Date", formatDate(repair.receivedAt), leftMargin, yPos);
+  }
+  if (repair.completedAt) {
+    addField("Completed Date", formatDate(repair.completedAt), rightCol, yPos);
+  }
+  yPos += 15;
+
+  // Parts Used
+  if (repair.partsUsed && repair.partsUsed.length > 0) {
+    yPos = addSection("Parts Used", yPos);
+    autoTable(doc, {
+      startY: yPos,
+      head: [["Part Name", "Qty", "Unit Price", "Total"]],
+      body: repair.partsUsed.map((part) => [
+        part.productName,
+        String(part.quantity),
+        formatCurrency(part.unitPrice),
+        formatCurrency(part.total),
+      ]),
+      headStyles: {
+        fillColor: [0, 0, 0],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 9,
+      },
+      bodyStyles: {
+        fontSize: 8,
+      },
+      columnStyles: {
+        0: { cellWidth: 100 },
+        1: { cellWidth: 20, halign: "center" },
+        2: { cellWidth: 30, halign: "right" },
+        3: { cellWidth: 30, halign: "right" },
+      },
+      margin: { left: leftMargin, right: leftMargin },
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // Cost Breakdown
+  yPos = addSection("Cost Breakdown", yPos);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  const costX = leftMargin;
+  const valueX = pageWidth - leftMargin - 40;
+
+  doc.text("Labor Cost:", costX, yPos);
+  doc.text(formatCurrency(repair.laborCost), valueX, yPos, { align: "right" });
+  yPos += 7;
+
+  doc.text("Parts Total:", costX, yPos);
+  doc.text(formatCurrency(repair.partsTotal), valueX, yPos, { align: "right" });
+  yPos += 7;
+
+  doc.setLineWidth(0.5);
+  doc.line(costX, yPos, pageWidth - leftMargin, yPos);
+  yPos += 7;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Total Cost:", costX, yPos);
+  doc.text(formatCurrency(repair.totalCost), valueX, yPos, { align: "right" });
+  yPos += 10;
+
+  if (repair.advancePayment) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Advance Payment:", costX, yPos);
+    doc.text(formatCurrency(repair.advancePayment), valueX, yPos, {
+      align: "right",
+    });
+    yPos += 7;
+  }
+
+  if (repair.balanceDue !== undefined) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Balance Due:", costX, yPos);
+    doc.text(formatCurrency(repair.balanceDue), valueX, yPos, {
+      align: "right",
+    });
+  }
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(100);
+  doc.text(
+    `Generated on: ${new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })}`,
+    pageWidth / 2,
+    pageHeight - 15,
+    { align: "center" }
+  );
+
+  // Generate filename
+  const filename = `repair-job-${repair.jobNumber}.pdf`;
+
+  // Download
+  doc.save(filename);
+}

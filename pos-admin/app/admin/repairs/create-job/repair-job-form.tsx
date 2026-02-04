@@ -827,10 +827,10 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                       <td className="px-4 py-2 text-sm text-gray-500">{part.sku || '-'}</td>
                       <td className="px-4 py-2 text-sm text-center">{part.quantity}</td>
                       <td className="px-4 py-2 text-sm text-right">
-                        ${part.unitPrice.toFixed(2)}
+                        {part.unitPrice.toFixed(2)}
                       </td>
                       <td className="px-4 py-2 text-sm text-right font-medium">
-                        ${(part.quantity * part.unitPrice).toFixed(2)}
+                        {(part.quantity * part.unitPrice).toFixed(2)}
                       </td>
                       <td className="px-4 py-2 text-right">
                         <Button
@@ -1018,17 +1018,17 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           <div className="mt-4 p-4 bg-gray-50 rounded-md">
             <div className="flex justify-between items-center text-sm mb-2">
               <span className="text-gray-600">Parts Cost:</span>
-              <span className="font-medium">${partsCost.toFixed(2)}</span>
+              <span className="font-medium">{partsCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center text-sm mb-2">
               <span className="text-gray-600">Labor Cost:</span>
               <span className="font-medium">
-                ${(parseFloat(formData.laborCost) || 0).toFixed(2)}
+                {(parseFloat(formData.laborCost) || 0).toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between items-center text-lg font-semibold border-t pt-2">
               <span>Total Estimate:</span>
-              <span className="text-blue-600">${totalEstimate.toFixed(2)}</span>
+              <span className="text-blue-600">{totalEstimate.toFixed(2)}</span>
             </div>
           </div>
         </div>

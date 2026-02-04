@@ -6,7 +6,7 @@ import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/providers/toast-provider";
 import { fetchStock } from "@/lib/api/inventoryApi";
-import { Package, RefreshCw, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Plus } from "lucide-react";
+import { Package, RefreshCw, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Plus, Download } from "lucide-react";
 import Link from "next/link";
 
 interface StockItem {
@@ -257,10 +257,18 @@ export default function StockPage() {
             </Button>
           </Link>
         </div>
-        <Button onClick={loadStock} disabled={loading} variant="danger">
-          <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/admin/stock/export">
+            <Button variant="secondary">
+              <Download size={16} className="mr-2" />
+              Export PDF
+            </Button>
+          </Link>
+          <Button onClick={loadStock} disabled={loading} variant="danger">
+            <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stock Table */}

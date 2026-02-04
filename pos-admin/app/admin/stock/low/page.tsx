@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { DataTable, DataTableColumn } from "@/components/ui/data-table";
-import { AlertTriangle, Package, RefreshCw } from "lucide-react";
+import { AlertTriangle, Package, RefreshCw, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { fetchLowStock } from "@/lib/api/inventoryApi";
 import { useToast } from "@/providers/toast-provider";
 
@@ -158,6 +159,16 @@ export default function LowStockPage() {
   -------------------------------------------------- */
   return (
     <div className="p-6 space-y-6">
+      <div className="mb-4">
+        <Link
+          href="/admin/stock"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Stock Overview
+        </Link>
+      </div>
+      
       <PageHeader
         title={`Low Stock Products (${stats.totalItems})`}
         description="Products with stock levels below their minimum threshold"

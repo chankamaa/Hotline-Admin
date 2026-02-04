@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AdminSidebar } from "../../components/sidebar";
+import { AdminSidebar } from "../sidebar/sidebar";
 import { AdminNavbar } from "../../components/navbar";
 
 

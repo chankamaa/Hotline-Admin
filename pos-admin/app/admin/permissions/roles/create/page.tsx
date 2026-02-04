@@ -7,6 +7,7 @@ import { ArrowLeft, Shield, Plus, X, Loader2 } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
 import { PERMISSIONS, PERMISSION_CATEGORIES } from "@/lib/permissions";
 import roleApi from "@/lib/api/roleApi";
+import Link from "next/link";
 
 interface Permission {
   _id: string;
@@ -212,14 +213,19 @@ export default function CreateRolePage() {
   return (
     <RequirePerm perm="MANAGE_ROLES">
       <div className="p-6 max-w-5xl mx-auto">
+        <div className="mb-4">
+          <Link
+            href="/admin/permissions/roles"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Roles
+          </Link>
+        </div>
+        
         <PageHeader
           title="Create New Role"
           subtitle="Define a custom role with specific permissions"
-          action={{
-            label: "Back to Roles",
-            onClick: () => router.push("/admin/permissions/roles"),
-            icon: ArrowLeft,
-          }}
         />
 
         <form onSubmit={handleSubmit} className="space-y-6">

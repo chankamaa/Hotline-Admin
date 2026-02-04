@@ -100,7 +100,7 @@ export default function FinancialReportsPage({
     {
       key: "amount",
       label: "Amount",
-      render: (item) => <div className="text-black font-semibold">${item.amount.toFixed(2)}</div>
+      render: (item) => <div className="text-black font-semibold">{item.amount.toFixed(2)}</div>
     },
   ];
 
@@ -171,20 +171,20 @@ export default function FinancialReportsPage({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 bg-blue-50 rounded-lg">
                 <div className="text-sm text-gray-600 mb-1">Opening Cash</div>
-                <div className="text-xl font-bold text-black">${dailyReportData.openingCash.toFixed(2)}</div>
+                <div className="text-xl font-bold text-black">{dailyReportData.openingCash.toFixed(2)}</div>
               </div>
               <div className="p-4 bg-green-50 rounded-lg">
                 <div className="text-sm text-gray-600 mb-1">Closing Cash</div>
-                <div className="text-xl font-bold text-black">${dailyReportData.closingCash.toFixed(2)}</div>
+                <div className="text-xl font-bold text-black">{dailyReportData.closingCash.toFixed(2)}</div>
               </div>
               <div className="p-4 bg-purple-50 rounded-lg">
                 <div className="text-sm text-gray-600 mb-1">Net Revenue</div>
-                <div className="text-xl font-bold text-black">${dailyReportData.netRevenue.toFixed(2)}</div>
+                <div className="text-xl font-bold text-black">{dailyReportData.netRevenue.toFixed(2)}</div>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
                 <div className="text-sm text-gray-600 mb-1">Cash Difference</div>
                 <div className={`text-xl font-bold ${dailyReportData.cashDifference === 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ${dailyReportData.cashDifference.toFixed(2)}
+                  {dailyReportData.cashDifference.toFixed(2)}
                 </div>
               </div>
             </div>
@@ -197,19 +197,19 @@ export default function FinancialReportsPage({
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-black">Cash Sales</span>
-                  <span className="font-semibold text-black">${dailyReportData.totalCashSales.toFixed(2)}</span>
+                  <span className="font-semibold text-black">{dailyReportData.totalCashSales.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Card Payments</span>
-                  <span className="font-semibold text-black">${dailyReportData.totalCardPayments.toFixed(2)}</span>
+                  <span className="font-semibold text-black">{dailyReportData.totalCardPayments.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Digital Payments</span>
-                  <span className="font-semibold text-black">${dailyReportData.totalDigitalPayments.toFixed(2)}</span>
+                  <span className="font-semibold text-black">{dailyReportData.totalDigitalPayments.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Repair Revenue</span>
-                  <span className="font-semibold text-black">${dailyReportData.repairRevenue.toFixed(2)}</span>
+                  <span className="font-semibold text-black">{dailyReportData.repairRevenue.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between items-center">
                   <span className="text-black font-semibold">Total Revenue</span>
@@ -226,21 +226,21 @@ export default function FinancialReportsPage({
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-black">Returns & Refunds</span>
-                  <span className="font-semibold text-red-600">${Math.abs(dailyReportData.returnsRefunds).toFixed(2)}</span>
+                  <span className="font-semibold text-red-600">{Math.abs(dailyReportData.returnsRefunds).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Discounts Given</span>
-                  <span className="font-semibold text-red-600">${Math.abs(dailyReportData.discountsGiven).toFixed(2)}</span>
+                  <span className="font-semibold text-red-600">{Math.abs(dailyReportData.discountsGiven).toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between items-center">
                   <span className="text-black font-semibold">Total Deductions</span>
                   <span className="font-bold text-red-600 text-lg">
-                    ${Math.abs(dailyReportData.returnsRefunds + dailyReportData.discountsGiven).toFixed(2)}
+                    {Math.abs(dailyReportData.returnsRefunds + dailyReportData.discountsGiven).toFixed(2)}
                   </span>
                 </div>
                 <div className="border-t pt-3 mt-3 flex justify-between items-center bg-green-50 p-3 rounded">
                   <span className="text-black font-semibold">Net Revenue</span>
-                  <span className="font-bold text-green-600 text-xl">${dailyReportData.netRevenue.toFixed(2)}</span>
+                  <span className="font-bold text-green-600 text-xl">{dailyReportData.netRevenue.toFixed(2)}</span>
                 </div>
               </div>
             </div>

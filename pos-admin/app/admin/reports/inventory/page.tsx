@@ -98,7 +98,7 @@ export default function InventoryReportsPage({
     {
       key: "stockValue",
       label: "Stock Value",
-      render: (item) => <div className="text-black">${item.stockValue.toFixed(2)}</div>
+      render: (item) => <div className="text-black">{item.stockValue.toFixed(2)}</div>
     },
     {
       key: "status",
@@ -197,7 +197,7 @@ export default function InventoryReportsPage({
     {
       key: "value",
       label: "Stock Value",
-      render: (item) => <div className="text-black">${item.stockValue.toFixed(2)}</div>
+      render: (item) => <div className="text-black">{item.stockValue.toFixed(2)}</div>
     },
     {
       key: "action",
@@ -269,7 +269,7 @@ export default function InventoryReportsPage({
             </div>
             <div className="bg-white rounded-xl border p-4">
               <div className="text-sm text-gray-600 mb-1">Total Stock Value</div>
-              <div className="text-2xl font-bold text-black">${stockStats.totalValue.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-black">{stockStats.totalValue.toFixed(2)}</div>
             </div>
             <div className="bg-white rounded-xl border p-4">
               <div className="text-sm text-gray-600 mb-1">Low Stock Items</div>

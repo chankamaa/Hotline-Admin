@@ -170,7 +170,7 @@ export default function BarcodeLabelPrinting() {
                   <td className="px-6 py-4 text-sm text-gray-900">{product.name}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{product.sku}</td>
                   <td className="px-6 py-4 text-sm font-mono text-gray-500">{product.barcode}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">${product.price.toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{product.price.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -379,7 +379,7 @@ export default function BarcodeLabelPrinting() {
                       </div>
                     )}
                     {labelSettings.includePrice && (
-                      <div className="font-bold text-lg">${product.price.toFixed(2)}</div>
+                      <div className="font-bold text-lg">{product.price.toFixed(2)}</div>
                     )}
                     {labelSettings.includeSKU && (
                       <div className="text-xs text-gray-500 mt-1">{product.sku}</div>

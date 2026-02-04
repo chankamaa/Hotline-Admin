@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/page-header";
-import { UserPlus, Search, Edit, Trash2, Lock, Power, RefreshCw } from "lucide-react";
+import { UserPlus, Search, Edit, Trash2, Lock, Power, RefreshCw, ArrowLeft } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
-import { PERMISSIONS } from "@/components/sidebar-config";
+import { PERMISSIONS } from "@/app/sidebar/sidebar-config";
 import { userApi, User as ApiUser } from "@/lib/api/userApi";
+import Link from "next/link";
 
 // Use the API User type
 type User = ApiUser;
@@ -151,6 +152,15 @@ export default function UsersManagementPage() {
   return (
     <RequirePerm perm={PERMISSIONS.USER_READ}>
       <div className="p-6">
+        <div className="mb-4">
+          <Link
+            href="/admin/permissions"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Permissions
+          </Link>
+        </div>
         <PageHeader
           title="User Management"
           subtitle="Manage user accounts, roles, and permissions"

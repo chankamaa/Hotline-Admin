@@ -173,12 +173,12 @@ export default function PriceHistoryPage() {
     {
       key: "oldPrice",
       label: "Old Price",
-      render: (item) => <div className="text-black">${item.oldPrice.toFixed(2)}</div>
+      render: (item) => <div className="text-black">{item.oldPrice.toFixed(2)}</div>
     },
     {
       key: "newPrice",
       label: "New Price",
-      render: (item) => <div className="text-black font-semibold">${item.newPrice.toFixed(2)}</div>
+      render: (item) => <div className="text-black font-semibold">{item.newPrice.toFixed(2)}</div>
     },
     {
       key: "change",
@@ -276,7 +276,7 @@ export default function PriceHistoryPage() {
             <div className="text-sm text-black">Avg Change</div>
             <DollarSign size={20} className="text-purple-600" />
           </div>
-          <div className="text-2xl font-bold text-black">${stats.avgChange.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-black">{stats.avgChange.toFixed(2)}</div>
         </div>
       </div>
 
@@ -355,7 +355,7 @@ export default function PriceHistoryPage() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="font-semibold text-black">
-                          ${change.oldPrice.toFixed(2)} → ${change.newPrice.toFixed(2)}
+                          {change.oldPrice.toFixed(2)} → {change.newPrice.toFixed(2)}
                         </div>
                         <div className={`text-sm ${change.changeType === "Increase" ? "text-green-600" : "text-red-600"}`}>
                           {change.priceChange > 0 ? '+' : ''}{change.priceChange.toFixed(2)} ({change.percentageChange > 0 ? '+' : ''}{change.percentageChange.toFixed(1)}%)

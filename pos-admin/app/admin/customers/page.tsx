@@ -163,7 +163,7 @@ export default function CustomersPage() {
       label: "Total Purchases",
       render: (customer) => (
         <div className="font-semibold text-green-600">
-          ${customer.totalPurchases.toFixed(2)}
+          {customer.totalPurchases.toFixed(2)}
         </div>
       ),
     },
@@ -398,7 +398,7 @@ export default function CustomersPage() {
               <div className="p-4 bg-green-50 rounded-lg">
                 <div className="text-sm text-gray-700 mb-1">Total Purchases</div>
                 <div className="text-2xl font-bold text-green-600">
-                  ${currentCustomer.totalPurchases.toFixed(2)}
+                  {currentCustomer.totalPurchases.toFixed(2)}
                 </div>
               </div>
               <div className="p-4 bg-blue-50 rounded-lg">

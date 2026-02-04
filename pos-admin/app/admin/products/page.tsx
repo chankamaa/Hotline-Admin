@@ -113,7 +113,6 @@ export default function ProductsPage() {
 
         // Auto-fill the barcode field
         setFormData(prev => ({ ...prev, barcode: scannedBarcode }));
-        toast.success(`Barcode scanned: ${scannedBarcode}`);
         e.preventDefault();
         return;
       }
@@ -302,8 +301,14 @@ export default function ProductsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Deactivate this product?")) return;
-    await deleteProduct(id);
-    loadProducts();
+    try {
+      await deleteProduct(id);
+      toast.success("Product deactivated successfully!");
+      await loadProducts();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to deactivate product";
+      toast.error(errorMessage);
+    }
   };
 
   /* --------------------------------------------------
@@ -335,9 +340,9 @@ export default function ProductsPage() {
       label: "Price",
       render: (p) => (
         <div>
-          <div className="font-semibold">${p.sellingPrice.toFixed(2)}</div>
+          <div className="font-semibold">{p.sellingPrice.toFixed(2)}</div>
           <div className="text-xs text-gray-500">
-            Cost: ${p.costPrice.toFixed(2)}
+            Cost: {p.costPrice.toFixed(2)}
           </div>
         </div>
       ),
@@ -634,10 +639,10 @@ export default function ProductsPage() {
                   <div className="bg-green-50 border border-green-200 rounded p-3 text-sm text-gray-700">
                     <strong>Effective Price:</strong>{" "}
                     {formData.offerType === "PERCENTAGE"
-                      ? `$${(+formData.sellingPrice * (1 - +formData.offerValue / 100)).toFixed(2)}`
-                      : `$${Math.max(0, +formData.sellingPrice - +formData.offerValue).toFixed(2)}`
+                      ? `${(+formData.sellingPrice * (1 - +formData.offerValue / 100)).toFixed(2)}`
+                      : `${Math.max(0, +formData.sellingPrice - +formData.offerValue).toFixed(2)}`
                     }
-                    {" "}(saving: {formData.offerType === "PERCENTAGE" ? `${formData.offerValue}%` : `$${formData.offerValue}`})
+                    {" "}(saving: {formData.offerType === "PERCENTAGE" ? `${formData.offerValue}%` : `${formData.offerValue}`})
                   </div>
                 )}
               </div>

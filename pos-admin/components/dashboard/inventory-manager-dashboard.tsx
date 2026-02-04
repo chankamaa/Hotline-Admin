@@ -34,7 +34,7 @@ export default function InventoryManagerDashboard() {
   const [stats, setStats] = useState({
     totalProducts: { value: "0", change: "+0 this week", changeType: "neutral" as ChangeType },
     lowStockItems: { value: "0", change: "Need attention", changeType: "decrease" as ChangeType },
-    stockValue: { value: "$0", change: "+0%", changeType: "neutral" as ChangeType },
+    stockValue: { value: "0", change: "+0%", changeType: "neutral" as ChangeType },
     pendingOrders: { value: "0", change: "Incoming", changeType: "neutral" as ChangeType },
   });
 

@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { ArrowLeft, Eye, EyeOff, RefreshCw, Send, Loader2 } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
-import { PERMISSIONS } from "@/components/sidebar-config";
+import { PERMISSIONS } from "@/app/sidebar/sidebar-config";
 import userApi from "@/lib/api/userApi";
 import roleApi, { Role } from "@/lib/api/roleApi";
+import Link from "next/link";
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -159,14 +160,19 @@ export default function CreateUserPage() {
   return (
     <RequirePerm perm={PERMISSIONS.USER_CREATE}>
       <div className="p-6">
+        <div className="mb-4">
+          <Link
+            href="/admin/permissions/users"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Users
+          </Link>
+        </div>
+        
         <PageHeader
           title="Create New User"
           subtitle="Add a new employee with unique username and password"
-          action={{
-            label: "Back to Users",
-            onClick: () => (window.location.href = "/admin/permissions/users"),
-            icon: ArrowLeft,
-          }}
         />
 
         <div className="max-w-3xl mx-auto text-gray-400">

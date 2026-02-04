@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/ui/data-table";
-import { Plus, TrendingUp, TrendingDown, Eye, User, X, Package, RefreshCw, Calendar, Search, Filter } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Eye, User, X, Package, RefreshCw, Calendar, Search, Filter, ArrowLeft } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
+import Link from "next/link";
 
 import { fetchProducts } from "@/lib/api/productApi";
 import { adjustStock, fetchAdjustmentTypes, fetchProductStock, fetchStockHistory } from "@/lib/api/inventoryApi";
@@ -369,6 +370,16 @@ export default function StockAdjustmentPage() {
   -------------------------------------------------- */
   return (
     <div className="p-6 text-gray-700">
+      <div className="mb-4">
+        <Link
+          href="/admin/stock"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Stock Overview
+        </Link>
+      </div>
+      
       <PageHeader
         title="Stock Adjustments"
         description="View and create inventory adjustments"

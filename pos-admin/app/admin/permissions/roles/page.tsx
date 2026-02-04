@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
-import { ShieldPlus, Edit, Trash2, Users, Key, AlertCircle } from "lucide-react";
+import { ShieldPlus, Edit, Trash2, Users, Key, AlertCircle, ArrowLeft } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
 import { PERMISSIONS } from "@/lib/permissions";
 import { roleApi, Role } from "@/lib/api/roleApi";
+import Link from "next/link";
 
 export default function RolesManagementPage() {
   const router = useRouter();
@@ -85,6 +86,15 @@ export default function RolesManagementPage() {
   return (
     <RequirePerm perm={PERMISSIONS.VIEW_ROLES}>
       <div className="p-6">
+        <div className="mb-4">
+          <Link
+            href="/admin/permissions"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Permissions
+          </Link>
+        </div>
         <PageHeader
           title="Role Management"
           subtitle="Create and manage user roles with specific permissions"

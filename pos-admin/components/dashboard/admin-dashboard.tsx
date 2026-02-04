@@ -44,7 +44,7 @@ export default function AdminDashboard() {
 
   type ChangeType = "increase" | "decrease" | "neutral";
   const [stats, setStats] = useState({
-    todaySales: { value: "$0", change: "+0%", changeType: "increase" as ChangeType },
+    todaySales: { value: "0", change: "+0%", changeType: "increase" as ChangeType },
     totalOrders: { value: "0", change: "+0", changeType: "neutral" as ChangeType },
     lowStock: { value: "0", change: "0", changeType: "decrease" as ChangeType },
     activeCustomers: { value: "0", change: "+0", changeType: "neutral" as ChangeType },
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
           id: sale.saleNumber || sale._id,
           customer: sale.customer?.name || "Walk-in",
           product: sale.items?.map((item: any) => item.productName).join(", ") || "N/A",
-          amount: `$${sale.grandTotal?.toFixed(2) || 0}`,
+          amount: `${sale.grandTotal?.toFixed(2) || 0}`,
           status: sale.status?.toLowerCase() || "completed",
         })));
       }
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
           value={stats.todaySales.value}
           change={stats.todaySales.change}
           changeType={stats.todaySales.changeType}
-          icon={<DollarSign size={20} />}
+          
         />
         <StatsCard
           title="Total Orders"
@@ -471,11 +471,11 @@ export default function AdminDashboard() {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Sales Revenue</span>
-              <span className="text-sm font-medium">$45,230</span>
+              <span className="text-sm font-medium">45,230</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Repair Revenue</span>
-              <span className="text-sm font-medium">$12,450</span>
+              <span className="text-sm font-medium">12,450</span>
             </div>
           </div>
         </div>

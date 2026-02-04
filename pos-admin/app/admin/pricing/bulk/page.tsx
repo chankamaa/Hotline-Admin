@@ -100,7 +100,7 @@ export default function BulkPriceUpdatesPage() {
       scheduledDate: new Date("2026-01-15"),
       products: 8,
       updateType: "Fixed Amount Decrease",
-      value: "$50",
+      value: "50",
       status: "Pending",
       createdBy: "Manager",
       createdAt: new Date("2026-01-03")
@@ -233,14 +233,14 @@ export default function BulkPriceUpdatesPage() {
     {
       key: "currentPrice",
       label: "Current Price",
-      render: (item) => <div className="text-black font-semibold">${item.currentPrice.toFixed(2)}</div>
+      render: (item) => <div className="text-black font-semibold">{item.currentPrice.toFixed(2)}</div>
     },
     {
       key: "newPrice",
       label: "New Price",
       render: (item) => (
         item.newPrice ? (
-          <div className="text-black font-semibold">${item.newPrice.toFixed(2)}</div>
+          <div className="text-black font-semibold">{item.newPrice.toFixed(2)}</div>
         ) : (
           <div className="text-gray-400">-</div>
         )

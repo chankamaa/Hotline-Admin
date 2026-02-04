@@ -3,7 +3,8 @@
 import { Menu, Bell, Search, Plus, LogOut, User, ChevronDown, AlertCircle, Package, Wrench, ShieldCheck, Info, Loader2, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/providers/providers";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, getLowStockAlerts, type Notification, type LowStockItem } from "@/lib/api/notificationApi";
+import { useRouter } from "next/navigation";
+
 
 export function AdminNavbar({
   onOpenMobileSidebar,
@@ -13,6 +14,7 @@ export function AdminNavbar({
   title?: string;
 }) {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -195,14 +197,14 @@ export function AdminNavbar({
         </button>
 
         {/* Page title */}
-        <div className="font-bold text-xl text-slate-800 tracking-tight">{title}</div>
+        <div className="font-bold text-xl text-white tracking-tight">{title}</div>
 
         {/* Search */}
         <div className="ml-auto flex items-center gap-3 w-full max-w-[600px]">
           <div className="relative w-full">
             <Search
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"
             />
             <input
               className="w-full pl-12 pr-16 py-2.5 text-slate-700 rounded-lg border-2 border-white/80 bg-white/90 backdrop-blur-sm text-[15px] font-normal placeholder:text-slate-400 shadow-sm hover:border-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 focus:bg-white transition-all duration-200"
@@ -216,7 +218,10 @@ export function AdminNavbar({
           </div>
 
           {/* Quick action */}
-          <button className="hidden sm:inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
+          <button 
+            onClick={() => router.push("/admin/permissions/users")}
+            className="hidden sm:inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
+          >
             <Plus size={16} />
             New
           </button>
@@ -232,7 +237,7 @@ export function AdminNavbar({
               className="p-3 rounded-xl hover:bg-slate-100/80 transition-all duration-200 backdrop-blur-sm relative group"
               aria-label="Notifications"
             >
-              <Bell size={20} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
+              <Bell size={20} className=" group-hover:text-blue-600 transition-colors" />
               {unreadCount > 0 && (
                 <span className="absolute top-2 right-2 h-5 w-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full border-2 border-white shadow-sm flex items-center justify-center">
                   <span className="text-[10px] font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>
@@ -418,8 +423,8 @@ export function AdminNavbar({
 
             {/* Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-3 w-64 bg-blue-600 backdrop-blur-xl rounded-xl shadow-xl border border-slate-200/60 py-2 z-50">
-                <div className="px-4 py-3 border-b border-slate-200/60">
+              <div className="absolute right-0 mt-3 w-64 bg-gray-200   to-indigo-500 backdrop-blur-xl rounded-xl shadow-xl border border-blue-600 py-2 z-50">
+                <div className="px-4 py-3  hover:bg-white border-b border-slate-200/60">
                   <p className="text-sm font-semibold text-slate-800">{user?.username}</p>
                   {user?.email && (
                     <p className="text-xs text-slate-500 truncate mt-1">{user.email}</p>

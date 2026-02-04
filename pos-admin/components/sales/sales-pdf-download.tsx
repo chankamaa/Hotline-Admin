@@ -230,7 +230,7 @@ export function SalesPDFDownload({ variant = "panel" }: SalesPDFDownloadProps) {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as PeriodType)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border text-gray-500 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="daily">Today</option>
             <option value="weekly">Last 7 Days</option>
@@ -242,7 +242,7 @@ export function SalesPDFDownload({ variant = "panel" }: SalesPDFDownloadProps) {
 
         {/* Custom Date Range */}
         {period === "custom" && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3  text-gray-500">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Start Date
@@ -278,7 +278,7 @@ export function SalesPDFDownload({ variant = "panel" }: SalesPDFDownloadProps) {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as StatusType)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2  text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All Statuses</option>
               <option value="COMPLETED">Completed</option>

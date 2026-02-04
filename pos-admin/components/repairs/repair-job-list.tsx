@@ -506,10 +506,10 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
                           <td className="px-4 py-2 text-sm text-gray-900">{part.productName || 'N/A'}</td>
                           <td className="px-4 py-2 text-sm text-gray-900">{part.quantity}</td>
                           <td className="px-4 py-2 text-sm text-gray-900">
-                            ${part.unitPrice?.toFixed(2) || '0.00'}
+                            {part.unitPrice?.toFixed(2) || '0.00'}
                           </td>
                           <td className="px-4 py-2 text-sm text-gray-900 font-semibold">
-                            ${((part.quantity * (part.unitPrice || 0)).toFixed(2))}
+                            {((part.quantity * (part.unitPrice || 0)).toFixed(2))}
                           </td>
                         </tr>
                       ))}
@@ -525,34 +525,34 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
               <div className="space-y-3">
                 <div className="flex justify-between items-center pb-2">
                   <span className="text-gray-700 font-medium">Labor Cost:</span>
-                  <span className="text-lg font-bold text-gray-900">${(selectedJob.laborCost || 0).toFixed(2)}</span>
+                  <span className="text-lg font-bold text-gray-900">{(selectedJob.laborCost || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center pb-2">
                   <span className="text-gray-700 font-medium">Parts Cost:</span>
                   <span className="text-lg font-bold text-gray-900">
-                    ${selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0).toFixed(2) : '0.00'}
+                    {selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0).toFixed(2) : '0.00'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-t pt-2">
                   <span className="text-gray-700 font-medium">Total Cost:</span>
                   <span className="text-xl font-bold text-blue-700">
-                    ${((selectedJob.laborCost || 0) + (selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0)).toFixed(2)}
+                    {((selectedJob.laborCost || 0) + (selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0)).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-2">
                   <span className="text-gray-700 font-medium">Advance Payment:</span>
-                  <span className="text-lg font-bold text-green-700">-${(selectedJob.advancePayment || 0).toFixed(2)}</span>
+                  <span className="text-lg font-bold text-green-700">-{(selectedJob.advancePayment || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t-2 border-blue-300">
                   <span className="text-gray-900 font-bold text-lg">Balance Due:</span>
                   <span className="text-2xl font-bold text-orange-600">
-                    ${(((selectedJob.laborCost || 0) + (selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0)) - (selectedJob.advancePayment || 0)).toFixed(2)}
+                    {(((selectedJob.laborCost || 0) + (selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0)) - (selectedJob.advancePayment || 0)).toFixed(2)}
                   </span>
                 </div>
                 {selectedJob.estimatedCost && (
                   <div className="flex justify-between items-center pt-2 text-sm">
                     <span className="text-gray-500 italic">Original Estimate:</span>
-                    <span className="text-gray-500 italic">${selectedJob.estimatedCost.toFixed(2)}</span>
+                    <span className="text-gray-500 italic">{selectedJob.estimatedCost.toFixed(2)}</span>
                   </div>
                 )}
               </div>

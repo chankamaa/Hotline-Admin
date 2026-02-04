@@ -31,9 +31,9 @@ export default function CashierDashboard() {
 
   type ChangeType = "increase" | "decrease" | "neutral";
   const [stats, setStats] = useState({
-    todaySales: { value: "$0", change: "+0%", changeType: "increase" as ChangeType },
+    todaySales: { value: "0", change: "+0%", changeType: "increase" as ChangeType },
     totalOrders: { value: "0", change: "+0", changeType: "neutral" as ChangeType },
-    mySales: { value: "$0", change: "+0%", changeType: "neutral" as ChangeType },
+    mySales: { value: "0", change: "+0%", changeType: "neutral" as ChangeType },
     activeCustomers: { value: "0", change: "+0", changeType: "neutral" as ChangeType },
   });
 
@@ -105,7 +105,7 @@ export default function CashierDashboard() {
           id: sale.saleNumber || sale._id,
           customer: sale.customer?.name || "Walk-in Customer",
           items: sale.items?.length || 0,
-          amount: `$${sale.grandTotal?.toFixed(2) || 0}`,
+          amount: `${sale.grandTotal?.toFixed(2) || 0}`,
           time: new Date(sale.createdAt).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
@@ -322,7 +322,7 @@ export default function CashierDashboard() {
             </div>
             <h4 className="font-semibold text-gray-900">Highest Value Sale</h4>
           </div>
-          <p className="text-sm text-gray-600 mb-2">$2,450.00</p>
+          <p className="text-sm text-gray-600 mb-2">2,450.00</p>
           <p className="text-xs text-gray-500">MacBook Pro + Accessories</p>
         </div>
 

@@ -105,7 +105,7 @@ export default function SalesReportsPage({
     {
       key: "revenue",
       label: "Revenue",
-      render: (item) => <div className="text-black font-semibold">${item.revenue.toLocaleString()}</div>
+      render: (item) => <div className="text-black font-semibold">{item.revenue.toLocaleString()}</div>
     },
     {
       key: "trend",
@@ -140,12 +140,12 @@ export default function SalesReportsPage({
     {
       key: "total",
       label: "Total Discount",
-      render: (item) => <div className="text-red-600 font-semibold">${item.totalDiscount.toLocaleString()}</div>
+      render: (item) => <div className="text-red-600 font-semibold">{item.totalDiscount.toLocaleString()}</div>
     },
     {
       key: "avg",
       label: "Avg Discount",
-      render: (item) => <div className="text-black">${item.avgDiscount.toFixed(2)}</div>
+      render: (item) => <div className="text-black">{item.avgDiscount.toFixed(2)}</div>
     },
     {
       key: "employee",
@@ -231,7 +231,7 @@ export default function SalesReportsPage({
                 <div className="text-sm text-gray-600">Total Sales</div>
                 <DollarSign size={20} className="text-green-600" />
               </div>
-              <div className="text-2xl font-bold text-black">${salesSummary.totalSales.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-black">{salesSummary.totalSales.toLocaleString()}</div>
               <div className="text-xs text-green-600 mt-1">+12.5% from last period</div>
             </div>
             <div className="bg-white rounded-xl border p-4">
@@ -247,7 +247,7 @@ export default function SalesReportsPage({
                 <div className="text-sm text-gray-600">Avg Transaction</div>
                 <TrendingUp size={20} className="text-purple-600" />
               </div>
-              <div className="text-2xl font-bold text-black">${salesSummary.avgTransaction.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-black">{salesSummary.avgTransaction.toFixed(2)}</div>
               <div className="text-xs text-purple-600 mt-1">+3.9% from last period</div>
             </div>
             <div className="bg-white rounded-xl border p-4">
@@ -268,7 +268,7 @@ export default function SalesReportsPage({
                 <div key={index}>
                   <div className="flex justify-between mb-1">
                     <span className="text-black">{method.method}</span>
-                    <span className="text-black font-semibold">${method.amount.toLocaleString()} ({method.count} txns)</span>
+                    <span className="text-black font-semibold">{method.amount.toLocaleString()} ({method.count} txns)</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div 
@@ -299,7 +299,7 @@ export default function SalesReportsPage({
                   {categoryData.map((cat, index) => (
                     <tr key={index} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4 text-black font-medium">{cat.category}</td>
-                      <td className="py-3 px-4 text-black font-semibold">${cat.sales.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-black font-semibold">{cat.sales.toLocaleString()}</td>
                       <td className="py-3 px-4 text-black">{cat.count}</td>
                       <td className="py-3 px-4 text-black">{cat.percentage}%</td>
                     </tr>
@@ -341,7 +341,7 @@ export default function SalesReportsPage({
                     <div className="text-sm text-gray-500">{product.quantitySold} units sold</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-black">${product.revenue.toLocaleString()}</div>
+                    <div className="font-bold text-black">{product.revenue.toLocaleString()}</div>
                     <div className="text-xs text-green-600">+{product.trendPercent}%</div>
                   </div>
                 </div>

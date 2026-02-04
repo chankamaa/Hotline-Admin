@@ -101,13 +101,17 @@ export default function CloudStoragePage() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6">
-        <Link href="/admin/settings">
-          <Button variant="outline" size="sm" className="mb-4">
-            <ArrowLeft size={16} className="mr-2" />
-            Back to Settings
-          </Button>
+      <div className="mb-4">
+        <Link
+          href="/admin/settings"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Settings
         </Link>
+      </div>
+      
+      <div className="mb-6">
         <PageHeader
           title="Cloud Storage Sync Settings"
           description="Configure automated cloud backup and data synchronization"
@@ -466,17 +470,17 @@ export default function CloudStoragePage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Storage Cost</div>
-                  <div className="text-2xl font-bold text-black">$1.38</div>
-                  <div className="text-xs text-gray-500 mt-1">{syncStats.totalSizeGB} GB @ $0.023/GB</div>
+                  <div className="text-2xl font-bold text-black">1.38</div>
+                  <div className="text-xs text-gray-500 mt-1">{syncStats.totalSizeGB} GB @ 0.023/GB</div>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Data Transfer</div>
-                  <div className="text-2xl font-bold text-black">$3.25</div>
+                  <div className="text-2xl font-bold text-black">3.25</div>
                   <div className="text-xs text-gray-500 mt-1">~130 GB monthly</div>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">Total Estimated</div>
-                  <div className="text-2xl font-bold text-black">$4.63</div>
+                  <div className="text-2xl font-bold text-black">4.63</div>
                   <div className="text-xs text-gray-500 mt-1">per month</div>
                 </div>
               </div>

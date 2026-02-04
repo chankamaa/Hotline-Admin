@@ -19,8 +19,10 @@ import {
   CheckCircle,
   XCircle,
   Edit,
-  Trash2
+  Trash2,
+  ArrowLeft
 } from "lucide-react";
+import Link from "next/link";
 
 interface AuditLog {
   id: string;
@@ -361,6 +363,16 @@ export default function StockAuditPage() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-4">
+        <Link
+          href="/admin/stock"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Stock Overview
+        </Link>
+      </div>
+      
       <PageHeader
         title="Stock Audit Trail"
         description="Complete audit log of all stock-related activities with user tracking"

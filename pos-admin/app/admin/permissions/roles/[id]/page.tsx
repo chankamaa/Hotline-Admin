@@ -195,14 +195,19 @@ export default function RoleEditPage() {
   return (
     <RequirePerm perm={PERMISSIONS.MANAGE_ROLES}>
       <div className="p-6">
+        <div className="mb-4">
+          <Link
+            href="/admin/permissions/roles"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Roles
+          </Link>
+        </div>
+        
         <PageHeader
           title={`Edit Role: ${role.name}`}
           subtitle={role.description || "Manage role permissions"}
-          action={{
-            label: "Back to Roles",
-            onClick: () => router.push("/admin/permissions/roles"),
-            icon: ArrowLeft,
-          }}
         />
 
         {/* Permission Access Warning */}

@@ -5,12 +5,24 @@ import { useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function CreatePurchaseOrderPage() {
   const [isModalOpen, setIsModalOpen] = useState(true);
 
   return (
     <div className="space-y-6">
+      <div className="mb-4">
+        <Link
+          href="/admin/purchase-orders"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Purchase Orders
+        </Link>
+      </div>
+      
       <PageHeader
         title="Create Purchase Order"
         description="Create a new purchase order for suppliers"

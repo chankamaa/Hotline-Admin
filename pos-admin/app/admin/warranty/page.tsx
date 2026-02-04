@@ -17,9 +17,11 @@ import {
   Package,
   User,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Download
 } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
+import Link from "next/link";
 import {
   fetchWarranties,
   fetchWarrantyStats,
@@ -358,14 +360,22 @@ export default function WarrantyPage() {
           title="Warranty Management"
           description="View product warranties, claims, and reports"
         />
-        <Button
-          onClick={loadWarrantyData}
-          disabled={loading}
-          variant="danger"
-        >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/admin/warranty/export">
+            <Button variant="secondary">
+              <Download size={16} className="mr-2" />
+              Export PDF
+            </Button>
+          </Link>
+          <Button
+            onClick={loadWarrantyData}
+            disabled={loading}
+            variant="danger"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Tab Navigation */}

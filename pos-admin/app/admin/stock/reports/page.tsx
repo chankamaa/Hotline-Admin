@@ -13,7 +13,8 @@ import {
   Calendar,
   Download,
   FileText,
-  Filter
+  Filter,
+  ArrowLeft
 } from "lucide-react";
 
 export default function StockReportsPage() {
@@ -57,6 +58,16 @@ export default function StockReportsPage() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-4">
+        <Link
+          href="/admin/stock"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Stock Overview
+        </Link>
+      </div>
+      
       <PageHeader
         title="Movement Reports"
         description="Analyze stock movements, trends, and patterns across locations"

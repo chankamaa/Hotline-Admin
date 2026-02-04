@@ -16,8 +16,10 @@ import {
   MapPin,
   User,
   FileText,
-  Eye
+  Eye,
+  ArrowLeft
 } from "lucide-react";
+import Link from "next/link";
 
 interface StockMovement {
   id: string;
@@ -302,6 +304,16 @@ export default function StockMovementsPage() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-4">
+        <Link
+          href="/admin/stock"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Stock Overview
+        </Link>
+      </div>
+      
       <PageHeader
         title="All Stock Movements"
         description="Comprehensive view of all inventory movements across locations"

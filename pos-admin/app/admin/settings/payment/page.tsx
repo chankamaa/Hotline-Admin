@@ -72,13 +72,17 @@ export default function PaymentGatewayPage() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6">
-        <Link href="/admin/settings">
-          <Button variant="outline" size="sm" className="mb-4">
-            <ArrowLeft size={16} className="mr-2" />
-            Back to Settings
-          </Button>
+      <div className="mb-4">
+        <Link
+          href="/admin/settings"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Settings
         </Link>
+      </div>
+      
+      <div className="mb-6">
         <PageHeader
           title="Payment Gateway Configuration"
           description="Configure payment processing, supported methods, and security settings"
