@@ -46,10 +46,9 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     todaySales: { value: "0", change: "+0%", changeType: "increase" as ChangeType },
     totalOrders: { value: "0", change: "+0", changeType: "neutral" as ChangeType },
+    totalProfit: { value: "0.00", change: "+0%", changeType: "increase" as ChangeType },
     lowStock: { value: "0", change: "0", changeType: "decrease" as ChangeType },
-    activeCustomers: { value: "0", change: "+0", changeType: "neutral" as ChangeType },
     inProgressRepairs: { value: "0", change: "0 active", changeType: "neutral" as ChangeType },
-    totalEmployees: { value: "0", change: "+0", changeType: "neutral" as ChangeType },
   });
 
   const [recentSales, setRecentSales] = useState<any[]>([]);
@@ -100,12 +99,21 @@ export default function AdminDashboard() {
 
         const orderChange = orderCount - previousOrderCount;
 
+        // Calculate profit: selling price - cost price
+        const totalCost = summary.totalCost || 0;
+        const totalProfit = totalSales - totalCost;
+        const previousDayProfit = (summary.previousDayAmount || 0) - (summary.previousDayCost || 0);
+        
+        const profitChange = previousDayProfit > 0
+          ? ((totalProfit - previousDayProfit) / previousDayProfit * 100)
+          : totalProfit > 0 ? 100 : 0;
+
         setStats(prev => ({
           ...prev,
           todaySales: {
             value: new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'USD',
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
             }).format(totalSales),
             change: `${salesChange >= 0 ? '+' : ''}${salesChange.toFixed(1)}%`,
             changeType: salesChange >= 0 ? "increase" : "decrease",
@@ -114,6 +122,14 @@ export default function AdminDashboard() {
             value: orderCount.toString(),
             change: `${orderChange >= 0 ? '+' : ''}${orderChange}`,
             changeType: orderChange > 0 ? "increase" : orderChange < 0 ? "decrease" : "neutral",
+          },
+          totalProfit: {
+            value: new Intl.NumberFormat('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(totalProfit),
+            change: `${profitChange >= 0 ? '+' : ''}${profitChange.toFixed(1)}%`,
+            changeType: profitChange >= 0 ? "increase" : "decrease",
           },
         }));
       }
@@ -187,20 +203,6 @@ export default function AdminDashboard() {
         }));
       }
 
-      // Process customer count
-      if (customerCountRes.status === "fulfilled") {
-        const customerData: any = customerCountRes.value;
-        const total = customerData.pagination?.total || 0;
-        setStats(prev => ({
-          ...prev,
-          activeCustomers: {
-            value: total.toString(),
-            change: "+0",
-            changeType: "neutral",
-          },
-        }));
-      }
-
     } catch (error: any) {
       console.error("Error loading admin dashboard:", error);
       
@@ -235,32 +237,33 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="bg-gray-200 p-6 w-full">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-gray-100 min-h-screen p-3 sm:p-4 md:p-6 w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 sm:mb-6">
         <PageHeader
           title="Administrator Dashboard"
           description="Complete system overview and controls"
         />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <Button
             onClick={loadDashboardData}
             disabled={loading}
             variant="danger"
+            className="flex-1 sm:flex-none"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
         </div>
       </div>
 
-      {/* Stats Grid - 6 cards for admin */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+      {/* Stats Grid - 5 cards for admin */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
         <StatsCard
           title="Today's Sales"
           value={stats.todaySales.value}
           change={stats.todaySales.change}
           changeType={stats.todaySales.changeType}
-          
+          icon={<DollarSign size={20} />}
         />
         <StatsCard
           title="Total Orders"
@@ -284,34 +287,27 @@ export default function AdminDashboard() {
           icon={<AlertTriangle size={20} />}
         />
         <StatsCard
-          title="Customers"
-          value={stats.activeCustomers.value}
-          change={stats.activeCustomers.change}
-          changeType={stats.activeCustomers.changeType}
-          icon={<Users size={20} />}
-        />
-        <StatsCard
-          title="Employees"
-          value={stats.totalEmployees.value}
-          change={stats.totalEmployees.change}
-          changeType={stats.totalEmployees.changeType}
-          icon={<UserCog size={20} />}
+          title="Today's Profit"
+          value={stats.totalProfit.value}
+          change={stats.totalProfit.change}
+          changeType={stats.totalProfit.changeType}
+          icon={<TrendingUp size={20} />}
         />
       </div>
 
       {/* Sales Trend Chart */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <React.Suspense fallback={<div className="p-4">Loading chart...</div>}>
           <SalesTrendChart />
         </React.Suspense>
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {/* Recent Sales */}
-        <div className="bg-white rounded-xl border border-blue-600">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold text-gray-900">Recent Sales</h3>
+        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm">
+          <div className="p-3 sm:p-4 border-b">
+            <h3 className="font-semibold text-sm sm:text-base text-gray-900">Recent Sales</h3>
           </div>
           <div className="divide-y">
             {recentSales.length === 0 ? (
@@ -321,14 +317,14 @@ export default function AdminDashboard() {
               </div>
             ) : (
               recentSales.map((sale) => (
-                <div key={sale.id} className="p-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between mb-1 text-black">
-                    <div className="font-medium text-sm">{sale.customer}</div>
-                    <div className="font-semibold text-sm">{sale.amount}</div>
+                <div key={sale.id} className="p-3 sm:p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between mb-1 text-black gap-2">
+                    <div className="font-medium text-xs sm:text-sm truncate">{sale.customer}</div>
+                    <div className="font-semibold text-xs sm:text-sm flex-shrink-0">{sale.amount}</div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-gray-500">{sale.product}</div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${sale.status === "completed"
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs text-gray-500 truncate flex-1">{sale.product}</div>
+                    <span className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${sale.status === "completed"
                       ? "bg-green-100 text-green-700"
                       : "bg-yellow-100 text-yellow-700"
                       }`}>
@@ -339,18 +335,18 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
-          <div className="p-4 border-t">
-            <a href="/admin/sales" className="text-sm text-blue-600 hover:text-blue-700">
+          <div className="p-3 sm:p-4 border-t bg-gray-50">
+            <a href="/admin/sales" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">
               View all sales →
             </a>
           </div>
         </div>
 
         {/* Low Stock Alerts */}
-        <div className="bg-white rounded-xl border  border-blue-600">
-          <div className="p-4 border-b flex items-center gap-2">
-            <AlertTriangle size={18} className="text-orange-500" />
-            <h3 className="font-semibold text-gray-900">Low Stock Alerts</h3>
+        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm">
+          <div className="p-3 sm:p-4 border-b flex items-center gap-2">
+            <AlertTriangle size={16} className="text-orange-500 sm:w-[18px] sm:h-[18px]" />
+            <h3 className="font-semibold text-sm sm:text-base text-gray-900">Low Stock Alerts</h3>
           </div>
           <div className="divide-y">
             {lowStockItems.length === 0 ? (
@@ -360,16 +356,16 @@ export default function AdminDashboard() {
               </div>
             ) : (
               lowStockItems.map((item, index) => (
-                <div key={index} className="p-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between mb-2 text-black">
-                    <div className="font-medium text-sm">{item.name}</div>
-                    <span className="text-xs font-medium text-red-600">
+                <div key={index} className="p-3 sm:p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between mb-2 text-black gap-2">
+                    <div className="font-medium text-xs sm:text-sm truncate flex-1">{item.name}</div>
+                    <span className="text-xs font-medium text-red-600 flex-shrink-0">
                       {item.stock} left
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-red-500 h-2 rounded-full"
+                      className="bg-red-500 h-2 rounded-full transition-all"
                       style={{ width: `${Math.min((item.stock / item.min) * 100, 100)}%` }}
                     />
                   </div>
@@ -378,19 +374,19 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
-          <div className="p-4 border-t">
-            <a href="/admin/stock/low" className="text-sm text-blue-600 hover:text-blue-700">
+          <div className="p-3 sm:p-4 border-t bg-gray-50">
+            <a href="/admin/stock/low" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">
               View all alerts →
             </a>
           </div>
         </div>
 
         {/* Pending Repairs */}
-        <div className="bg-white rounded-xl border border-blue-600 lg:col-span-2">
-          <div className="p-4 border-b flex items-center justify-between">
+        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm lg:col-span-2">
+          <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Wrench size={18} className="text-blue-500" />
-              <h3 className="font-semibold text-gray-900">Active Repairs</h3>
+              <Wrench size={16} className="text-blue-500 sm:w-[18px] sm:h-[18px]" />
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Active Repairs</h3>
             </div>
             {pendingRepairs.length > 0 && (
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
@@ -406,17 +402,17 @@ export default function AdminDashboard() {
               </div>
             ) : (
               pendingRepairs.map((repair) => (
-                <div key={repair.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
-                  <div className="flex-1 text-gray-500">
-                    <div className="flex items-center gap-3 mb-1">
-                      <div className="font-medium text-sm">{repair.id}</div>
-                      <div className="text-sm text-gray-600">{repair.customer}</div>
+                <div key={repair.id} className="p-3 sm:p-4 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex-1 text-gray-500 min-w-0 w-full sm:w-auto">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-1">
+                      <div className="font-medium text-xs sm:text-sm">{repair.id}</div>
+                      <div className="text-xs sm:text-sm text-gray-600 truncate">{repair.customer}</div>
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 line-clamp-2">
                       {repair.device} - {repair.issue}
                     </div>
                   </div>
-                  <span className={`text-xs px-3 py-1 rounded-full ${repair.status === "in-progress"
+                  <span className={`text-xs px-3 py-1 rounded-full flex-shrink-0 whitespace-nowrap ${repair.status === "in-progress"
                     ? "bg-blue-100 text-blue-700"
                     : "bg-yellow-100 text-yellow-700"
                     }`}>
@@ -426,8 +422,8 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
-          <div className="p-4 border-t">
-            <a href="/admin/repairs" className="text-sm text-blue-600 hover:text-blue-700">
+          <div className="p-3 sm:p-4 border-t bg-gray-50">
+            <a href="/admin/repairs" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">
               View all repairs →
             </a>
           </div>
@@ -435,69 +431,69 @@ export default function AdminDashboard() {
       </div>
 
       {/* System Analytics Section */}
-      <div className="mt-6 grid grid-cols-1  md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl border p-6">
+      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <BarChart3 size={24} className="text-blue-600" />
+            <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
+              <BarChart3 size={20} className="text-blue-600 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Performance</h3>
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Performance</h3>
               <p className="text-xs text-gray-500">System metrics</p>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Avg Response Time</span>
-              <span className="text-sm font-medium">1.2s</span>
+              <span className="text-xs sm:text-sm text-gray-600">Avg Response Time</span>
+              <span className="text-xs sm:text-sm font-medium">1.2s</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Uptime</span>
-              <span className="text-sm font-medium text-green-600">99.9%</span>
+              <span className="text-xs sm:text-sm text-gray-600">Uptime</span>
+              <span className="text-xs sm:text-sm font-medium text-green-600">99.9%</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <TrendingUp size={24} className="text-green-600" />
+            <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
+              <TrendingUp size={20} className="text-green-600 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Revenue</h3>
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Revenue</h3>
               <p className="text-xs text-gray-500">This month</p>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Sales Revenue</span>
-              <span className="text-sm font-medium">45,230</span>
+              <span className="text-xs sm:text-sm text-gray-600">Sales Revenue</span>
+              <span className="text-xs sm:text-sm font-medium">45,230</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Repair Revenue</span>
-              <span className="text-sm font-medium">12,450</span>
+              <span className="text-xs sm:text-sm text-gray-600">Repair Revenue</span>
+              <span className="text-xs sm:text-sm font-medium">12,450</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <UserCog size={24} className="text-purple-600" />
+            <div className="p-2 sm:p-3 bg-purple-100 rounded-lg">
+              <UserCog size={20} className="text-purple-600 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Team Activity</h3>
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Team Activity</h3>
               <p className="text-xs text-gray-500">Active now</p>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Online Users</span>
-              <span className="text-sm font-medium">5</span>
+              <span className="text-xs sm:text-sm text-gray-600">Online Users</span>
+              <span className="text-xs sm:text-sm font-medium">5</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Logged In Today</span>
-              <span className="text-sm font-medium">12</span>
+              <span className="text-xs sm:text-sm text-gray-600">Logged In Today</span>
+              <span className="text-xs sm:text-sm font-medium">12</span>
             </div>
           </div>
         </div>

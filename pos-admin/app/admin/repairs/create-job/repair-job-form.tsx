@@ -78,7 +78,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
     assignedTo: '',
     priority: 'NORMAL',
     expectedCompletionDate: '',
-    status: 'PENDING',
+    status: 'ASSIGNED',
     
     // Cost
     laborCost: '',

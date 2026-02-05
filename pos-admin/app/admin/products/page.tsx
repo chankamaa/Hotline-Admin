@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/providers/toast-provider";
 import { CategorySelector } from "@/components/categories/category-selector";
-import { Product, Category } from "@/types";
 
 import {
   fetchProducts,
@@ -64,8 +63,6 @@ export default function ProductsPage() {
     sellingPrice: "",
     wholesalePrice: "",
     unit: "piece" as Product["unit"],
-    taxRate: "",
-    image: "",
     minStockLevel: "",
     warrantyDuration: "0",
     warrantyType: "NONE" as "NONE" | "MANUFACTURER" | "SHOP" | "BOTH",
@@ -180,8 +177,6 @@ export default function ProductsPage() {
       sellingPrice: "",
       wholesalePrice: "",
       unit: "piece" as Product["unit"],
-      taxRate: "",
-      image: "",
       minStockLevel: "",
       warrantyDuration: "0",
       warrantyType: "NONE" as "NONE" | "MANUFACTURER" | "SHOP" | "BOTH",
@@ -221,8 +216,6 @@ export default function ProductsPage() {
       sellingPrice: product.sellingPrice?.toString() ?? "",
       wholesalePrice: product.wholesalePrice?.toString() ?? "",
       unit: product.unit,
-      taxRate: product.taxRate?.toString() ?? "",
-      image: product.image || "",
       minStockLevel: product.minStockLevel?.toString() ?? "",
       warrantyDuration: product.warrantyDuration?.toString() ?? "0",
       warrantyType: product.warrantyType ?? "NONE",
@@ -258,8 +251,6 @@ export default function ProductsPage() {
       sellingPrice: +formData.sellingPrice,
       wholesalePrice: formData.wholesalePrice ? +formData.wholesalePrice : null,
       unit: formData.unit,
-      taxRate: formData.taxRate ? +formData.taxRate : 0,
-      image: formData.image || undefined,
       minStockLevel: formData.minStockLevel ? +formData.minStockLevel : 0,
       warrantyDuration: +formData.warrantyDuration || 0,
       warrantyType: formData.warrantyType,
@@ -402,6 +393,7 @@ export default function ProductsPage() {
       <DataTable
         data={products}
         columns={columns}
+        loading={loading}
         onAdd={handleAdd}
         onSearch={(q) => {
           setSearchQuery(q);
@@ -492,16 +484,6 @@ export default function ProductsPage() {
             placeholder="Select unit"
             onChange={(e) => setFormData({ ...formData, unit: e.target.value as Product["unit"] })}
             options={UNITS.map((u) => ({ value: u, label: u }))} />
-
-
-          <Input label="Tax Rate (%)" type="number" value={formData.taxRate}
-            placeholder="e.g. 18 for 18%"
-            onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })} />
-
-
-          <Input label="Image URL (optional)" value={formData.image}
-            placeholder="Paste image URL (optional)"
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })} />
 
 
           <Input label="Minimum Stock Level" type="number" value={formData.minStockLevel}
@@ -723,10 +705,6 @@ export default function ProductsPage() {
                 <div>
                   <div className="text-gray-500">Unit</div>
                   <div className="font-medium">{viewProduct.unit}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">Tax Rate</div>
-                  <div className="font-medium">{viewProduct.taxRate}%</div>
                 </div>
               </div>
             </div>

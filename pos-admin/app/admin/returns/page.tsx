@@ -266,7 +266,7 @@ export default function ReturnsPage() {
                         Total Refunds
                     </div>
                     <div className="text-2xl font-bold text-green-700">
-                        ₹{stats.totalValue.toFixed(2)}
+                        {stats.totalValue.toFixed(2)}
                     </div>
                 </div>
             </div>
@@ -345,7 +345,7 @@ export default function ReturnsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className="font-semibold text-red-600">
-                                            ₹{ret.totalRefund?.toFixed(2) || '0.00'}
+                                            {ret.totalRefund?.toFixed(2) || '0.00'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
@@ -455,7 +455,7 @@ export default function ReturnsPage() {
                                 {getTypeBadge(selectedReturn.returnType)}
                             </div>
                             <div className="mt-4 text-3xl font-bold">
-                                ₹{selectedReturn.totalRefund?.toFixed(2)}
+                                {selectedReturn.totalRefund?.toFixed(2)}
                             </div>
                         </div>
 
@@ -482,7 +482,7 @@ export default function ReturnsPage() {
                                         </div>
                                         <div className="text-right">
                                             <div className="text-red-600 font-semibold">
-                                                -₹{item.refundAmount?.toFixed(2)}
+                                                -{item.refundAmount?.toFixed(2)}
                                             </div>
                                         </div>
                                     </div>
@@ -504,14 +504,14 @@ export default function ReturnsPage() {
                                     <div>
                                         <span className="text-gray-500">New Sale Total:</span>
                                         <span className="ml-2 text-gray-900 font-medium">
-                                            ₹{selectedReturn.exchangeSale.grandTotal?.toFixed(2)}
+                                            {selectedReturn.exchangeSale.grandTotal?.toFixed(2)}
                                         </span>
                                     </div>
                                     {selectedReturn.exchangeAmountDue !== undefined && (
                                         <div>
                                             <span className="text-gray-500">Amount Due:</span>
                                             <span className="ml-2 text-green-600 font-medium">
-                                                ₹{selectedReturn.exchangeAmountDue?.toFixed(2)}
+                                                {selectedReturn.exchangeAmountDue?.toFixed(2)}
                                             </span>
                                         </div>
                                     )}

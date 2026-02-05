@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatsCard } from "@/components/ui/stats-card";
 import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,13 @@ import {
   Trash2,
   Minus,
   Download,
+  DollarSign,
+  TrendingUp,
+  ShoppingCart,
+  Tag,
+  Calendar,
+  RefreshCw,
+  Percent,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -81,10 +89,22 @@ export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [timeFilter, setTimeFilter] = useState<'all' | 'daily' | 'weekly' | 'monthly' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
 
   const [viewSale, setViewSale] = useState<Sale | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  // Stats state
+  const [stats, setStats] = useState({
+    totalSales: 0,
+    totalProfit: 0,
+    totalCost: 0,
+    totalSellingPrice: 0,
+    totalDiscounts: 0,
+  });
 
   /* ---------------- Create Sale State ---------------- */
 
@@ -103,6 +123,31 @@ export default function SalesPage() {
       // Handle different response structures
       const salesData = (res as any)?.data?.data?.sales || (res as any)?.data?.sales || [];
       setSales(salesData);
+      
+      // Calculate stats from filtered sales data
+      const filteredByTime = filterSalesByTime(salesData);
+      const completedSales = filteredByTime.filter((sale: Sale) => sale.status === 'COMPLETED');
+      const totalSales = completedSales.reduce((sum: number, sale: Sale) => sum + sale.grandTotal, 0);
+      const totalCost = completedSales.reduce((sum: number, sale: Sale) => {
+        return sum + sale.items.reduce((itemSum, item) => {
+          // Assume cost is 70% of selling price if not available
+          const costPrice = item.unitPrice * 0.7;
+          return itemSum + (costPrice * item.quantity);
+        }, 0);
+      }, 0);
+      const totalSellingPrice = completedSales.reduce((sum: number, sale: Sale) => {
+        return sum + sale.items.reduce((itemSum, item) => itemSum + (item.unitPrice * item.quantity), 0);
+      }, 0);
+      const totalProfit = totalSellingPrice - totalCost;
+      const totalDiscounts = completedSales.reduce((sum: number, sale: Sale) => sum + (sale.discountTotal || 0), 0);
+      
+      setStats({
+        totalSales,
+        totalProfit,
+        totalCost,
+        totalSellingPrice,
+        totalDiscounts,
+      });
     } catch (error: any) {
       console.error("Error loading sales:", error);
       setSales([]);
@@ -115,11 +160,100 @@ export default function SalesPage() {
     loadSales();
   }, []);
 
+  // Recalculate stats when time filter changes
+  useEffect(() => {
+    if (sales.length > 0) {
+      const filteredByTime = filterSalesByTime(sales);
+      const completedSales = filteredByTime.filter((sale: Sale) => sale.status === 'COMPLETED');
+      const totalSales = completedSales.reduce((sum: number, sale: Sale) => sum + sale.grandTotal, 0);
+      const totalCost = completedSales.reduce((sum: number, sale: Sale) => {
+        return sum + sale.items.reduce((itemSum, item) => {
+          const costPrice = item.unitPrice * 0.7;
+          return itemSum + (costPrice * item.quantity);
+        }, 0);
+      }, 0);
+      const totalSellingPrice = completedSales.reduce((sum: number, sale: Sale) => {
+        return sum + sale.items.reduce((itemSum, item) => itemSum + (item.unitPrice * item.quantity), 0);
+      }, 0);
+      const totalProfit = totalSellingPrice - totalCost;
+      const totalDiscounts = completedSales.reduce((sum: number, sale: Sale) => sum + (sale.discountTotal || 0), 0);
+      
+      setStats({
+        totalSales,
+        totalProfit,
+        totalCost,
+        totalSellingPrice,
+        totalDiscounts,
+      });
+    }
+  }, [timeFilter, sales, customStartDate, customEndDate]);
+
+  /* ======================================================
+     HELPER: Filter by Time Period
+  ===================================================== */
+  
+  const filterSalesByTime = (salesList: Sale[]) => {
+    const now = new Date();
+    
+    if (timeFilter === 'all') return salesList;
+    
+    return salesList.filter(sale => {
+      const saleDate = new Date(sale.createdAt);
+      
+      if (timeFilter === 'daily') {
+        // Today only
+        return (
+          saleDate.getDate() === now.getDate() &&
+          saleDate.getMonth() === now.getMonth() &&
+          saleDate.getFullYear() === now.getFullYear()
+        );
+      }
+      
+      if (timeFilter === 'weekly') {
+        // Last 7 days
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return saleDate >= weekAgo;
+      }
+      
+      if (timeFilter === 'monthly') {
+        // Current month
+        return (
+          saleDate.getMonth() === now.getMonth() &&
+          saleDate.getFullYear() === now.getFullYear()
+        );
+      }
+      
+      if (timeFilter === 'custom') {
+        // Custom date range
+        if (!customStartDate && !customEndDate) return true;
+        
+        const start = customStartDate ? new Date(customStartDate) : null;
+        const end = customEndDate ? new Date(customEndDate) : null;
+        
+        // Set end date to end of day
+        if (end) {
+          end.setHours(23, 59, 59, 999);
+        }
+        
+        if (start && end) {
+          return saleDate >= start && saleDate <= end;
+        } else if (start) {
+          return saleDate >= start;
+        } else if (end) {
+          return saleDate <= end;
+        }
+      }
+      
+      return true;
+    });
+  };
+
   /* ======================================================
      SEARCH & FILTER
   ===================================================== */
 
-  const filteredSales = sales.filter((sale) => {
+  const filteredSales = filterSalesByTime(sales).filter((sale) => {
     if (!searchQuery) return true;
     
     const query = searchQuery.toLowerCase();
@@ -333,7 +467,139 @@ export default function SalesPage() {
         description="Manage all sales transactions"
       />
 
+      {/* Time Filter Buttons */}
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <Calendar size={18} className="text-gray-500" />
+          <span className="text-sm text-gray-600 font-medium">Filter:</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTimeFilter('all')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                timeFilter === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setTimeFilter('daily')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                timeFilter === 'daily'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Daily
+            </button>
+            <button
+              onClick={() => setTimeFilter('weekly')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                timeFilter === 'weekly'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Weekly
+            </button>
+            <button
+              onClick={() => setTimeFilter('monthly')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                timeFilter === 'monthly'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setTimeFilter('custom')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                timeFilter === 'custom'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Custom
+            </button>
+          </div>
+        </div>
+        
+        {/* Custom Date Range Inputs */}
+        {timeFilter === 'custom' && (
+          <div className="flex items-center gap-3 ml-7 bg-gray-50 p-3 rounded-lg border">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600 font-medium">From:</label>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300  text-gray-900 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600 font-medium">To:</label>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300  text-gray-900 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {(customStartDate || customEndDate) && (
+              <button
+                onClick={() => {
+                  setCustomStartDate('');
+                  setCustomEndDate('');
+                }}
+                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                Clear Dates
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+        <StatsCard
+          title="Total Sales"
+          value={stats.totalSales.toFixed(2)}
+          icon={<ShoppingCart size={20} />}
+        />
+        <StatsCard
+          title="Total Profit"
+          value={stats.totalProfit.toFixed(2)}
+          icon={<TrendingUp size={20} />}
+        />
+        <StatsCard
+          title="Cost Price"
+          value={stats.totalCost.toFixed(2)}
+          icon={<Tag size={20} />}
+        />
+        <StatsCard
+          title="Selling Price"
+          value={stats.totalSellingPrice.toFixed(2)}
+          icon={<DollarSign size={20} />}
+        />
+        <StatsCard
+          title="Total Discounts"
+          value={stats.totalDiscounts.toFixed(2)}
+          icon={<Percent size={20} />}
+        />
+      </div>
+
       <div className="flex justify-end gap-2 mb-4">
+        <Button
+          onClick={loadSales}
+          disabled={loading}
+          variant="secondary"
+        >
+          <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
         <Link href="/admin/sales/export">
           <Button variant="secondary">
             <Download size={16} className="mr-2" />

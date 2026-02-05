@@ -78,8 +78,7 @@ export function AdminSidebar({
   return (
     <aside
       className={cx(
-        
-        
+        "bg-white shadow-lg h-screen flex flex-col",
         collapsed ? "w-[76px]" : "w-[280px]",
         "transition-all duration-300 ease-in-out"
       )}

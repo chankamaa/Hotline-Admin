@@ -392,9 +392,9 @@ export default function StockAdjustmentPage() {
           View Adjustment History
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Product Search */}
-          <div className="relative md:col-span-2">
+          <div className="relative md:col-span-2 lg:col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Select Product
             </label>
@@ -463,32 +463,32 @@ export default function StockAdjustmentPage() {
             </select>
           </div>
 
-          {/* Filter: Date Range */}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={filterStartDate}
-                onChange={(e) => setFilterStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={!selectedHistoryProduct}
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={filterEndDate}
-                onChange={(e) => setFilterEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={!selectedHistoryProduct}
-              />
-            </div>
+          {/* Filter: Start Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={!selectedHistoryProduct}
+            />
+          </div>
+
+          {/* Filter: End Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={!selectedHistoryProduct}
+            />
           </div>
         </div>
       </div>

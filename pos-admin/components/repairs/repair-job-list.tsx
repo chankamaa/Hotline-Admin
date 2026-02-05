@@ -71,23 +71,33 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
       job.device?.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.device?.imei?.includes(searchTerm);
 
-    // Match status directly with backend format
-    const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
+    // Match status - treat RECEIVED and ASSIGNED as the same for filtering
+    let matchesStatus = statusFilter === 'all' || job.status === statusFilter;
+    // If filtering for ASSIGNED, also include RECEIVED jobs (they display as ASSIGNED)
+    if (statusFilter === 'ASSIGNED' && job.status === 'RECEIVED') {
+      matchesStatus = true;
+    }
     const matchesPriority = priorityFilter === 'all' || job.priority === priorityFilter;
 
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
   const getStatusBadge = (status: string) => {
+    // Map RECEIVED to ASSIGNED for display purposes
+    const displayStatus = status === 'RECEIVED' ? 'ASSIGNED' : status;
     const badges = {
-      RECEIVED: 'bg-gray-100 text-gray-700',
       ASSIGNED: 'bg-yellow-100 text-yellow-700',
       IN_PROGRESS: 'bg-blue-100 text-blue-700',
       READY: 'bg-green-100 text-green-700',
       COMPLETED: 'bg-purple-100 text-purple-700',
       CANCELLED: 'bg-red-100 text-red-700',
     };
-    return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-700';
+    return badges[displayStatus as keyof typeof badges] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getDisplayStatus = (status: string) => {
+    // Map RECEIVED to ASSIGNED for display
+    return status === 'RECEIVED' ? 'ASSIGNED' : status;
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -134,7 +144,7 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
   // Calculate stats based on actual backend status values
   const stats = {
     total: jobs.length,
-    received: jobs.filter((j) => j.status === 'RECEIVED').length,
+    assigned: jobs.filter((j) => j.status === 'RECEIVED' || j.status === 'ASSIGNED').length,
     cancelled: jobs.filter((j) => j.status === 'CANCELLED').length,
     inProgress: jobs.filter((j) => j.status === 'IN_PROGRESS').length,
     ready: jobs.filter((j) => j.status === 'READY').length,
@@ -151,9 +161,9 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
         <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-4">
           <div className="text-sm text-yellow-600 mb-1 flex items-center gap-1">
             <Clock className="w-4 h-4" />
-            Received
+            Assigned
           </div>
-          <div className="text-2xl font-bold text-yellow-700">{stats.received}</div>
+          <div className="text-2xl font-bold text-yellow-700">{stats.assigned}</div>
         </div>
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
           <div className="text-sm text-blue-600 mb-1 flex items-center gap-1">
@@ -199,7 +209,6 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
               className="w-full px-3 py-2 border  text-gray-800 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Statuses</option>
-              <option value="RECEIVED">Received</option>
               <option value="ASSIGNED">Assigned</option>
               <option value="IN_PROGRESS">In Progress</option>
               <option value="READY">Ready</option>
@@ -286,7 +295,7 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
                         job.status
                       )}`}
                     >
-                      {job.status?.replace('_', ' ')}
+                      {getDisplayStatus(job.status)?.replace('_', ' ')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

@@ -29,7 +29,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           />
           
           {/* Mobile Sidebar */}
-          <div className="fixed left-0 top-0 z-50 md:hidden">
+          <div className="fixed left-0 top-0 h-full z-50 md:hidden">
             <AdminSidebar
               collapsed={false}
               onToggle={() => setMobileSidebarOpen(false)}

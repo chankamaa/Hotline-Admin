@@ -186,6 +186,7 @@ export const adminNav = [
     items: [
       { title: "Repair Jobs", href: "/admin/repairs", icon: Wrench },
       { title: "Repair History", href: "/admin/repairs/history", icon: ClipboardList },
+      { title: "Repair Analytics", href: "/admin/repairs/analytics", icon: BarChart3 },
     ],
     roles: ["admin", "manager", "cashier", "technician"],
   },
