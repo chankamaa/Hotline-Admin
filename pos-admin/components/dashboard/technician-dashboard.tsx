@@ -153,21 +153,21 @@ export default function TechnicianDashboard() {
     try {
       // Call the backend API to start the repair
       await repairApi.start(repairId);
-      
+
       // Show success message
       toast.success(`Started working on ${jobNumber}. Status updated to IN_PROGRESS.`);
-      
+
       // Reload dashboard data to reflect changes
       await loadDashboardData();
-      
+
       // Scroll to My Active Repairs section after a brief delay
       setTimeout(() => {
-        myActiveRepairsRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
+        myActiveRepairsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
         });
       }, 300);
-      
+
     } catch (error: any) {
       console.error("Error starting repair job:", error);
       const errorMessage = error.response?.data?.message || "Failed to start repair job";
@@ -229,14 +229,14 @@ export default function TechnicianDashboard() {
         repairNotes: completeFormData.repairNotes.trim(),
         partsUsed: [] // Parts can be added in future enhancement
       });
-      
+
       // Show success message
       toast.success(`${selectedRepair.id} marked as complete. Status updated to READY.`);
-      
+
       // Close modal and reload dashboard
       handleCloseCompleteModal();
       await loadDashboardData();
-      
+
     } catch (error: any) {
       console.error("Error completing repair job:", error);
       const errorMessage = error.response?.data?.message || "Failed to complete repair job";
@@ -364,17 +364,16 @@ export default function TechnicianDashboard() {
                   <span className="font-medium">Issue:</span> {repair.issue}
                 </div>
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={() => handleOpenCompleteModal(repair)}
                     disabled={completingJobId === repair._id}
-                    className={`text-xs px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 flex items-center gap-1.5 ${
-                      completingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
-                    }`}
+                    className={`text-xs px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 flex items-center gap-1.5 ${completingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
+                      }`}
                   >
                     <CheckCircle size={12} />
                     Complete
                   </button>
-                  <button 
+                  <button
                     onClick={() => router.push(`/admin/repairs/${repair._id}`)}
                     className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 font-medium"
                   >
@@ -436,12 +435,11 @@ export default function TechnicianDashboard() {
                   </div>
                   <div className="text-right">
                     <div className="text-xs text-gray-500 mb-2">{repair.createdAt}</div>
-                    <button 
+                    <button
                       onClick={() => handleStartJob(repair._id, repair.id)}
                       disabled={startingJobId === repair._id}
-                      className={`text-xs px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 ${
-                        startingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
-                      }`}
+                      className={`text-xs px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 ${startingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
+                        }`}
                     >
                       {startingJobId === repair._id ? (
                         <span className="flex items-center gap-1.5">
@@ -576,21 +574,130 @@ export default function TechnicianDashboard() {
 
               {/* Labor Cost */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Labor Cost ($)
-                </label>
-                <input
-                  type="number"
-                  min=""
-                  step="10"
-                  value={completeFormData.laborCost}
-                  onChange={(e) => setCompleteFormData(prev => ({
-                    ...prev,
-                    laborCost: parseFloat(e.target.value) 
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  placeholder="0.00"
-                />
+                <div className="flex items-center gap-2 mb-4 text-gray-700">
+                  <PackageIcon className="w-5 h-5 text-gray-500" />
+                  <h3 className="text-lg font-semibold">Parts Used</h3>
+                </div>
+                {errors.parts && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-red-700 text-sm">{errors.parts}</p>
+                  </div>
+                )}
+
+                <div className="mb-4 relative" ref={suggestionRef}>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                    <div className="md:col-span-5 relative">
+                      <Input
+                        value={searchTerm}
+                        onChange={(e) => handleProductSearch(e.target.value)}
+                        placeholder="Search product name..."
+                      />
+                      {showSuggestions && productSuggestions.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {productSuggestions.map((product) => (
+                            <button
+                              key={product._id}
+                              type="button"
+                              onClick={() => handleSelectProduct(product)}
+                              className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                            >
+                              <div className="font-medium">{product.name}</div>
+                              {product.sku && (
+                                <div className="text-sm text-gray-500">SKU: {product.sku}</div>
+                              )}
+                              <div className="text-sm text-gray-600">
+                                Price: ${product.sellingPrice?.toFixed(2)}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="md:col-span-2">
+                      <Input
+                        type="number"
+                        value={newPart.quantity}
+                        onChange={(e) =>
+                          setNewPart({ ...newPart, quantity: parseInt(e.target.value) || 1 })
+                        }
+                        placeholder="Qty"
+                      />
+                    </div>
+                    <div className="md:col-span-3">
+                      <Input
+                        type="number"
+                        value={newPart.unitPrice || ''}
+                        onChange={(e) =>
+                          setNewPart({ ...newPart, unitPrice: parseFloat(e.target.value) || 0 })
+                        }
+                        placeholder="Unit Price"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Button
+                        type="button"
+                        onClick={handleAddPart}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {parts.length > 0 && (
+                  <div className="border rounded-md overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                            Part Name
+                          </th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                            SKU
+                          </th>
+                          <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">
+                            Qty
+                          </th>
+                          <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">
+                            Unit Price
+                          </th>
+                          <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">
+                            Total
+                          </th>
+                          <th className="px-4 py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {parts.map((part, index) => (
+                          <tr key={index}>
+                            <td className="px-4 py-2 text-sm">{part.productName}</td>
+                            <td className="px-4 py-2 text-sm text-gray-500">{part.sku || '-'}</td>
+                            <td className="px-4 py-2 text-sm text-center">{part.quantity}</td>
+                            <td className="px-4 py-2 text-sm text-right">
+                              {part.unitPrice.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-2 text-sm text-right font-medium">
+                              {(part.quantity * part.unitPrice).toFixed(2)}
+                            </td>
+                            <td className="px-4 py-2 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemovePart(index)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
 
               {/* Diagnosis Notes */}
@@ -648,11 +755,10 @@ export default function TechnicianDashboard() {
               <button
                 onClick={handleCompleteJob}
                 disabled={submittingComplete || !completeFormData.diagnosisNotes.trim() || !completeFormData.repairNotes.trim()}
-                className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 ${
-                  submittingComplete || !completeFormData.diagnosisNotes.trim() || !completeFormData.repairNotes.trim()
-                    ? 'opacity-60 cursor-not-allowed'
-                    : ''
-                }`}
+                className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 ${submittingComplete || !completeFormData.diagnosisNotes.trim() || !completeFormData.repairNotes.trim()
+                  ? 'opacity-60 cursor-not-allowed'
+                  : ''
+                  }`}
               >
                 {submittingComplete ? (
                   <>
