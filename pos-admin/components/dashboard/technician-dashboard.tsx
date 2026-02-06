@@ -287,6 +287,7 @@ export default function TechnicianDashboard() {
         sku: product.sku,
         quantity: 1,
         unitPrice: product.sellingPrice || 0,
+        isManual: false, // Explicitly mark as inventory part
       }]);
     }
     setProductSearch("");
@@ -396,17 +397,30 @@ export default function TechnicianDashboard() {
 
     setSubmittingComplete(true);
     try {
+      // Separate inventory parts from manual parts
+      const inventoryParts = partsUsed.filter(p => p.isManual !== true && p.productId);
+      const manualParts = partsUsed.filter(p => p.isManual === true || !p.productId);
+
+      // Append manual parts info to repair notes so they're recorded
+      let repairNotes = completeFormData.repairNotes.trim();
+      if (manualParts.length > 0) {
+        const manualPartsText = manualParts
+          .map(p => `- ${p.productName} (Qty: ${p.quantity}, Price: ${p.unitPrice.toFixed(2)}, Total: ${(p.quantity * p.unitPrice).toFixed(2)})`)
+          .join('\n');
+        repairNotes += `\n\n[Manual Parts Used]\n${manualPartsText}`;
+      }
+
       // Call the backend API to complete the repair
       await repairApi.complete(selectedRepair._id, {
         laborCost: completeFormData.laborCost,
         diagnosisNotes: completeFormData.diagnosisNotes.trim(),
-        repairNotes: completeFormData.repairNotes.trim(),
-        partsUsed: partsUsed.map(p => ({
-          productId: p.productId || null, // null for manual entries
+        repairNotes,
+        partsUsed: inventoryParts.map(p => ({
+          productId: p.productId!,
           productName: p.productName,
           quantity: p.quantity,
           unitPrice: p.unitPrice,
-          isManual: p.isManual || false,
+          ...(p.sku ? { sku: p.sku } : {}),
         })),
       });
 
@@ -559,12 +573,6 @@ export default function TechnicianDashboard() {
                   >
                     <CheckCircle size={12} />
                     Complete
-                  </button>
-                  <button
-                    onClick={() => router.push(`/admin/repairs/${repair._id}`)}
-                    className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 font-medium"
-                  >
-                    View Details
                   </button>
                 </div>
               </div>

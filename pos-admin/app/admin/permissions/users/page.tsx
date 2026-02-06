@@ -171,41 +171,12 @@ export default function UsersManagementPage() {
           }}
         />
 
-        {/* Summary Cards */}
-        {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-6">
-            <div className="bg-white rounded-lg border p-4">
-              <div className="text-sm text-gray-500">Total Users</div>
-              <div className="text-2xl font-bold text-gray-900">{users.length}</div>
-            </div>
-            <div className="bg-white rounded-lg border p-4">
-              <div className="text-sm text-gray-500">Active Users</div>
-              <div className="text-2xl font-bold text-green-600">
-                {users.filter(u => u.isActive).length}
-              </div>
-            </div>
-            <div className="bg-white rounded-lg border p-4">
-              <div className="text-sm text-gray-500">Admins</div>
-              <div className="text-2xl font-bold text-purple-600">
-                {users.filter(u => u.roles.some(r => r.name.toLowerCase() === "admin")).length}
-              </div>
-            </div>
-            <div className="bg-white rounded-lg border p-4">
-              <div className="text-sm text-gray-500">Managers</div>
-              <div className="text-2xl font-bold text-blue-600">
-                {users.filter(u => u.roles.some(r => r.name.toLowerCase() === "manager")).length}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Refresh Button */}
         <div className="mb-4 flex justify-end">
           <button
             onClick={() => fetchUsers(true)}
             disabled={refreshing}
-            variant="danger"
-            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh"}
@@ -253,21 +224,18 @@ export default function UsersManagementPage() {
                   />
                 </div>
 
-                {/* Sort by Label and Role Filter */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-600 whitespace-nowrap">Sort by:</label>
-                  <select
-                    value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                    className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  >
-                    <option value="all">All Roles</option>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="cashier">Cashier</option>
-                    <option value="technician">Technician</option>
-                  </select>
-                </div>
+                {/* Role Filter */}
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
+                  <option value="cashier">Cashier</option>
+                  <option value="technician">Technician</option>
+                </select>
               </div>
             </div>
 
@@ -392,6 +360,32 @@ export default function UsersManagementPage() {
               <p className="text-gray-500">No users found matching your criteria.</p>
             </div>
           )}
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+          <div className="bg-white rounded-lg border p-4">
+            <div className="text-sm text-gray-500">Total Users</div>
+            <div className="text-2xl font-bold text-gray-900">{users.length}</div>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
+            <div className="text-sm text-gray-500">Active Users</div>
+            <div className="text-2xl font-bold text-green-600">
+              {users.filter(u => u.isActive).length}
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
+            <div className="text-sm text-gray-500">Admins</div>
+            <div className="text-2xl font-bold text-purple-600">
+              {users.filter(u => u.roles.some(r => r.name.toLowerCase() === "admin")).length}
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
+            <div className="text-sm text-gray-500">Managers</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {users.filter(u => u.roles.some(r => r.name.toLowerCase() === "manager")).length}
+            </div>
+          </div>
         </div>
           </>
         )}

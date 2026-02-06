@@ -1,6 +1,18 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// Type definitions for PDF utilities
+interface Product {
+  _id: string;
+  name: string;
+  sku?: string;
+  sellingPrice?: number;
+  costPrice?: number;
+  quantity?: number;
+  category?: { name?: string } | string;
+  [key: string]: any;
+}
+
 /**
  * Format currency for display
  */
@@ -14,7 +26,7 @@ function formatCurrency(amount: number): string {
 /**
  * Get category name from category object or string
  */
-function getCategoryName(category: string | Category | undefined): string {
+function getCategoryName(category: string | { name?: string } | undefined): string {
   if (!category) return "—";
   if (typeof category === "string") return category;
   return category.name || "—";
@@ -75,10 +87,10 @@ export function generateProductsPDF(
   doc.setFontSize(11);
   doc.text(`Total Products: ${products.length}`, 14, 45);
 
-  const totalValue = products.reduce((sum, p) => sum + p.sellingPrice, 0);
+  const totalValue = products.reduce((sum, p) => sum + (p.sellingPrice || 0), 0);
   doc.text(`Total Selling Price: ${formatCurrency(totalValue)}`, 14, 52);
 
-  const costValue = products.reduce((sum, p) => sum + p.costPrice, 0);
+  const costValue = products.reduce((sum, p) => sum + (p.costPrice || 0), 0);
   doc.text(`Total Cost Price: ${formatCurrency(costValue)}`, 14, 59);
 
   const profit = totalValue - costValue;
@@ -89,8 +101,8 @@ export function generateProductsPDF(
     product.name,
     product.sku || "—",
     getCategoryName(product.category),
-    formatCurrency(product.costPrice),
-    formatCurrency(product.sellingPrice),
+    formatCurrency(product.costPrice || 0),
+    formatCurrency(product.sellingPrice || 0),
     product.stock !== undefined ? String(product.stock) : "—",
     product.isActive ? "Active" : "Inactive",
   ]);

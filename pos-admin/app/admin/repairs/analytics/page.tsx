@@ -181,7 +181,7 @@ export default function RepairAnalyticsPage() {
 
       if (timeFilter === 'custom') {
         if (!customStartDate || !customEndDate) {
-          toast("Please select both start and end dates before downloading", "warning");
+          toast.warning("Please select both start and end dates before downloading");
           return;
         }
         startDate = new Date(customStartDate);
@@ -211,10 +211,10 @@ export default function RepairAnalyticsPage() {
       // Generate PDF
       generateRepairAnalyticsPDF(pdfData);
 
-      toast("PDF downloaded successfully!", "success");
+      toast.success("PDF downloaded successfully!");
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast("Failed to generate PDF. Please try again.", "error");
+      toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setDownloadingPDF(false);
     }

@@ -51,14 +51,14 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
   const [technicianSearchTerm, setTechnicianSearchTerm] = useState('');
   const [showTechnicianSuggestions, setShowTechnicianSuggestions] = useState(false);
   const technicianRef = useRef<HTMLDivElement>(null);
-
+  
   const [formData, setFormData] = useState({
     // Customer Info
     customerName: '',
     customerPhone: '',
     customerEmail: '',
     customerAddress: '',
-
+    
     // Device Info
     deviceType: 'MOBILE_PHONE',
     brand: '',
@@ -68,18 +68,18 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
     color: '',
     accessories: '',
     condition: '',
-
+    
     // Issue Info
     problemDescription: '',
     diagnosisNotes: '',
     repairNotes: '',
-
+    
     // Assignment
     assignedTo: '',
     priority: 'NORMAL',
     expectedCompletionDate: '',
-    status: 'ASSIGNED',
-
+    status: 'PENDING',
+    
     // Cost
     laborCost: '',
     estimatedCost: '',
@@ -87,26 +87,26 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
   });
 
   const [parts, setParts] = useState<PartItem[]>([]);
-  const [newPart, setNewPart] = useState({
-    productName: '',
-    quantity: 1,
+  const [newPart, setNewPart] = useState({ 
+    productName: '', 
+    quantity: 1, 
     unitPrice: 0,
     productId: ''
   });
-
+  
   // Product autocomplete state
   const [productSuggestions, setProductSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const suggestionRef = useRef<HTMLDivElement>(null);
-
+  
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Load current user
   useEffect(() => {
     loadCurrentUser();
   }, []);
-
+  
   // Auto-assign to technician if they're creating a new job
   useEffect(() => {
     if (currentUser && !jobId) {
@@ -130,7 +130,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
         loadTechnicians();
       }
     }
-
+    
     if (jobId) {
       loadJobData(jobId);
     }
@@ -164,20 +164,20 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
       // Fetch all users from User Management system
       const response = await userApi.getAll();
       let allUsers = response.data.users || [];
-
+      
       // Filter to show only users with 'TECHNICIAN' role and 'Active' status
       const techList = allUsers.filter((user: any) => {
         // Check if user has TECHNICIAN role (case-insensitive match)
-        const hasTechnicianRole = user.roles?.some((role: any) =>
+        const hasTechnicianRole = user.roles?.some((role: any) => 
           role.name?.toUpperCase() === 'TECHNICIAN'
         );
-
+        
         // Check if user is active
         const isActive = user.isActive === true;
-
+        
         return hasTechnicianRole && isActive;
       });
-
+      
       // Calculate active jobs count for each technician (if available from backend)
       // This would require a separate API call or be included in the user data
       const enrichedTechList = await Promise.all(
@@ -186,11 +186,11 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
             // Try to get active jobs count for this technician
             const jobsResponse = await repairApi.getAll();
             const activeJobs = jobsResponse.data.repairs?.filter(
-              (job: any) =>
-                job.assignedTo?._id === tech._id &&
+              (job: any) => 
+                job.assignedTo?._id === tech._id && 
                 ['PENDING', 'ASSIGNED', 'IN_PROGRESS'].includes(job.status)
             ).length || 0;
-
+            
             return { ...tech, activeJobs };
           } catch (error) {
             // If error, return technician without active jobs count
@@ -198,7 +198,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           }
         })
       );
-
+      
       // Sort by active jobs (least busy first) and then by username
       enrichedTechList.sort((a: any, b: any) => {
         if (a.activeJobs !== b.activeJobs) {
@@ -206,7 +206,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
         }
         return (a.username || '').localeCompare(b.username || '');
       });
-
+      
       setTechnicians(enrichedTechList);
       setFilteredTechnicians(enrichedTechList);
     } catch (error) {
@@ -220,7 +220,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
       setLoading(true);
       const response = await repairApi.getById(id);
       const job = response.data.repair;
-
+      
       setFormData({
         customerName: job.customer.name,
         customerPhone: job.customer.phone,
@@ -245,7 +245,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
         estimatedCost: job.estimatedCost.toString(),
         advancePayment: job.advancePayment.toString(),
       });
-
+      
       if (job.partsUsed && job.partsUsed.length > 0) {
         setParts(job.partsUsed.map((part: any) => ({
           productId: typeof part.product === 'string' ? part.product : part.product._id,
@@ -269,7 +269,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
       setProductSuggestions([]);
       return;
     }
-
+    
     try {
       const response = await fetchProducts({ search: query, limit: 10 });
       setProductSuggestions(response.data.products || []);
@@ -308,7 +308,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
     }
     const searchLower = value.toLowerCase();
     const filtered = technicians.filter((tech: any) => {
-      const matchesSearch =
+      const matchesSearch = 
         tech.username?.toLowerCase().includes(searchLower) ||
         tech._id?.toLowerCase().includes(searchLower); // User ID from User Management
       // Only show active technicians (using isActive boolean from User Management)
@@ -416,13 +416,15 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           laborCost: parseFloat(formData.laborCost),
           partsUsed: parts.map(part => ({
             productId: part.productId,
+            productName: part.productName,
+            sku: part.sku,
             quantity: part.quantity,
             unitPrice: part.unitPrice,
           })),
           diagnosisNotes: formData.diagnosisNotes || undefined,
           repairNotes: formData.repairNotes || undefined,
         };
-
+        
         await repairApi.complete(jobId, completePayload);
         toast.success('Repair job completed successfully!');
         onSuccess();
@@ -478,7 +480,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg border  text-gray-500">
       <div className="p-6 space-y-6">
-
+        
         {/* Customer Information */}
         <div>
           <div className="flex items-center gap-2 mb-4 text-gray-700">
@@ -495,6 +497,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.customerName}
                 onChange={handleInputChange}
                 placeholder="Enter customer name"
+                error={errors.customerName}
               />
               {errors.customerName && (
                 <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>
@@ -510,6 +513,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.customerPhone}
                 onChange={handleInputChange}
                 placeholder="Enter phone number"
+                error={errors.customerPhone}
               />
               {errors.customerPhone && (
                 <p className="text-red-500 text-sm mt-1">{errors.customerPhone}</p>
@@ -577,6 +581,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.brand}
                 onChange={handleInputChange}
                 placeholder="e.g., Apple, Samsung"
+                error={errors.brand}
               />
               {errors.brand && (
                 <p className="text-red-500 text-sm mt-1">{errors.brand}</p>
@@ -592,6 +597,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 value={formData.model}
                 onChange={handleInputChange}
                 placeholder="e.g., iPhone 14 Pro"
+                error={errors.model}
               />
               {errors.model && (
                 <p className="text-red-500 text-sm mt-1">{errors.model}</p>
@@ -676,8 +682,9 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 onChange={handleInputChange}
                 placeholder="Describe the issue reported by the customer"
                 rows={3}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.problemDescription ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.problemDescription ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
               {errors.problemDescription && (
                 <p className="text-red-500 text-sm mt-1">{errors.problemDescription}</p>
@@ -729,10 +736,13 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           <div className="mb-4 relative" ref={suggestionRef}>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
               <div className="md:col-span-5 relative">
-                <Input
+                <input
+                  type="text"
                   value={searchTerm}
                   onChange={(e) => handleProductSearch(e.target.value)}
                   placeholder="Search product name..."
+                  onFocus={() => setShowSuggestions(true)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {showSuggestions && productSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -748,7 +758,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                           <div className="text-sm text-gray-500">SKU: {product.sku}</div>
                         )}
                         <div className="text-sm text-gray-600">
-                          Price: {product.sellingPrice?.toFixed(2)}
+                          Price: ${product.sellingPrice?.toFixed(2)}
                         </div>
                       </button>
                     ))}
@@ -756,23 +766,28 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 )}
               </div>
               <div className="md:col-span-2">
-                <Input
+                <input
                   type="number"
                   value={newPart.quantity}
                   onChange={(e) =>
                     setNewPart({ ...newPart, quantity: parseInt(e.target.value) || 1 })
                   }
                   placeholder="Qty"
+                  min={1}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div className="md:col-span-3">
-                <Input
+                <input
                   type="number"
                   value={newPart.unitPrice || ''}
                   onChange={(e) =>
                     setNewPart({ ...newPart, unitPrice: parseFloat(e.target.value) || 0 })
                   }
                   placeholder="Unit Price"
+                  step="0.01"
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div className="md:col-span-2">
@@ -852,10 +867,16 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Assign to Technician
                 </label>
-                <Input
+                <input
+                  type="text"
                   value={technicianSearchTerm || technicians.find(t => t._id === formData.assignedTo)?.username || ''}
                   onChange={(e) => handleTechnicianSearch(e.target.value)}
+                  onFocus={() => {
+                    setShowTechnicianSuggestions(true);
+                    setFilteredTechnicians(technicians);
+                  }}
                   placeholder="Search active technicians..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {showTechnicianSuggestions && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -879,14 +900,14 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                   </div>
                 )}
                 <p className="text-xs text-gray-500 mt-1">
-                  {technicians.length > 0
+                  {technicians.length > 0 
                     ? `${technicians.length} active technician${technicians.length !== 1 ? 's' : ''} from User Management`
                     : 'No active technicians with TECHNICIAN role found'
                   }
                 </p>
               </div>
             )}
-
+            
             {/* Show auto-assignment info for technicians */}
             {isTechnician() && (
               <div>
@@ -955,14 +976,17 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Labor Cost
+                Labor Cost ($)
               </label>
-              <Input
+              <input
                 type="number"
                 name="laborCost"
                 value={formData.laborCost}
                 onChange={handleInputChange}
                 placeholder="0.00"
+                step="0.01"
+                min="0"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.laborCost ? 'border-red-500' : 'border-gray-300'}`}
               />
               {errors.laborCost && (
                 <p className="text-red-500 text-sm mt-1">{errors.laborCost}</p>
@@ -971,27 +995,33 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estimated Total Cost
+                Estimated Total Cost ($)
               </label>
-              <Input
+              <input
                 type="number"
                 name="estimatedCost"
                 value={formData.estimatedCost}
                 onChange={handleInputChange}
                 placeholder="0.00"
+                step="0.01"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Advance Payment
+                Advance Payment ($)
               </label>
-              <Input
+              <input
                 type="number"
                 name="advancePayment"
                 value={formData.advancePayment}
                 onChange={handleInputChange}
                 placeholder="0.00"
+                step="0.01"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
@@ -1019,7 +1049,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
       <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
         <Button
           type="button"
-          variant="ghost"
+          variant="secondary"
           onClick={onCancel}
           disabled={loading}
         >
