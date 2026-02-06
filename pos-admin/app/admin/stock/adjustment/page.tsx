@@ -379,7 +379,7 @@ export default function StockAdjustmentPage() {
           Back to Stock Overview
         </Link>
       </div>
-      
+
       <PageHeader
         title="Stock Adjustments"
         description="View and create inventory adjustments"

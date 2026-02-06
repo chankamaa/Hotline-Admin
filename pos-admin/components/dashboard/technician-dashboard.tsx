@@ -22,9 +22,22 @@ import {
   Settings,
   Plus,
   X,
+  Trash2,
+  Search,
+  BarChart3,
 } from "lucide-react";
 import { useToast } from "@/providers/toast-provider";
 import { repairApi } from "@/lib/api/repairApi";
+import { fetchProducts } from "@/lib/api/productApi";
+
+// Part item type for the complete form
+interface PartItem {
+  productId: string;
+  productName: string;
+  sku?: string;
+  quantity: number;
+  unitPrice: number;
+}
 
 export default function TechnicianDashboard() {
   const router = useRouter();
@@ -54,6 +67,14 @@ export default function TechnicianDashboard() {
     repairNotes: "",
   });
   const [submittingComplete, setSubmittingComplete] = useState(false);
+
+  // Parts Used State
+  const [partsUsed, setPartsUsed] = useState<PartItem[]>([]);
+  const [productSearch, setProductSearch] = useState("");
+  const [productSuggestions, setProductSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchingProducts, setSearchingProducts] = useState(false);
+  const suggestionsRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -201,6 +222,86 @@ export default function TechnicianDashboard() {
       diagnosisNotes: "",
       repairNotes: "",
     });
+    // Reset parts state
+    setPartsUsed([]);
+    setProductSearch("");
+    setProductSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  /**
+   * Search for products to add as parts
+   */
+  const handleProductSearch = async (searchTerm: string) => {
+    setProductSearch(searchTerm);
+
+    if (searchTerm.length < 2) {
+      setProductSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setSearchingProducts(true);
+    try {
+      const response = await fetchProducts({ search: searchTerm, limit: 10 });
+      setProductSuggestions(response.data.products || []);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error("Error searching products:", error);
+      setProductSuggestions([]);
+    } finally {
+      setSearchingProducts(false);
+    }
+  };
+
+  /**
+   * Add a product as a part used
+   */
+  const handleAddPart = (product: any) => {
+    // Check if already added
+    const existingIndex = partsUsed.findIndex(p => p.productId === product._id);
+    if (existingIndex >= 0) {
+      // Increment quantity
+      const updated = [...partsUsed];
+      updated[existingIndex].quantity += 1;
+      setPartsUsed(updated);
+    } else {
+      // Add new part
+      setPartsUsed([...partsUsed, {
+        productId: product._id,
+        productName: product.name,
+        sku: product.sku,
+        quantity: 1,
+        unitPrice: product.sellingPrice || 0,
+      }]);
+    }
+    setProductSearch("");
+    setProductSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  /**
+   * Update part quantity
+   */
+  const handleUpdatePartQuantity = (index: number, quantity: number) => {
+    if (quantity < 1) return;
+    const updated = [...partsUsed];
+    updated[index].quantity = quantity;
+    setPartsUsed(updated);
+  };
+
+  /**
+   * Remove a part
+   */
+  const handleRemovePart = (index: number) => {
+    setPartsUsed(partsUsed.filter((_, i) => i !== index));
+  };
+
+  /**
+   * Calculate parts total
+   */
+  const getPartsTotal = () => {
+    return partsUsed.reduce((sum, part) => sum + (part.quantity * part.unitPrice), 0);
   };
 
   /**
@@ -227,7 +328,11 @@ export default function TechnicianDashboard() {
         laborCost: completeFormData.laborCost,
         diagnosisNotes: completeFormData.diagnosisNotes.trim(),
         repairNotes: completeFormData.repairNotes.trim(),
-        partsUsed: [] // Parts can be added in future enhancement
+        partsUsed: partsUsed.map(p => ({
+          productId: p.productId,
+          quantity: p.quantity,
+          unitPrice: p.unitPrice,
+        })),
       });
 
       // Show success message
@@ -266,6 +371,13 @@ export default function TechnicianDashboard() {
           description="Your repair jobs and workflow"
         />
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/admin/repairs/my-analytics')}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <BarChart3 size={16} />
+            <span className="text-sm font-medium">My Analytics</span>
+          </button>
           <button
             onClick={() => router.push('/admin/repairs?tab=create')}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -589,6 +701,137 @@ export default function TechnicianDashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   placeholder="Enter labor cost..."
                 />
+              </div>
+
+              {/* Parts Used Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Package size={16} className="text-gray-500" />
+                  <label className="text-sm font-medium text-gray-700">Parts Used (Optional)</label>
+                </div>
+
+                {/* Product Search */}
+                <div className="relative mb-3" ref={suggestionsRef}>
+                  <div className="relative">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={productSearch}
+                      onChange={(e) => handleProductSearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
+                      placeholder="Search products to add..."
+                    />
+                    {searchingProducts && (
+                      <RefreshCw size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+                    )}
+                  </div>
+
+                  {/* Product Suggestions Dropdown */}
+                  {showSuggestions && productSuggestions.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      {productSuggestions.map((product) => (
+                        <button
+                          key={product._id}
+                          type="button"
+                          onClick={() => handleAddPart(product)}
+                          className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                        >
+                          <div className="font-medium text-gray-900">{product.name}</div>
+                          <div className="text-xs text-gray-500 flex justify-between">
+                            <span>{product.sku || 'No SKU'}</span>
+                            <span className="font-medium">${product.sellingPrice?.toFixed(2) || '0.00'}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Parts List */}
+                {partsUsed.length > 0 && (
+                  <div className="border rounded-lg overflow-hidden mb-3">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">Part</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600 w-20">Qty</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-600 w-24">Price</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-600 w-24">Total</th>
+                          <th className="px-3 py-2 w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {partsUsed.map((part, index) => (
+                          <tr key={part.productId}>
+                            <td className="px-3 py-2">
+                              <div className="font-medium text-gray-900">{part.productName}</div>
+                              {part.sku && <div className="text-xs text-gray-500">{part.sku}</div>}
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={part.quantity}
+                                onChange={(e) => handleUpdatePartQuantity(index, parseInt(e.target.value) || 1)}
+                                min="1"
+                                className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-right text-gray-700">
+                              ${part.unitPrice.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-medium text-gray-900">
+                              ${(part.quantity * part.unitPrice).toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2">
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePart(index)}
+                                className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-gray-50">
+                        <tr>
+                          <td colSpan={3} className="px-3 py-2 text-right font-medium text-gray-700">
+                            Parts Total:
+                          </td>
+                          <td className="px-3 py-2 text-right font-semibold text-gray-900">
+                            ${getPartsTotal().toFixed(2)}
+                          </td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+
+                {partsUsed.length === 0 && (
+                  <div className="text-center py-3 text-sm text-gray-500 bg-gray-50 rounded-lg">
+                    No parts added yet. Search above to add parts.
+                  </div>
+                )}
+
+                {/* Total Cost Summary */}
+                {(completeFormData.laborCost > 0 || partsUsed.length > 0) && (
+                  <div className="mt-3 p-3 bg-green-50 rounded-lg">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600">Labor Cost:</span>
+                      <span className="text-gray-900">${completeFormData.laborCost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600">Parts Total:</span>
+                      <span className="text-gray-900">${getPartsTotal().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold border-t pt-1 mt-1">
+                      <span className="text-gray-700">Total Cost:</span>
+                      <span className="text-green-700">${(completeFormData.laborCost + getPartsTotal()).toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Diagnosis Notes */}
