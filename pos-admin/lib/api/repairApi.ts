@@ -75,9 +75,11 @@ export interface UpdateRepairRequest {
 export interface CompleteRepairRequest {
     laborCost: number;
     partsUsed?: Array<{
-        productId: string;
+        productId?: string | null; // Optional for manual entries
+        productName?: string; // Required for manual entries
         quantity: number;
         unitPrice?: number;
+        isManual?: boolean; // Flag for manually entered parts
     }>;
     diagnosisNotes?: string;
     repairNotes?: string;

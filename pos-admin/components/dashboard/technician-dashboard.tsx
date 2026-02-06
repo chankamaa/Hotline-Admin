@@ -32,11 +32,12 @@ import { fetchProducts } from "@/lib/api/productApi";
 
 // Part item type for the complete form
 interface PartItem {
-  productId: string;
+  productId?: string; // Optional for manual entries
   productName: string;
   sku?: string;
   quantity: number;
   unitPrice: number;
+  isManual?: boolean; // Flag for manually entered parts
 }
 
 export default function TechnicianDashboard() {
@@ -75,6 +76,15 @@ export default function TechnicianDashboard() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchingProducts, setSearchingProducts] = useState(false);
   const suggestionsRef = React.useRef<HTMLDivElement>(null);
+
+  // Manual Part Entry State
+  const [isManualEntryMode, setIsManualEntryMode] = useState(false);
+  const [manualPartData, setManualPartData] = useState({
+    name: "",
+    quantity: 1,
+    price: 0,
+  });
+  const [manualEntryErrors, setManualEntryErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadDashboardData();
@@ -227,6 +237,10 @@ export default function TechnicianDashboard() {
     setProductSearch("");
     setProductSuggestions([]);
     setShowSuggestions(false);
+    // Reset manual entry state
+    setIsManualEntryMode(false);
+    setManualPartData({ name: "", quantity: 1, price: 0 });
+    setManualEntryErrors({});
   };
 
   /**
@@ -298,6 +312,65 @@ export default function TechnicianDashboard() {
   };
 
   /**
+   * Validate manual part entry
+   */
+  const validateManualPart = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!manualPartData.name.trim()) {
+      errors.name = "Part name is required";
+    }
+    if (manualPartData.quantity < 1) {
+      errors.quantity = "Quantity must be at least 1";
+    }
+    if (manualPartData.price <= 0) {
+      errors.price = "Price must be greater than 0";
+    }
+
+    setManualEntryErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  /**
+   * Add a manual part (not from inventory)
+   */
+  const handleAddManualPart = () => {
+    if (!validateManualPart()) {
+      return;
+    }
+
+    setPartsUsed([
+      ...partsUsed,
+      {
+        productId: undefined, // No product ID for manual entries
+        productName: manualPartData.name.trim(),
+        sku: undefined,
+        quantity: manualPartData.quantity,
+        unitPrice: manualPartData.price,
+        isManual: true,
+      },
+    ]);
+
+    // Reset form
+    setManualPartData({ name: "", quantity: 1, price: 0 });
+    setManualEntryErrors({});
+    toast.success("Manual part added");
+  };
+
+  /**
+   * Toggle between search and manual entry modes
+   */
+  const handleToggleManualMode = () => {
+    setIsManualEntryMode(!isManualEntryMode);
+    // Reset form state when toggling
+    setProductSearch("");
+    setProductSuggestions([]);
+    setShowSuggestions(false);
+    setManualPartData({ name: "", quantity: 1, price: 0 });
+    setManualEntryErrors({});
+  };
+
+  /**
    * Calculate parts total
    */
   const getPartsTotal = () => {
@@ -329,9 +402,11 @@ export default function TechnicianDashboard() {
         diagnosisNotes: completeFormData.diagnosisNotes.trim(),
         repairNotes: completeFormData.repairNotes.trim(),
         partsUsed: partsUsed.map(p => ({
-          productId: p.productId,
+          productId: p.productId || null, // null for manual entries
+          productName: p.productName,
           quantity: p.quantity,
           unitPrice: p.unitPrice,
+          isManual: p.isManual || false,
         })),
       });
 
@@ -705,47 +780,129 @@ export default function TechnicianDashboard() {
 
               {/* Parts Used Section */}
               <div className="border-t pt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Package size={16} className="text-gray-500" />
-                  <label className="text-sm font-medium text-gray-700">Parts Used (Optional)</label>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Package size={16} className="text-gray-500" />
+                    <label className="text-sm font-medium text-gray-700">Parts Used (Optional)</label>
+                  </div>
+                  {/* Toggle button */}
+                  <button
+                    type="button"
+                    onClick={handleToggleManualMode}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition-colors ${isManualEntryMode
+                      ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      }`}
+                  >
+                    {isManualEntryMode ? (
+                      <>
+                        <Search size={12} />
+                        Search Mode
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={12} />
+                        Manual Entry
+                      </>
+                    )}
+                  </button>
                 </div>
 
-                {/* Product Search */}
-                <div className="relative mb-3" ref={suggestionsRef}>
-                  <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={productSearch}
-                      onChange={(e) => handleProductSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
-                      placeholder="Search products to add..."
-                    />
-                    {searchingProducts && (
-                      <RefreshCw size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+                {/* Product Search Mode */}
+                {!isManualEntryMode && (
+                  <div className="relative mb-3" ref={suggestionsRef}>
+                    <div className="relative">
+                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={productSearch}
+                        onChange={(e) => handleProductSearch(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
+                        placeholder="Search products to add..."
+                      />
+                      {searchingProducts && (
+                        <RefreshCw size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+                      )}
+                    </div>
+
+                    {/* Product Suggestions Dropdown */}
+                    {showSuggestions && productSuggestions.length > 0 && (
+                      <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {productSuggestions.map((product) => (
+                          <button
+                            key={product._id}
+                            type="button"
+                            onClick={() => handleAddPart(product)}
+                            className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                          >
+                            <div className="font-medium text-gray-900">{product.name}</div>
+                            <div className="text-xs text-gray-500 flex justify-between">
+                              <span>{product.sku || 'No SKU'}</span>
+                              <span className="font-medium">{product.sellingPrice?.toFixed(2) || '0.00'}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
+                )}
 
-                  {/* Product Suggestions Dropdown */}
-                  {showSuggestions && productSuggestions.length > 0 && (
-                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                      {productSuggestions.map((product) => (
-                        <button
-                          key={product._id}
-                          type="button"
-                          onClick={() => handleAddPart(product)}
-                          className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b last:border-b-0 text-sm"
-                        >
-                          <div className="font-medium text-gray-900">{product.name}</div>
-                          <div className="text-xs text-gray-500 flex justify-between">
-                            <span>{product.sku || 'No SKU'}</span>
-                            <span className="font-medium">{product.sellingPrice?.toFixed(2) || '0.00'}</span>
-                          </div>
-                        </button>
-                      ))}
+                {/* Manual Entry Mode */}
+                {isManualEntryMode && (
+                  <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-center gap-1.5 mb-2 text-orange-700">
+                      <Plus size={12} />
+                      <span className="text-xs font-medium">Manual Part Entry</span>
                     </div>
-                  )}
-                </div>
+                    <div className="grid grid-cols-12 gap-2">
+                      <div className="col-span-5">
+                        <input
+                          type="text"
+                          value={manualPartData.name}
+                          onChange={(e) => setManualPartData(prev => ({ ...prev, name: e.target.value }))}
+                          className={`w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${manualEntryErrors.name ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                          placeholder="Part name..."
+                        />
+                        {manualEntryErrors.name && (
+                          <p className="text-red-500 text-xs mt-0.5">{manualEntryErrors.name}</p>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <input
+                          type="number"
+                          value={manualPartData.quantity}
+                          onChange={(e) => setManualPartData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                          className={`w-full px-2 py-1.5 border rounded-md text-sm text-center focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${manualEntryErrors.quantity ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                          placeholder="Qty"
+                          min={1}
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <input
+                          type="number"
+                          value={manualPartData.price || ''}
+                          onChange={(e) => setManualPartData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                          className={`w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${manualEntryErrors.price ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                          placeholder="Price"
+                          min={0}
+                          step={0.01}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <button
+                          type="button"
+                          onClick={handleAddManualPart}
+                          className="w-full h-full px-2 py-1.5 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-xs font-medium"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Parts List */}
                 {partsUsed.length > 0 && (
@@ -762,10 +919,18 @@ export default function TechnicianDashboard() {
                       </thead>
                       <tbody className="divide-y">
                         {partsUsed.map((part, index) => (
-                          <tr key={part.productId}>
+                          <tr key={part.productId || `manual-${index}`} className={part.isManual ? 'bg-orange-50' : ''}>
                             <td className="px-3 py-2">
-                              <div className="font-medium text-gray-900">{part.productName}</div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-900">{part.productName}</span>
+                                {part.isManual && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded">
+                                    Manual
+                                  </span>
+                                )}
+                              </div>
                               {part.sku && <div className="text-xs text-gray-500">{part.sku}</div>}
+                              {part.isManual && <div className="text-xs text-orange-600 italic">Not in inventory</div>}
                             </td>
                             <td className="px-3 py-2">
                               <input
