@@ -6,8 +6,8 @@ import autoTable from "jspdf-autotable";
  */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
@@ -372,8 +372,10 @@ export function generateSalesReportPDF(
   const totalSales = summaryData?.totalSales ?? sales.length;
   
   const totalDiscount = summaryData?.totalDiscount ?? sales.reduce((sum, s) => sum + s.discountTotal, 0);
-  const totalProfit = summaryData?.totalRevenue ?? sales.reduce((sum, s) => sum + s.grandTotal, 0);
- 
+  const totalRevenue = summaryData?.totalRevenue ?? sales.reduce((sum, s) => sum + s.grandTotal, 0);
+  
+  // Calculate profit: revenue - discounts (Note: cost price data not available in sales objects)
+  const totalProfit = totalRevenue - totalDiscount;
  
   doc.text(`Total Sales: ${totalSales}`, 14, 45);
 
