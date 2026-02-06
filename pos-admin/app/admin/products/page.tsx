@@ -17,6 +17,7 @@ import {
 } from "@/lib/api/productApi";
 
 import { fetchCategories } from "@/lib/api/categoryApi";
+import type { Product, Category } from "@/types";
 import { Edit, Trash2, Package, RefreshCw, Barcode, Eye, Download } from "lucide-react";
 import Link from "next/link";
 
@@ -725,8 +726,8 @@ export default function ProductsPage() {
                   <div>
                     <div className="text-gray-500">Status</div>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${viewProduct.stockStatus === "OUT_OF_STOCK" ? "bg-red-100 text-red-700" :
-                        viewProduct.stockStatus === "LOW_STOCK" ? "bg-yellow-100 text-yellow-700" :
-                          "bg-green-100 text-green-700"
+                      viewProduct.stockStatus === "LOW_STOCK" ? "bg-yellow-100 text-yellow-700" :
+                        "bg-green-100 text-green-700"
                       }`}>
                       {viewProduct.stockStatus?.replace(/_/g, " ")}
                     </span>

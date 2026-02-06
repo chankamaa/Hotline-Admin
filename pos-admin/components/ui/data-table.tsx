@@ -13,6 +13,7 @@ interface DataTableProps<T> {
   addButtonLabel?: string;
   emptyMessage?: string;
   actions?: ReactNode;
+  loading?: boolean;
 }
 
 export interface DataTableColumn<T> {
@@ -33,6 +34,7 @@ export function DataTable<T extends Record<string, any>>({
   addButtonLabel = "Add New",
   emptyMessage = "No data available",
   actions,
+  loading = false,
 }: DataTableProps<T>) {
   return (
     <div className="bg-white rounded-xl border ">
@@ -57,7 +59,7 @@ export function DataTable<T extends Record<string, any>>({
         {/* Actions */}
         <div className="flex items-center gap-2 ml-auto">
           {actions}
-          
+
           {onExport && (
             <button
               onClick={onExport}
@@ -88,9 +90,8 @@ export function DataTable<T extends Record<string, any>>({
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    column.className || ""
-                  }`}
+                  className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${column.className || ""
+                    }`}
                 >
                   {column.label}
                 </th>
@@ -98,7 +99,19 @@ export function DataTable<T extends Record<string, any>>({
             </tr>
           </thead>
           <tbody className="divide-y">
-            {data.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-4 py-12 text-center text-gray-500"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                    Loading...
+                  </div>
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}

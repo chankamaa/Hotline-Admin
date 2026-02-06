@@ -574,130 +574,21 @@ export default function TechnicianDashboard() {
 
               {/* Labor Cost */}
               <div>
-                <div className="flex items-center gap-2 mb-4 text-gray-700">
-                  <PackageIcon className="w-5 h-5 text-gray-500" />
-                  <h3 className="text-lg font-semibold">Parts Used</h3>
-                </div>
-                {errors.parts && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-red-700 text-sm">{errors.parts}</p>
-                  </div>
-                )}
-
-                <div className="mb-4 relative" ref={suggestionRef}>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-                    <div className="md:col-span-5 relative">
-                      <Input
-                        value={searchTerm}
-                        onChange={(e) => handleProductSearch(e.target.value)}
-                        placeholder="Search product name..."
-                      />
-                      {showSuggestions && productSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                          {productSuggestions.map((product) => (
-                            <button
-                              key={product._id}
-                              type="button"
-                              onClick={() => handleSelectProduct(product)}
-                              className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                            >
-                              <div className="font-medium">{product.name}</div>
-                              {product.sku && (
-                                <div className="text-sm text-gray-500">SKU: {product.sku}</div>
-                              )}
-                              <div className="text-sm text-gray-600">
-                                Price: ${product.sellingPrice?.toFixed(2)}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="md:col-span-2">
-                      <Input
-                        type="number"
-                        value={newPart.quantity}
-                        onChange={(e) =>
-                          setNewPart({ ...newPart, quantity: parseInt(e.target.value) || 1 })
-                        }
-                        placeholder="Qty"
-                      />
-                    </div>
-                    <div className="md:col-span-3">
-                      <Input
-                        type="number"
-                        value={newPart.unitPrice || ''}
-                        onChange={(e) =>
-                          setNewPart({ ...newPart, unitPrice: parseFloat(e.target.value) || 0 })
-                        }
-                        placeholder="Unit Price"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <Button
-                        type="button"
-                        onClick={handleAddPart}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {parts.length > 0 && (
-                  <div className="border rounded-md overflow-hidden">
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            Part Name
-                          </th>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            SKU
-                          </th>
-                          <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">
-                            Qty
-                          </th>
-                          <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">
-                            Unit Price
-                          </th>
-                          <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">
-                            Total
-                          </th>
-                          <th className="px-4 py-2"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {parts.map((part, index) => (
-                          <tr key={index}>
-                            <td className="px-4 py-2 text-sm">{part.productName}</td>
-                            <td className="px-4 py-2 text-sm text-gray-500">{part.sku || '-'}</td>
-                            <td className="px-4 py-2 text-sm text-center">{part.quantity}</td>
-                            <td className="px-4 py-2 text-sm text-right">
-                              {part.unitPrice.toFixed(2)}
-                            </td>
-                            <td className="px-4 py-2 text-sm text-right font-medium">
-                              {(part.quantity * part.unitPrice).toFixed(2)}
-                            </td>
-                            <td className="px-4 py-2 text-right">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemovePart(index)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Labor Cost (Optional)
+                </label>
+                <input
+                  type="number"
+                  value={completeFormData.laborCost}
+                  onChange={(e) => setCompleteFormData(prev => ({
+                    ...prev,
+                    laborCost: parseFloat(e.target.value) || 0
+                  }))}
+                  min="0"
+                  step="0.01"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="Enter labor cost..."
+                />
               </div>
 
               {/* Diagnosis Notes */}
