@@ -748,7 +748,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                           <div className="text-sm text-gray-500">SKU: {product.sku}</div>
                         )}
                         <div className="text-sm text-gray-600">
-                          Price: ${product.sellingPrice?.toFixed(2)}
+                          Price: {product.sellingPrice?.toFixed(2)}
                         </div>
                       </button>
                     ))}
@@ -955,7 +955,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Labor Cost ($)
+                Labor Cost
               </label>
               <Input
                 type="number"
@@ -971,7 +971,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estimated Total Cost ($)
+                Estimated Total Cost
               </label>
               <Input
                 type="number"
@@ -984,7 +984,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Advance Payment ($)
+                Advance Payment
               </label>
               <Input
                 type="number"

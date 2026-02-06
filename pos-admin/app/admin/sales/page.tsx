@@ -138,8 +138,8 @@ export default function SalesPage() {
       const totalSellingPrice = completedSales.reduce((sum: number, sale: Sale) => {
         return sum + sale.items.reduce((itemSum, item) => itemSum + (item.unitPrice * item.quantity), 0);
       }, 0);
-      const totalProfit = totalSellingPrice - totalCost;
       const totalDiscounts = completedSales.reduce((sum: number, sale: Sale) => sum + (sale.discountTotal || 0), 0);
+      const totalProfit = totalSellingPrice - (totalCost + totalDiscounts);
       
       setStats({
         totalSales,
@@ -175,8 +175,8 @@ export default function SalesPage() {
       const totalSellingPrice = completedSales.reduce((sum: number, sale: Sale) => {
         return sum + sale.items.reduce((itemSum, item) => itemSum + (item.unitPrice * item.quantity), 0);
       }, 0);
-      const totalProfit = totalSellingPrice - totalCost;
       const totalDiscounts = completedSales.reduce((sum: number, sale: Sale) => sum + (sale.discountTotal || 0), 0);
+      const totalProfit = totalSellingPrice - (totalCost + totalDiscounts);
       
       setStats({
         totalSales,
@@ -571,7 +571,7 @@ export default function SalesPage() {
         />
         <StatsCard
           title="Total Profit"
-          value={stats.totalProfit.toFixed(2)}
+          value={Math.abs(stats.totalProfit).toFixed(2)}
           icon={<TrendingUp size={20} />}
         />
         <StatsCard
@@ -595,7 +595,7 @@ export default function SalesPage() {
         <Button
           onClick={loadSales}
           disabled={loading}
-          variant="secondary"
+          variant="danger"
         >
           <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh

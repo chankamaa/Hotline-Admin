@@ -219,7 +219,7 @@ export default function SuppliersPage() {
       />
 
       <div className="flex justify-end mb-4">
-        <Button onClick={() => setSuppliers([...suppliers])} variant="secondary">
+        <Button onClick={() => setSuppliers([...suppliers])} variant="danger">
           <RefreshCw size={16} className="mr-2" />
           Refresh
         </Button>

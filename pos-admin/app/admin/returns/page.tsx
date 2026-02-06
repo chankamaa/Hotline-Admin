@@ -155,7 +155,7 @@ export default function ReturnsPage() {
                 </div>
                 <Button 
                     onClick={handleRefresh} 
-                    variant="secondary"
+                    variant="danger"
                     disabled={loading}
                     className="flex items-center gap-2"
                 >
@@ -174,7 +174,7 @@ export default function ReturnsPage() {
                     </div>
                     <Button 
                         onClick={handleRefresh} 
-                        variant="secondary"
+                        variant="danger"
                         size="sm"
                     >
                         Try Again

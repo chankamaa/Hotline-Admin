@@ -381,7 +381,7 @@ export default function DiscountsPage() {
           description="Manage discount and promotional rules connected to backend"
         />
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={loadPromotions}>
+          <Button variant="danger" onClick={loadPromotions}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>

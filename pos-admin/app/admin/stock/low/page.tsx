@@ -199,7 +199,7 @@ export default function LowStockPage() {
         <Button
           onClick={loadLowStock}
           disabled={loading}
-          variant="secondary"
+          variant="danger"
         >
           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           <span className="ml-2">Refresh</span>

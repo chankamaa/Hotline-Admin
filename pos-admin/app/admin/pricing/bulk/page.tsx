@@ -164,7 +164,7 @@ export default function BulkPriceUpdatesPage() {
         scheduledDate: new Date(scheduleDate),
         products: selectedProducts.length,
         updateType: `${updateType === "percentage" ? "Percentage" : "Fixed Amount"} ${updateDirection === "increase" ? "Increase" : "Decrease"}`,
-        value: updateType === "percentage" ? `${updateValue}%` : `$${updateValue}`,
+        value: updateType === "percentage" ? `${updateValue}%` : `${updateValue}`,
         status: "Pending",
         createdBy: "Current User",
         createdAt: new Date()
@@ -408,7 +408,7 @@ export default function BulkPriceUpdatesPage() {
               <strong>{selectedProducts.length} products selected</strong> - 
               {updateType === "percentage" 
                 ? ` ${updateDirection === "increase" ? "Increase" : "Decrease"} by ${updateValue}%`
-                : ` ${updateDirection === "increase" ? "Increase" : "Decrease"} by $${updateValue}`}
+                : ` ${updateDirection === "increase" ? "Increase" : "Decrease"} by ${updateValue}`}
             </p>
           </div>
         )}

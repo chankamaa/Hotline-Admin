@@ -1,6 +1,5 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Category, Product } from "@/types/index.d";
 
 /**
  * Format currency for display
@@ -371,16 +370,15 @@ export function generateSalesReportPDF(
   doc.setFontSize(11);
 
   const totalSales = summaryData?.totalSales ?? sales.length;
-  const totalRevenue = summaryData?.totalRevenue ?? sales.reduce((sum, s) => sum + s.grandTotal, 0);
+  
   const totalDiscount = summaryData?.totalDiscount ?? sales.reduce((sum, s) => sum + s.discountTotal, 0);
-  const totalTax = summaryData?.totalTax ?? sales.reduce((sum, s) => sum + s.taxTotal, 0);
-  const avgSaleValue = summaryData?.avgSaleValue ?? (totalSales > 0 ? totalRevenue / totalSales : 0);
-
+  const totalProfit = summaryData?.totalRevenue ?? sales.reduce((sum, s) => sum + s.grandTotal, 0);
+ 
+ 
   doc.text(`Total Sales: ${totalSales}`, 14, 45);
-  doc.text(`Total Revenue: ${formatCurrency(totalRevenue)}`, 14, 52);
+
   doc.text(`Total Discounts: ${formatCurrency(totalDiscount)}`, 14, 59);
-  doc.text(`Total Tax: ${formatCurrency(totalTax)}`, 105, 45);
-  doc.text(`Avg Sale Value: ${formatCurrency(avgSaleValue)}`, 105, 52);
+doc.text(`Total Profit: ${formatCurrency(totalProfit)}`, 14, 52);
 
   // Table data
   const tableData = sales.map((sale) => [
@@ -1794,6 +1792,247 @@ export function generateSingleRepairJobPDF(
 
   // Generate filename
   const filename = `repair-job-${repair.jobNumber}.pdf`;
+
+  // Download
+  doc.save(filename);
+}
+
+/**
+ * Generate Repair Analytics Report PDF
+ */
+export interface RepairAnalyticsData {
+  repairIncome: number;
+  repairCost: number;
+  laborCost: number;
+  totalJobs: number;
+  technicianStats: Array<{
+    technician: {
+      _id: string;
+      username: string;
+      email?: string;
+    };
+    jobCount: number;
+    totalRevenue: number;
+    partsCost: number;
+    laborCost: number;
+  }>;
+  periodLabel: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export function generateRepairAnalyticsPDF(data: RepairAnalyticsData): void {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Title
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("Repair Analytics Report", pageWidth / 2, 20, { align: "center" });
+
+  // Subtitle - Period
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Period: ${data.periodLabel}`, pageWidth / 2, 28, { align: "center" });
+
+  // Date range if available
+  if (data.startDate && data.endDate) {
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(
+      `${formatDate(data.startDate)} - ${formatDate(data.endDate)}`,
+      pageWidth / 2,
+      35,
+      { align: "center" }
+    );
+  }
+
+  // Generated date
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(
+    `Generated on: ${new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`,
+    pageWidth / 2,
+    data.startDate && data.endDate ? 42 : 35,
+    { align: "center" }
+  );
+
+  // Summary Box
+  doc.setTextColor(0);
+  const summaryStartY = data.startDate && data.endDate ? 52 : 45;
+  
+  doc.setFillColor(240, 248, 255); // Light blue background
+  doc.roundedRect(14, summaryStartY, pageWidth - 28, 48, 3, 3, "F");
+  
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("Summary Statistics", 18, summaryStartY + 8);
+  
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  
+  const col1X = 18;
+  const col2X = pageWidth / 2 + 5;
+  let lineY = summaryStartY + 16;
+  
+  doc.text(`Total Jobs:`, col1X, lineY);
+  doc.text(`${data.totalJobs}`, col1X + 45, lineY);
+  
+  doc.text(`Total Income:`, col2X, lineY);
+  doc.text(formatCurrency(data.repairIncome), col2X + 45, lineY);
+  
+  lineY += 7;
+  doc.text(`Parts Cost:`, col1X, lineY);
+  doc.text(formatCurrency(data.repairCost), col1X + 45, lineY);
+  
+  doc.text(`Labor Cost:`, col2X, lineY);
+  doc.text(formatCurrency(data.laborCost), col2X + 45, lineY);
+  
+  lineY += 7;
+  const netProfit = data.repairIncome - data.repairCost - data.laborCost;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  if (netProfit >= 0) {
+    doc.setTextColor(0, 128, 0); // Green
+  } else {
+    doc.setTextColor(255, 0, 0); // Red
+  }
+  doc.text(`Net Profit:`, col1X, lineY);
+  doc.text(formatCurrency(netProfit), col1X + 45, lineY);
+  
+  doc.setTextColor(0);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  const avgJobValue = data.totalJobs > 0 ? data.repairIncome / data.totalJobs : 0;
+  doc.text(`Avg Job Value:`, col2X, lineY);
+  doc.text(formatCurrency(avgJobValue), col2X + 45, lineY);
+  
+  lineY += 7;
+  const profitMargin = data.repairIncome > 0 ? ((netProfit / data.repairIncome) * 100).toFixed(1) : '0.0';
+  doc.text(`Profit Margin:`, col1X, lineY);
+  doc.text(`${profitMargin}%`, col1X + 45, lineY);
+
+  // Technician Performance Table
+  const tableStartY = summaryStartY + 56;
+  
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Technician Performance", 14, tableStartY);
+
+  if (data.technicianStats.length === 0) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(150);
+    doc.text("No technician data available for this period", 14, tableStartY + 10);
+  } else {
+    // Table headers and data with profit column
+    const tableData = data.technicianStats.map((tech) => {
+      const techProfit = tech.totalRevenue - tech.partsCost - tech.laborCost;
+      return [
+        tech.technician.username,
+        tech.jobCount.toString(),
+        formatCurrency(tech.totalRevenue),
+        formatCurrency(tech.partsCost),
+        formatCurrency(tech.laborCost),
+        formatCurrency(techProfit),
+      ];
+    });
+
+    // Add totals row
+    const totals = data.technicianStats.reduce(
+      (acc, tech) => ({
+        jobCount: acc.jobCount + tech.jobCount,
+        totalRevenue: acc.totalRevenue + tech.totalRevenue,
+        partsCost: acc.partsCost + tech.partsCost,
+        laborCost: acc.laborCost + tech.laborCost,
+      }),
+      { jobCount: 0, totalRevenue: 0, partsCost: 0, laborCost: 0 }
+    );
+
+    const totalProfit = totals.totalRevenue - totals.partsCost - totals.laborCost;
+
+    tableData.push([
+      "TOTAL",
+      totals.jobCount.toString(),
+      formatCurrency(totals.totalRevenue),
+      formatCurrency(totals.partsCost),
+      formatCurrency(totals.laborCost),
+      formatCurrency(totalProfit),
+    ]);
+
+    // Generate table
+    autoTable(doc, {
+      startY: tableStartY + 8,
+      head: [["Technician", "Jobs", "Revenue", "Parts", "Labor", "Profit"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: {
+        fillColor: [59, 130, 246],
+        textColor: 255,
+        fontStyle: "bold",
+        fontSize: 10,
+      },
+      bodyStyles: {
+        fontSize: 9,
+      },
+      alternateRowStyles: {
+        fillColor: [245, 247, 250],
+      },
+      columnStyles: {
+        0: { cellWidth: 45 },
+        1: { cellWidth: 20, halign: "center" },
+        2: { cellWidth: 30, halign: "right" },
+        3: { cellWidth: 28, halign: "right" },
+        4: { cellWidth: 28, halign: "right" },
+        5: { cellWidth: 30, halign: "right" },
+      },
+      didParseCell: function (data) {
+        // Make the last row (totals) bold
+        if (data.row.index === tableData.length - 1) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.fillColor = [220, 230, 245];
+        }
+        // Color profit column - green for positive, red for negative
+        if (data.column.index === 5 && data.row.index < tableData.length - 1) {
+          const profitText = data.cell.text[0];
+          if (profitText && profitText.includes('-')) {
+            data.cell.styles.textColor = [255, 0, 0];
+          } else if (profitText && profitText !== '$0.00') {
+            data.cell.styles.textColor = [0, 128, 0];
+          }
+        }
+      },
+    });
+  }
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(100);
+  doc.text(
+    "This report provides insights into repair operations and technician performance",
+    pageWidth / 2,
+    pageHeight - 20,
+    { align: "center" }
+  );
+
+  doc.setFontSize(7);
+  doc.text(
+    "POS Admin System - Repair Analytics",
+    pageWidth / 2,
+    pageHeight - 15,
+    { align: "center" }
+  );
+
+  // Generate filename with date
+  const dateStr = new Date().toISOString().split("T")[0];
+  const filename = `repair-analytics-${data.periodLabel.toLowerCase().replace(/\s+/g, "-")}-${dateStr}.pdf`;
 
   // Download
   doc.save(filename);

@@ -239,7 +239,7 @@ export default function CustomersPage() {
         <div className="bg-white rounded-xl border p-4">
           <div className="text-sm text-gray-500 mb-1">Total Revenue</div>
           <div className="text-2xl font-bold text-green-600">
-            ${customers.reduce((sum, c) => sum + (c.totalPurchases || 0), 0).toFixed(0)}
+            {customers.reduce((sum, c) => sum + (c.totalPurchases || 0), 0).toFixed(0)}
           </div>
         </div>
         <div className="bg-white rounded-xl border p-4">

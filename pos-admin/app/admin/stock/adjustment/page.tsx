@@ -532,7 +532,7 @@ export default function StockAdjustmentPage() {
         </div>
         <div className="flex gap-2">
           {selectedHistoryProduct && (
-            <Button onClick={loadAdjustments} disabled={loading} variant="secondary">
+            <Button onClick={loadAdjustments} disabled={loading} variant="danger">
               <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </Button>

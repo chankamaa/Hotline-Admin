@@ -5,7 +5,7 @@ import { SalesPDFDownload } from "@/components/sales/sales-pdf-download";
 import {
   FileText,
   ArrowLeft,
-  DollarSign,
+
   ShoppingCart,
   TrendingUp,
   CreditCard,

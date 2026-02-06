@@ -11,10 +11,13 @@ import {
   Calendar,
   RefreshCw,
   TrendingUp,
+  Download,
 } from "lucide-react";
 import { repairApi } from "@/lib/api/repairApi";
+import { generateRepairAnalyticsPDF, RepairAnalyticsData } from "@/lib/pdf-utils";
+import { useToast } from "@/providers/toast-provider";
 
-type TimeFilter = 'daily' | 'weekly' | 'monthly';
+type TimeFilter = 'daily' | 'weekly' | 'monthly' | 'custom';
 
 interface TechnicianStats {
   technician: {
@@ -24,13 +27,17 @@ interface TechnicianStats {
   };
   jobCount: number;
   totalRevenue: number;
-  avgJobValue: number;
+  partsCost: number;
+  laborCost: number;
 }
 
 export default function RepairAnalyticsPage() {
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('daily');
-  const [activeTab, setActiveTab] = useState<'repairs' | 'service'>('repairs');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   const [stats, setStats] = useState({
     repairIncome: 0,
@@ -43,7 +50,7 @@ export default function RepairAnalyticsPage() {
 
   useEffect(() => {
     loadAnalytics();
-  }, [timeFilter, activeTab]);
+  }, [timeFilter]);
 
   const loadAnalytics = async () => {
     setLoading(true);
@@ -52,7 +59,14 @@ export default function RepairAnalyticsPage() {
       const now = new Date();
       let startDate = new Date();
       
-      if (timeFilter === 'daily') {
+      if (timeFilter === 'custom') {
+        if (!customStartDate || !customEndDate) {
+          setLoading(false);
+          return;
+        }
+        startDate = new Date(customStartDate);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (timeFilter === 'daily') {
         startDate.setHours(0, 0, 0, 0);
       } else if (timeFilter === 'weekly') {
         startDate.setDate(now.getDate() - 7);
@@ -62,10 +76,15 @@ export default function RepairAnalyticsPage() {
         startDate.setHours(0, 0, 0, 0);
       }
 
+      // Determine end date based on filter type
+      const endDate = timeFilter === 'custom' && customEndDate 
+        ? new Date(customEndDate + 'T23:59:59')
+        : now;
+
       // Fetch repair data using the correct API method
       const response = await repairApi.getAll({
         startDate: startDate.toISOString(),
-        endDate: now.toISOString(),
+        endDate: endDate.toISOString(),
         limit: 1000, // Get all repairs in the period
       });
 
@@ -79,8 +98,10 @@ export default function RepairAnalyticsPage() {
       const technicianMap = new Map<string, TechnicianStats>();
 
       repairs.forEach((repair: any) => {
-        // Calculate metrics for jobs with 'READY' status (repair completed, awaiting payment/pickup)
-        if (repair.status === 'READY') {
+        // Calculate metrics for completed/delivered repairs (READY, COMPLETED, or DELIVERED)
+        const isCompletedJob = ['READY', 'COMPLETED', 'DELIVERED'].includes(repair.status);
+        
+        if (isCompletedJob) {
           const income = repair.totalCost || 0;
           const parts = repair.partsTotal || 0;
           const labor = repair.laborCost || 0;
@@ -105,20 +126,18 @@ export default function RepairAnalyticsPage() {
                 },
                 jobCount: 0,
                 totalRevenue: 0,
-                avgJobValue: 0,
+                partsCost: 0,
+                laborCost: 0,
               });
             }
 
             const techStats = technicianMap.get(techId)!;
             techStats.jobCount += 1;
             techStats.totalRevenue += income;
+            techStats.partsCost += parts;
+            techStats.laborCost += labor;
           }
         }
-      });
-
-      // Calculate averages for technicians
-      technicianMap.forEach((stats) => {
-        stats.avgJobValue = stats.jobCount > 0 ? stats.totalRevenue / stats.jobCount : 0;
       });
 
       setStats({
@@ -142,42 +161,71 @@ export default function RepairAnalyticsPage() {
       case 'daily': return 'Today';
       case 'weekly': return 'This Week';
       case 'monthly': return 'This Month';
+      case 'custom': 
+        if (customStartDate && customEndDate) {
+          return `${new Date(customStartDate).toLocaleDateString()} - ${new Date(customEndDate).toLocaleDateString()}`;
+        }
+        return 'Custom Range';
       default: return '';
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setDownloadingPDF(true);
+
+      // Calculate date range based on filter
+      const now = new Date();
+      let startDate = new Date();
+      let endDate = now;
+
+      if (timeFilter === 'custom') {
+        if (!customStartDate || !customEndDate) {
+          toast("Please select both start and end dates before downloading", "warning");
+          return;
+        }
+        startDate = new Date(customStartDate);
+        endDate = new Date(customEndDate + 'T23:59:59');
+      } else if (timeFilter === 'daily') {
+        startDate.setHours(0, 0, 0, 0);
+      } else if (timeFilter === 'weekly') {
+        startDate.setDate(now.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (timeFilter === 'monthly') {
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+      }
+
+      // Prepare data for PDF
+      const pdfData: RepairAnalyticsData = {
+        repairIncome: stats.repairIncome,
+        repairCost: stats.repairCost,
+        laborCost: stats.laborCost,
+        totalJobs: stats.totalJobs,
+        technicianStats: technicianStats,
+        periodLabel: getFilterLabel(),
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+      };
+
+      // Generate PDF
+      generateRepairAnalyticsPDF(pdfData);
+
+      toast("PDF downloaded successfully!", "success");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast("Failed to generate PDF. Please try again.", "error");
+    } finally {
+      setDownloadingPDF(false);
     }
   };
 
   return (
     <div className="p-6">
       <PageHeader
-        title="Repair & Service Analytics"
+        title="Repair Analytics"
         description="Track repair income, costs, and technician performance"
       />
-
-      {/* Tab Navigation */}
-      <div className="flex items-center gap-2 mb-6 border-b">
-        <button
-          onClick={() => setActiveTab('repairs')}
-          className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-            activeTab === 'repairs'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Wrench className="inline-block w-4 h-4 mr-2" />
-          Repairs
-        </button>
-        <button
-          onClick={() => setActiveTab('service')}
-          className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-            activeTab === 'service'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Users className="inline-block w-4 h-4 mr-2" />
-          Service
-        </button>
-      </div>
 
       {/* Time Filter Buttons */}
       <div className="flex items-center justify-between mb-6">
@@ -215,30 +263,97 @@ export default function RepairAnalyticsPage() {
             >
               Monthly
             </button>
+            <button
+              onClick={() => setTimeFilter('custom')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                timeFilter === 'custom'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Custom
+            </button>
           </div>
         </div>
-        <Button onClick={loadAnalytics} disabled={loading} variant="secondary">
-          <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleDownloadPDF} disabled={downloadingPDF} variant="danger">
+            <Download size={16} className={`mr-2 ${downloadingPDF ? 'animate-pulse' : ''}`} />
+            {downloadingPDF ? 'Generating...' : 'Download PDF'}
+          </Button>
+          <Button onClick={loadAnalytics} disabled={loading} variant="danger">
+            <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
+      {/* Custom Date Range Inputs */}
+      {timeFilter === 'custom' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                max={customEndDate || new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                min={customStartDate}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="pt-6">
+              <Button
+                onClick={loadAnalytics}
+                disabled={loading || !customStartDate || !customEndDate}
+              >
+                Apply
+              </Button>
+            </div>
+          </div>
+          {(!customStartDate || !customEndDate) && (
+            <p className="text-sm text-gray-600 mt-2">
+              Please select both start and end dates to view analytics
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <StatsCard
-          title={`${activeTab === 'repairs' ? 'Repair' : 'Service'} Income`}
-          value={stats.repairIncome.toFixed(2)}
+          title="Repair Income"
+          value={`$${stats.repairIncome.toFixed(2)}`}
           icon={<DollarSign size={20} />}
         />
         <StatsCard
           title="Parts Cost"
-          value={stats.repairCost.toFixed(2)}
+          value={`$${stats.repairCost.toFixed(2)}`}
           icon={<TrendingUp size={20} />}
         />
         <StatsCard
           title="Labor Cost"
-          value={stats.laborCost.toFixed(2)}
+          value={`$${stats.laborCost.toFixed(2)}`}
           icon={<Wrench size={20} />}
+        />
+        <StatsCard
+          title="Net Profit"
+          value={`$${(stats.repairIncome - stats.repairCost - stats.laborCost).toFixed(2)}`}
+          icon={<DollarSign size={20} className="text-green-600" />}
         />
         <StatsCard
           title="Total Jobs"
@@ -254,7 +369,7 @@ export default function RepairAnalyticsPage() {
             Technician Performance - {getFilterLabel()}
           </h3>
           <p className="text-sm text-gray-500">
-            {activeTab === 'repairs' ? 'Repair jobs' : 'Service jobs'} completed by each technician
+            Completed repair jobs by each technician
           </p>
         </div>
         
@@ -283,20 +398,15 @@ export default function RepairAnalyticsPage() {
                     Total Revenue
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Avg. Job Value
+                    Parts Cost
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estimated Salary
+                    Labor Cost
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {technicianStats.map((tech) => {
-                  // Calculate estimated salary (e.g., 30% of labor cost or 15% of total revenue)
-                  const estimatedSalary = stats.laborCost > 0 
-                    ? (tech.totalRevenue / stats.repairIncome) * stats.laborCost
-                    : tech.totalRevenue * 0.15;
-
                   return (
                     <tr key={tech.technician._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -317,12 +427,12 @@ export default function RepairAnalyticsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {tech.avgJobValue.toFixed(2)}
+                          {tech.partsCost.toFixed(2)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-green-600 font-semibold">
-                          {estimatedSalary.toFixed(2)}
+                        <div className="text-sm text-gray-900">
+                          {tech.laborCost.toFixed(2)}
                         </div>
                       </td>
                     </tr>
@@ -338,9 +448,11 @@ export default function RepairAnalyticsPage() {
                   <td className="px-6 py-4 text-gray-900">
                     {technicianStats.reduce((sum, tech) => sum + tech.totalRevenue, 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 text-gray-900">-</td>
-                  <td className="px-6 py-4 text-green-600">
-                    {stats.laborCost.toFixed(2)}
+                  <td className="px-6 py-4 text-gray-900">
+                    {technicianStats.reduce((sum, tech) => sum + tech.partsCost, 0).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-900">
+                    {technicianStats.reduce((sum, tech) => sum + tech.laborCost, 0).toFixed(2)}
                   </td>
                 </tr>
               </tfoot>

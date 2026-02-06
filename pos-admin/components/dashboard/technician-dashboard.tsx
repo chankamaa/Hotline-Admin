@@ -109,7 +109,7 @@ export default function TechnicianDashboard() {
           issue: repair.problemDescription || "Not specified",
           priority: repair.priority || "normal",
           estimatedCost: repair.estimatedCost || 0,
-          estimatedCostDisplay: repair.estimatedCost ? `$${repair.estimatedCost}` : "N/A",
+          estimatedCostDisplay: repair.estimatedCost ? `${repair.estimatedCost}` : "N/A",
           status: repair.status || "IN_PROGRESS",
           createdAt: new Date(repair.createdAt).toLocaleDateString(),
         })));
@@ -679,7 +679,7 @@ export default function TechnicianDashboard() {
                   </div>
                   <div>
                     <span className="text-gray-500">Estimated Cost:</span>
-                    <p className="font-medium text-gray-900">${selectedRepair.estimatedCost}</p>
+                    <p className="font-medium text-gray-900">{selectedRepair.estimatedCost}</p>
                   </div>
                 </div>
               </div>
@@ -739,7 +739,7 @@ export default function TechnicianDashboard() {
                           <div className="font-medium text-gray-900">{product.name}</div>
                           <div className="text-xs text-gray-500 flex justify-between">
                             <span>{product.sku || 'No SKU'}</span>
-                            <span className="font-medium">${product.sellingPrice?.toFixed(2) || '0.00'}</span>
+                            <span className="font-medium">{product.sellingPrice?.toFixed(2) || '0.00'}</span>
                           </div>
                         </button>
                       ))}
@@ -777,10 +777,10 @@ export default function TechnicianDashboard() {
                               />
                             </td>
                             <td className="px-3 py-2 text-right text-gray-700">
-                              ${part.unitPrice.toFixed(2)}
+                              {part.unitPrice.toFixed(2)}
                             </td>
                             <td className="px-3 py-2 text-right font-medium text-gray-900">
-                              ${(part.quantity * part.unitPrice).toFixed(2)}
+                              {(part.quantity * part.unitPrice).toFixed(2)}
                             </td>
                             <td className="px-3 py-2">
                               <button
@@ -800,7 +800,7 @@ export default function TechnicianDashboard() {
                             Parts Total:
                           </td>
                           <td className="px-3 py-2 text-right font-semibold text-gray-900">
-                            ${getPartsTotal().toFixed(2)}
+                            {getPartsTotal().toFixed(2)}
                           </td>
                           <td></td>
                         </tr>
@@ -820,15 +820,15 @@ export default function TechnicianDashboard() {
                   <div className="mt-3 p-3 bg-green-50 rounded-lg">
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-600">Labor Cost:</span>
-                      <span className="text-gray-900">${completeFormData.laborCost.toFixed(2)}</span>
+                      <span className="text-gray-900">{completeFormData.laborCost.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-600">Parts Total:</span>
-                      <span className="text-gray-900">${getPartsTotal().toFixed(2)}</span>
+                      <span className="text-gray-900">{getPartsTotal().toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-semibold border-t pt-1 mt-1">
                       <span className="text-gray-700">Total Cost:</span>
-                      <span className="text-green-700">${(completeFormData.laborCost + getPartsTotal()).toFixed(2)}</span>
+                      <span className="text-green-700">{(completeFormData.laborCost + getPartsTotal()).toFixed(2)}</span>
                     </div>
                   </div>
                 )}

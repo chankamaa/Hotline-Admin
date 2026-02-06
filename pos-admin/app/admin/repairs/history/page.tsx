@@ -253,7 +253,7 @@ export default function RepairHistoryPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'date' | 'cost' | 'device')}
-                  className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                  className="px-3  text-gray-500 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="date">Date</option>
                   <option value="cost">Cost</option>
@@ -261,7 +261,7 @@ export default function RepairHistoryPage() {
                 </select>
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-3 text-gray-500 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
                 </button>

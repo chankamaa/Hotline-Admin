@@ -637,7 +637,7 @@ export default function ProductsPage() {
             <div className="font-semibold">Summary</div>
             <div>Name: {formData.name || "—"}</div>
             <div>Category: {formData.category || "—"}</div>
-            <div>Price: ${formData.sellingPrice || "0"} (Cost: ${formData.costPrice || "0"})</div>
+            <div>Price: {formData.sellingPrice || "0"} (Cost: {formData.costPrice || "0"})</div>
             {formData.warrantyType !== "NONE" && <div>Warranty: {formData.warrantyDuration} months</div>}
             {formData.offerIsActive && <div>Discount: {formData.offerValue}{formData.offerType === "PERCENTAGE" ? "%" : " fixed"}</div>}
           </div>
@@ -689,16 +689,16 @@ export default function ProductsPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <div className="text-gray-500">Selling Price</div>
-                  <div className="font-medium text-green-600">${viewProduct.sellingPrice}</div>
+                  <div className="font-medium text-green-600">{viewProduct.sellingPrice}</div>
                 </div>
                 <div>
                   <div className="text-gray-500">Cost Price</div>
-                  <div className="font-medium">${viewProduct.costPrice}</div>
+                  <div className="font-medium">{viewProduct.costPrice}</div>
                 </div>
                 {viewProduct.wholesalePrice && (
                   <div>
                     <div className="text-gray-500">Wholesale</div>
-                    <div className="font-medium">${viewProduct.wholesalePrice}</div>
+                    <div className="font-medium">{viewProduct.wholesalePrice}</div>
                   </div>
                 )}
               </div>
@@ -800,13 +800,13 @@ export default function ProductsPage() {
                     <div className="font-medium text-green-600">
                       {viewProduct.offer.type === "PERCENTAGE"
                         ? `${viewProduct.offer.value}%`
-                        : `$${viewProduct.offer.value}`}
+                        : `${viewProduct.offer.value}`}
                     </div>
                   </div>
                   {viewProduct.effectivePrice && (
                     <div>
                       <div className="text-gray-500">Effective Price</div>
-                      <div className="font-medium text-green-600">${viewProduct.effectivePrice}</div>
+                      <div className="font-medium text-green-600">{viewProduct.effectivePrice}</div>
                     </div>
                   )}
                 </div>

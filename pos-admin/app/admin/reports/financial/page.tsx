@@ -213,7 +213,7 @@ export default function FinancialReportsPage({
                 <div className="border-t pt-3 flex justify-between items-center">
                   <span className="text-black font-semibold">Total Revenue</span>
                   <span className="font-bold text-black text-lg">
-                    ${(dailyReportData.totalCashSales + dailyReportData.totalCardPayments + 
+                    {(dailyReportData.totalCashSales + dailyReportData.totalCardPayments + 
                        dailyReportData.totalDigitalPayments + dailyReportData.repairRevenue).toFixed(2)}
                   </span>
                 </div>
@@ -294,7 +294,7 @@ export default function FinancialReportsPage({
                   {weeklyData.map((week, index) => (
                     <tr key={index} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4 text-black">{week.week}</td>
-                      <td className="py-3 px-4 text-black font-semibold">${week.revenue.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-black font-semibold">{week.revenue.toLocaleString()}</td>
                       <td className="py-3 px-4 text-black">{week.sales}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1">
@@ -323,7 +323,7 @@ export default function FinancialReportsPage({
                 <div key={index}>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm text-black">{week.week}</span>
-                    <span className="text-sm font-semibold text-black">${week.revenue.toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-black">{week.revenue.toLocaleString()}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div 
@@ -361,20 +361,20 @@ export default function FinancialReportsPage({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-xl border p-4">
               <div className="text-sm text-gray-600 mb-1">Total Revenue</div>
-              <div className="text-2xl font-bold text-black">${profitLossData.totalSalesRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-black">{profitLossData.totalSalesRevenue.toLocaleString()}</div>
             </div>
             <div className="bg-white rounded-xl border p-4">
               <div className="text-sm text-gray-600 mb-1">Gross Profit</div>
-              <div className="text-2xl font-bold text-green-600">${profitLossData.grossProfit.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600">{profitLossData.grossProfit.toLocaleString()}</div>
               <div className="text-xs text-gray-500 mt-1">{profitLossData.grossProfitMargin}% margin</div>
             </div>
             <div className="bg-white rounded-xl border p-4">
               <div className="text-sm text-gray-600 mb-1">Operating Expenses</div>
-              <div className="text-2xl font-bold text-red-600">${profitLossData.operatingExpenses.total.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-red-600">{profitLossData.operatingExpenses.total.toLocaleString()}</div>
             </div>
             <div className="bg-white rounded-xl border p-4">
               <div className="text-sm text-gray-600 mb-1">Net Profit</div>
-              <div className="text-2xl font-bold text-blue-600">${profitLossData.netProfit.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-blue-600">{profitLossData.netProfit.toLocaleString()}</div>
               <div className="text-xs text-gray-500 mt-1">{profitLossData.netProfitMargin}% margin</div>
             </div>
           </div>
@@ -385,50 +385,50 @@ export default function FinancialReportsPage({
             <div className="space-y-4">
               <div className="flex justify-between items-center pb-2">
                 <span className="text-black font-semibold">Total Sales Revenue</span>
-                <span className="text-black font-bold text-lg">${profitLossData.totalSalesRevenue.toLocaleString()}</span>
+                <span className="text-black font-bold text-lg">{profitLossData.totalSalesRevenue.toLocaleString()}</span>
               </div>
               
               <div className="flex justify-between items-center pb-2 border-b">
                 <span className="text-black">Less: Cost of Goods Sold (COGS)</span>
-                <span className="text-red-600">-${profitLossData.costOfGoodsSold.toLocaleString()}</span>
+                <span className="text-red-600">-{profitLossData.costOfGoodsSold.toLocaleString()}</span>
               </div>
               
               <div className="flex justify-between items-center pb-2 bg-green-50 p-3 rounded">
                 <span className="text-black font-semibold">Gross Profit</span>
-                <span className="text-green-600 font-bold">${profitLossData.grossProfit.toLocaleString()}</span>
+                <span className="text-green-600 font-bold">{profitLossData.grossProfit.toLocaleString()}</span>
               </div>
               
               <div className="pl-4 space-y-2 border-l-2 border-gray-200">
                 <div className="font-medium text-black mb-2">Operating Expenses:</div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Salaries & Wages</span>
-                  <span className="text-black">${profitLossData.operatingExpenses.salaries.toLocaleString()}</span>
+                  <span className="text-black">{profitLossData.operatingExpenses.salaries.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Rent</span>
-                  <span className="text-black">${profitLossData.operatingExpenses.rent.toLocaleString()}</span>
+                  <span className="text-black">{profitLossData.operatingExpenses.rent.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Utilities</span>
-                  <span className="text-black">${profitLossData.operatingExpenses.utilities.toLocaleString()}</span>
+                  <span className="text-black">{profitLossData.operatingExpenses.utilities.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Marketing</span>
-                  <span className="text-black">${profitLossData.operatingExpenses.marketing.toLocaleString()}</span>
+                  <span className="text-black">{profitLossData.operatingExpenses.marketing.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-black">Other</span>
-                  <span className="text-black">${profitLossData.operatingExpenses.other.toLocaleString()}</span>
+                  <span className="text-black">{profitLossData.operatingExpenses.other.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t">
                   <span className="text-black font-medium">Total Operating Expenses</span>
-                  <span className="text-red-600 font-semibold">-${profitLossData.operatingExpenses.total.toLocaleString()}</span>
+                  <span className="text-red-600 font-semibold">-{profitLossData.operatingExpenses.total.toLocaleString()}</span>
                 </div>
               </div>
               
               <div className="flex justify-between items-center pt-4 bg-blue-50 p-4 rounded-lg">
                 <span className="text-black font-bold text-lg">Net Profit/Loss</span>
-                <span className="text-blue-600 font-bold text-xl">${profitLossData.netProfit.toLocaleString()}</span>
+                <span className="text-blue-600 font-bold text-xl">{profitLossData.netProfit.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -451,9 +451,9 @@ export default function FinancialReportsPage({
                   {categoryProfitability.map((cat, index) => (
                     <tr key={index} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4 text-black font-medium">{cat.category}</td>
-                      <td className="py-3 px-4 text-black">${cat.revenue.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-red-600">${cat.cogs.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-green-600 font-semibold">${cat.profit.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-black">{cat.revenue.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-red-600">{cat.cogs.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-green-600 font-semibold">{cat.profit.toLocaleString()}</td>
                       <td className="py-3 px-4 text-black">{cat.margin}%</td>
                     </tr>
                   ))}

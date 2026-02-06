@@ -230,7 +230,7 @@ export default function PromotionsPage() {
             case 'PERCENTAGE':
                 return `${promo.value}% OFF`;
             case 'FIXED':
-                return `$${promo.value} OFF`;
+                return `${promo.value} OFF`;
             case 'BUY_X_GET_Y':
                 return `Buy ${promo.buyQuantity} Get ${promo.getQuantity} Free`;
             default:
@@ -805,12 +805,12 @@ export default function PromotionsPage() {
                             </div>
                             <div>
                                 <span className="text-gray-500">Min Purchase:</span>
-                                <span className="ml-2 text-gray-900">${selectedPromotion.minPurchase}</span>
+                                <span className="ml-2 text-gray-900">{selectedPromotion.minPurchase}</span>
                             </div>
                             <div>
                                 <span className="text-gray-500">Max Discount:</span>
                                 <span className="ml-2 text-gray-900">
-                                    {selectedPromotion.maxDiscount ? `$${selectedPromotion.maxDiscount}` : 'No limit'}
+                                    {selectedPromotion.maxDiscount ? `${selectedPromotion.maxDiscount}` : 'No limit'}
                                 </span>
                             </div>
                             <div>

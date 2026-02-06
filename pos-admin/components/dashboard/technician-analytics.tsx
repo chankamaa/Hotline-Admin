@@ -205,7 +205,7 @@ export default function TechnicianAnalytics() {
                         ))}
                     </div>
                 </div>
-                <Button onClick={loadAnalytics} disabled={loading} variant="secondary">
+                <Button onClick={loadAnalytics} disabled={loading} variant="danger">
                     <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
                     Refresh
                 </Button>
@@ -215,21 +215,21 @@ export default function TechnicianAnalytics() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatsCard
                     title="Total Income"
-                    value={`$${metrics.totalIncome.toFixed(2)}`}
+                    value={`${metrics.totalIncome.toFixed(2)}`}
                     icon={<DollarSign size={20} />}
                     change={`${getFilterLabel()} earnings`}
                     changeType="neutral"
                 />
                 <StatsCard
                     title="Parts Cost"
-                    value={`$${metrics.partsTotal.toFixed(2)}`}
+                    value={`${metrics.partsTotal.toFixed(2)}`}
                     icon={<Package size={20} />}
                     change={`${metrics.partsPercentage.toFixed(1)}% of income`}
                     changeType="neutral"
                 />
                 <StatsCard
                     title="Labor Cost"
-                    value={`$${metrics.laborCost.toFixed(2)}`}
+                    value={`${metrics.laborCost.toFixed(2)}`}
                     icon={<Wrench size={20} />}
                     change={`${metrics.laborPercentage.toFixed(1)}% of income`}
                     changeType="neutral"
@@ -238,7 +238,7 @@ export default function TechnicianAnalytics() {
                     title="Jobs Completed"
                     value={metrics.jobCount.toString()}
                     icon={<CheckCircle size={20} />}
-                    change={`Avg. $${metrics.avgJobValue.toFixed(2)}/job`}
+                    change={`Avg. ${metrics.avgJobValue.toFixed(2)}/job`}
                     changeType="neutral"
                 />
             </div>
@@ -282,11 +282,11 @@ export default function TechnicianAnalytics() {
                             <div className="mt-4 pt-4 border-t">
                                 <div className="flex justify-between mb-2">
                                     <span className="text-gray-600">Net Profit (Income - Parts):</span>
-                                    <span className="font-semibold text-green-600">${metrics.netProfit.toFixed(2)}</span>
+                                    <span className="font-semibold text-green-600">{metrics.netProfit.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Average Job Value:</span>
-                                    <span className="font-semibold text-gray-900">${metrics.avgJobValue.toFixed(2)}</span>
+                                    <span className="font-semibold text-gray-900">{metrics.avgJobValue.toFixed(2)}</span>
                                 </div>
                             </div>
                         </>
@@ -312,11 +312,11 @@ export default function TechnicianAnalytics() {
                         </div>
                         <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                             <span className="text-gray-700">Average Job Value</span>
-                            <span className="text-2xl font-bold text-blue-600">${metrics.avgJobValue.toFixed(2)}</span>
+                            <span className="text-2xl font-bold text-blue-600">{metrics.avgJobValue.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
                             <span className="text-gray-700">Net Profit</span>
-                            <span className="text-2xl font-bold text-green-600">${metrics.netProfit.toFixed(2)}</span>
+                            <span className="text-2xl font-bold text-green-600">{metrics.netProfit.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -386,14 +386,14 @@ export default function TechnicianAnalytics() {
                                             <div className="text-sm text-gray-900">{job.customer?.name || '-'}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="text-sm text-gray-600">${(job.partsTotal || 0).toFixed(2)}</span>
+                                            <span className="text-sm text-gray-600">{(job.partsTotal || 0).toFixed(2)}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="text-sm text-gray-600">${(job.laborCost || 0).toFixed(2)}</span>
+                                            <span className="text-sm text-gray-600">{(job.laborCost || 0).toFixed(2)}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <span className="text-sm font-semibold text-gray-900">
-                                                ${(job.totalCost || 0).toFixed(2)}
+                                                {(job.totalCost || 0).toFixed(2)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">

@@ -398,8 +398,8 @@ export default function StoreSettingsPage() {
 
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Example:</strong> Product price $100 with {formData.defaultTaxRate}% {formData.taxSystem}
-              {formData.taxInclusive ? " (inclusive)" : " (exclusive)"} = ${
+              <strong>Example:</strong> Product price 100 with {formData.defaultTaxRate}% {formData.taxSystem}
+              {formData.taxInclusive ? " (inclusive)" : " (exclusive)"} = {
                 formData.taxInclusive
                   ? 100
                   : (100 + (100 * formData.defaultTaxRate / 100)).toFixed(2)
