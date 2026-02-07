@@ -218,10 +218,21 @@ export function generateSingleProductPDF(product: Product): void {
   doc.text("Pricing", leftMargin, yPosition);
   yPosition += 10;
 
-  addField("Cost Price", formatCurrency(product.costPrice));
-  addField("Selling Price", formatCurrency(product.sellingPrice));
-  if (product.wholesalePrice) {
-    addField("Wholesale Price", formatCurrency(product.wholesalePrice));
+  addField(
+    "Cost Price",
+    product.costPrice !== undefined ? formatCurrency(product.costPrice) : "—"
+  );
+  addField(
+    "Selling Price",
+    product.sellingPrice !== undefined
+      ? formatCurrency(product.sellingPrice)
+      : "—"
+  );
+  if (product.wholesalePrice !== undefined) {
+    addField(
+      "Wholesale Price",
+      formatCurrency(product.wholesalePrice)
+    );
   }
   addField("Tax Rate", `${product.taxRate}%`);
   if (product.profitMargin !== undefined) {
