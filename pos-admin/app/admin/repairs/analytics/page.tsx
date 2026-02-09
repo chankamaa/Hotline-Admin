@@ -302,20 +302,40 @@ export default function RepairAnalyticsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatsCard
           title="Repair Income"
+<<<<<<< HEAD
           value={stats.repairIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+=======
+          value={stats.repairIncome.toFixed(2)}
+>>>>>>> fdacb623a8a3b437853f1628bb034837d9c929dc
           icon={<DollarSign size={20} />}
         />
         <StatsCard
           title="Parts Cost"
+<<<<<<< HEAD
           value={stats.repairCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+=======
+          value={stats.repairCost.toFixed(2)}
+>>>>>>> fdacb623a8a3b437853f1628bb034837d9c929dc
           icon={<TrendingUp size={20} />}
         />
         <StatsCard
           title="Labor Cost"
+<<<<<<< HEAD
           value={stats.laborCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<Wrench size={20} />}
         />
         <StatsCard
+=======
+          value={stats.laborCost.toFixed(2)}
+          icon={<Wrench size={20} />}
+        />
+        <StatsCard
+          title="Net Profit"
+          value={(stats.repairIncome - stats.repairCost - stats.laborCost).toFixed(2)}
+          icon={<DollarSign size={20} className="text-green-600" />}
+        />
+        <StatsCard
+>>>>>>> fdacb623a8a3b437853f1628bb034837d9c929dc
           title="Total Jobs"
           value={stats.totalJobs.toLocaleString('en-US')}
           icon={<Users size={20} />}
