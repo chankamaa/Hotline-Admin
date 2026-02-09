@@ -349,9 +349,6 @@ export default function PromotionsPage() {
                                 <tr key={promo._id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                                                {getTypeIcon(promo.type)}
-                                            </div>
                                             <div>
                                                 <div className="font-medium text-gray-900">{promo.name}</div>
                                                 <div className="text-sm text-gray-500">{promo.description}</div>
@@ -776,9 +773,9 @@ export default function PromotionsPage() {
             >
                 {selectedPromotion && (
                     <div className="space-y-4">
-                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-6 text-blue-500">
+                        <div className="bg-blue-600 rounded-lg p-6 text-white">
                             <h3 className="text-2xl font-bold">{selectedPromotion.name}</h3>
-                            <p className="text-purple-100 mt-1">{selectedPromotion.description}</p>
+                            <p className="text-blue-100 mt-1">{selectedPromotion.description}</p>
                             <div className="mt-4 text-3xl font-bold">{getDiscountDisplay(selectedPromotion)}</div>
                         </div>
 

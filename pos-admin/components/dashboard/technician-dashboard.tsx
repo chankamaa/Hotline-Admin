@@ -453,26 +453,28 @@ export default function TechnicianDashboard() {
   }
 
   return (
-    <div className="bg-gray-100 p-6 w-full">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-gray-100 p-3 sm:p-4 md:p-6 w-full min-h-screen">
+      {/* Responsive Header Section - Stacks on mobile, side-by-side on desktop */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 sm:mb-6">
         <PageHeader
           title="Technician Dashboard"
           description="Your repair jobs and workflow"
         />
-        <div className="flex items-center gap-3">
+        {/* Action Buttons - Horizontal scroll on mobile, flex-wrap on tablet, flex on desktop */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 overflow-x-auto pb-2 sm:pb-0">
           <button
             onClick={() => router.push('/admin/repairs/my-analytics')}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap flex-shrink-0"
           >
-            <BarChart3 size={16} />
-            <span className="text-sm font-medium">My Analytics</span>
+            <BarChart3 size={16} className="flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium">My Analytics</span>
           </button>
           <button
             onClick={() => router.push('/admin/repairs?tab=create')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap flex-shrink-0"
           >
-            <Plus size={16} />
-            <span className="text-sm font-medium">Create Job</span>
+            <Plus size={16} className="flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium">Create Job</span>
           </button>
           <Button
             onClick={loadDashboardData}
@@ -485,8 +487,12 @@ export default function TechnicianDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Stats Grid - Responsive breakpoints:
+          - Mobile (< 640px): 1 column
+          - Tablet (640px - 1024px): 2 columns
+          - Desktop (>= 1024px): 3 columns
+      */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
         <StatsCard
           title="Assigned to Me"
           value={stats.assignedToMe.value}
@@ -508,41 +514,38 @@ export default function TechnicianDashboard() {
           changeType={stats.completedToday.changeType}
           icon={<CheckCircle size={20} />}
         />
-        <StatsCard
-          title="Pending Assignment"
-          value={stats.pending.value}
-          change={stats.pending.change}
-          changeType="neutral"
-          icon={<Clock size={20} />}
-        />
       </div>
 
-      {/* My Active Repairs */}
-      <div ref={myActiveRepairsRef} className="mb-6 bg-white rounded-xl border">
-        <div className="p-4 border-b flex items-center justify-between">
+      {/* My Active Repairs - Mobile-friendly card layout */}
+      <div ref={myActiveRepairsRef} className="mb-4 sm:mb-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Wrench size={18} className="text-blue-500" />
-            <h3 className="font-semibold text-gray-900">My Active Repairs</h3>
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <Wrench size={18} className="text-blue-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900 text-base sm:text-lg">My Active Repairs</h3>
           </div>
           {myRepairs.length > 0 && (
-            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-              {myRepairs.length} jobs
+            <span className="text-xs sm:text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+              {myRepairs.length} {myRepairs.length === 1 ? 'job' : 'jobs'}
             </span>
           )}
         </div>
-        <div className="divide-y">
+        <div className="divide-y divide-gray-200">
           {myRepairs.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <Wrench className="mx-auto mb-2 opacity-50" size={32} />
-              <p>No active repairs assigned</p>
-              <p className="text-xs mt-1">Check pending repairs below</p>
+            <div className="p-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <Wrench className="text-gray-400" size={32} />
+              </div>
+              <p className="text-gray-900 font-medium mb-1">No active repairs assigned</p>
+              <p className="text-sm text-gray-500">Check pending repairs below</p>
             </div>
           ) : (
             myRepairs.map((repair) => (
-              <div key={repair.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
+              <div key={repair.id} className="p-3 sm:p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
                       <div className="font-medium text-sm text-black">{repair.id}</div>
                       <span className={`text-xs px-2 py-1 rounded-full ${repair.priority === "urgent"
                         ? "bg-red-100 text-red-700"
@@ -553,10 +556,10 @@ export default function TechnicianDashboard() {
                         {repair.priority}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-600 mb-1">{repair.customer}</div>
-                    <div className="text-xs text-gray-500">{repair.device}</div>
+                    <div className="text-xs sm:text-sm text-gray-600 mb-1 truncate">{repair.customer}</div>
+                    <div className="text-xs text-gray-500 truncate">{repair.device}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right flex sm:flex-col justify-between sm:justify-start gap-1 sm:gap-0">
                     <div className="font-semibold text-sm text-black">{repair.estimatedCost}</div>
                     <div className="text-xs text-gray-500">{repair.createdAt}</div>
                   </div>
@@ -564,11 +567,11 @@ export default function TechnicianDashboard() {
                 <div className="text-sm text-gray-700 mb-2">
                   <span className="font-medium">Issue:</span> {repair.issue}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => handleOpenCompleteModal(repair)}
                     disabled={completingJobId === repair._id}
-                    className={`text-xs px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 flex items-center gap-1.5 ${completingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
+                    className={`text-xs sm:text-sm px-3 sm:px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 active:bg-green-800 flex items-center justify-center gap-1.5 w-full sm:w-auto ${completingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
                       }`}
                   >
                     <CheckCircle size={12} />
@@ -579,37 +582,42 @@ export default function TechnicianDashboard() {
             ))
           )}
         </div>
-        <div className="p-4 border-t">
-          <a href="/admin/repairs" className="text-sm text-blue-600 hover:text-blue-700">
-            View all my repairs →
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
+          <a href="/admin/repairs" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline inline-flex items-center gap-1">
+            View all my repairs 
+            <span>→</span>
           </a>
         </div>
       </div>
 
-      {/* Pending Repairs - Awaiting Assignment */}
-      <div className="mb-6 bg-white rounded-xl border">
-        <div className="p-4 border-b flex items-center justify-between">
+      {/* Pending Repairs - Awaiting Assignment - Responsive card */}
+      <div className="mb-4 sm:mb-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Clock size={18} className="text-orange-500" />
-            <h3 className="font-semibold text-gray-900">Pending Repairs - Awaiting Assignment</h3>
+            <div className="p-2 bg-orange-50 rounded-lg">
+              <Clock size={18} className="text-orange-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900 text-base sm:text-lg">Pending Repairs - Awaiting Assignment</h3>
           </div>
           {pendingRepairs.length > 0 && (
-            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
+            <span className="text-xs sm:text-sm bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium">
               {pendingRepairs.length} pending
             </span>
           )}
         </div>
-        <div className="divide-y">
+        <div className="divide-y divide-gray-200">
           {pendingRepairs.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <Clock className="mx-auto mb-2 opacity-50" size={32} />
-              <p>No pending repairs</p>
-              <p className="text-xs mt-1">All jobs are assigned</p>
+            <div className="p-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <Clock className="text-gray-400" size={32} />
+              </div>
+              <p className="text-gray-900 font-medium mb-1">No pending repairs</p>
+              <p className="text-sm text-gray-500">All jobs are assigned</p>
             </div>
           ) : (
             pendingRepairs.map((repair) => (
-              <div key={repair.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-start justify-between">
+              <div key={repair.id} className="p-3 sm:p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <div className="font-medium text-sm text-black">{repair.id}</div>
@@ -628,12 +636,12 @@ export default function TechnicianDashboard() {
                       <span className="font-medium">Issue:</span> {repair.issue}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500 mb-2">{repair.createdAt}</div>
+                  <div className="w-full sm:w-auto sm:text-right flex flex-col gap-2">
+                    <div className="text-xs text-gray-500 order-2 sm:order-1">{repair.createdAt}</div>
                     <button
                       onClick={() => handleStartJob(repair._id, repair.id)}
                       disabled={startingJobId === repair._id}
-                      className={`text-xs px-4 py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 ${startingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
+                      className={`text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-1.5 bg-green-600 text-white rounded font-medium transition-all hover:bg-green-700 active:bg-green-800 w-full sm:w-auto order-1 sm:order-2 ${startingJobId === repair._id ? 'opacity-60 cursor-not-allowed' : ''
                         }`}
                     >
                       {startingJobId === repair._id ? (
@@ -651,76 +659,37 @@ export default function TechnicianDashboard() {
             ))
           )}
         </div>
-        <div className="p-4 border-t">
-          <a href="/admin/repairs" className="text-sm text-blue-600 hover:text-blue-700">
-            View all pending repairs →
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
+          <a href="/admin/repairs" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline inline-flex items-center gap-1">
+            View all pending repairs
+            <span>→</span>
           </a>
         </div>
       </div>
 
-      {/* Quick Actions & Tips */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl border p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle size={20} className="text-green-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900">Today's Progress</h4>
+      {/* Workflow Reminder - Responsive grid layout */}
+      <div className="mt-4 sm:mt-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+        <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Repair Workflow Reminder</h3>
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 text-xs sm:text-sm">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0">1</div>
+            <span className="text-xs sm:text-sm font-medium">Receive Job</span>
           </div>
-          <p className="text-sm text-gray-600 mb-2">
-            {stats.completedToday.value} repairs completed
-          </p>
-          <p className="text-xs text-gray-500">Great job! Keep it up!</p>
-        </div>
-
-        <div className="bg-white rounded-xl border p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Package size={20} className="text-blue-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900">Parts Needed</h4>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0">2</div>
+            <span className="text-xs sm:text-sm font-medium">Diagnose Issue</span>
           </div>
-          <p className="text-sm text-gray-600 mb-2">3 jobs awaiting parts</p>
-          <a href="/admin/stock" className="text-xs text-blue-600 hover:text-blue-700">
-            Check inventory →
-          </a>
-        </div>
-
-        <div className="bg-white rounded-xl border p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <AlertCircle size={20} className="text-purple-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900">Urgent Jobs</h4>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0">3</div>
+            <span className="text-xs sm:text-sm font-medium">Get Approval</span>
           </div>
-          <p className="text-sm text-gray-600 mb-2">2 urgent repairs pending</p>
-          <p className="text-xs text-gray-500">Check priority queue</p>
-        </div>
-      </div>
-
-      {/* Workflow Reminder */}
-      <div className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-        <h3 className="text-lg font-semibold mb-2">Repair Workflow Reminder</h3>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">1</div>
-            <span>Receive Job</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0">4</div>
+            <span className="text-xs sm:text-sm font-medium">Complete Repair</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">2</div>
-            <span>Diagnose Issue</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">3</div>
-            <span>Get Approval</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">4</div>
-            <span>Complete Repair</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">5</div>
-            <span>Quality Check</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0">5</div>
+            <span className="text-xs sm:text-sm font-medium">Quality Check</span>
           </div>
         </div>
       </div>
@@ -777,10 +746,9 @@ export default function TechnicianDashboard() {
                   value={completeFormData.laborCost}
                   onChange={(e) => setCompleteFormData(prev => ({
                     ...prev,
-                    laborCost: parseFloat(e.target.value) || 0
+                    laborCost: parseFloat(e.target.value) 
                   }))}
-                  min="0"
-                  step="0.01"
+                
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   placeholder="Enter labor cost..."
                 />
@@ -863,7 +831,7 @@ export default function TechnicianDashboard() {
                       <span className="text-xs font-medium">Manual Part Entry</span>
                     </div>
                     <div className="grid grid-cols-12 gap-2">
-                      <div className="col-span-5">
+                      <div className="col-span-5 text-gray-700">
                         <input
                           type="text"
                           value={manualPartData.name}
@@ -876,7 +844,7 @@ export default function TechnicianDashboard() {
                           <p className="text-red-500 text-xs mt-0.5">{manualEntryErrors.name}</p>
                         )}
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-2 text-gray-700">
                         <input
                           type="number"
                           value={manualPartData.quantity}
@@ -887,7 +855,7 @@ export default function TechnicianDashboard() {
                           min={1}
                         />
                       </div>
-                      <div className="col-span-3">
+                      <div className="col-span-3 text-gray-700">
                         <input
                           type="number"
                           value={manualPartData.price || ''}
@@ -940,7 +908,7 @@ export default function TechnicianDashboard() {
                               {part.sku && <div className="text-xs text-gray-500">{part.sku}</div>}
                               {part.isManual && <div className="text-xs text-orange-600 italic">Not in inventory</div>}
                             </td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 text-gray-700">
                               <input
                                 type="number"
                                 value={part.quantity}

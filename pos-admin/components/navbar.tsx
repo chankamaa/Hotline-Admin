@@ -1,11 +1,13 @@
 "use client";
 
-import { Menu, Bell, Search, Plus, LogOut, User, ChevronDown, AlertCircle, Package, Wrench, ShieldCheck, Info, Loader2, AlertTriangle } from "lucide-react";
+import { Menu, Bell, Search, Plus, LogOut, User, ChevronDown, AlertCircle, Package, Wrench, ShieldCheck, Info, Loader2, AlertTriangle, ShoppingCart, DollarSign, X } from "lucide-react";
 import { useAuth } from "@/providers/providers";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LowStockItem, AppNotification } from "@/types/index.d";
 import { getNotifications, getLowStockAlerts, markAsRead, markAllAsRead } from "@/lib/api/notificationApi";
+import { fetchProducts } from "@/lib/api/productApi";
+import { getSales } from "@/lib/api/sale.api";
 
 
 export function AdminNavbar({
@@ -28,12 +30,26 @@ export function AdminNavbar({
   const notificationRef = useRef<HTMLDivElement>(null);
   const notificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchCategory, setSearchCategory] = useState<"all" | "products" | "sales">("all");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ products: any[], sales: any[] }>({ products: [], sales: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false);
       }
     };
 
@@ -130,6 +146,115 @@ export function AdminNavbar({
     }
   };
 
+  // Search functionality
+  const performSearch = useCallback(async (query: string, category: "all" | "products" | "sales") => {
+    if (!query.trim()) {
+      setSearchResults({ products: [], sales: [] });
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results: { products: any[], sales: any[] } = { products: [], sales: [] };
+
+      // Fetch products
+      if (category === "all" || category === "products") {
+        try {
+          const productData = await fetchProducts({ search: query, page: 1, limit: 10 });
+          results.products = productData?.data?.products || [];
+        } catch (err) {
+          console.error("Failed to search products:", err);
+        }
+      }
+
+      // Fetch sales
+      if (category === "all" || category === "sales") {
+        try {
+          const salesData = await getSales({ page: 1, limit: 10 });
+          // Filter sales client-side by invoice number or customer name
+          const allSales = Array.isArray(salesData) ? salesData : (salesData as any)?.data?.sales || [];
+          results.sales = allSales.filter((sale: any) => 
+            sale.invoiceNumber?.toLowerCase().includes(query.toLowerCase()) ||
+            sale.customerName?.toLowerCase().includes(query.toLowerCase()) ||
+            sale._id?.toLowerCase().includes(query.toLowerCase())
+          ).slice(0, 10);
+        } catch (err) {
+          console.error("Failed to search sales:", err);
+        }
+      }
+
+      setSearchResults(results);
+      setShowSearchResults(true);
+      setSelectedResultIndex(-1);
+    } catch (err) {
+      console.error("Search failed:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      performSearch(searchQuery, searchCategory);
+    }, 300);
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchQuery, searchCategory, performSearch]);
+
+  // Handle keyboard navigation in search
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    const totalResults = (searchCategory === "all" || searchCategory === "products" ? searchResults.products.length : 0) +
+                         (searchCategory === "all" || searchCategory === "sales" ? searchResults.sales.length : 0);
+    
+    if (e.key === "Escape") {
+      setShowSearchResults(false);
+      searchInputRef.current?.blur();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedResultIndex(prev => (prev + 1) % totalResults);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedResultIndex(prev => (prev - 1 + totalResults) % totalResults);
+    } else if (e.key === "Enter" && selectedResultIndex >= 0) {
+      e.preventDefault();
+      handleSelectResult(selectedResultIndex);
+    }
+  };
+
+  // Handle result selection
+  const handleSelectResult = (index: number) => {
+    const productCount = (searchCategory === "all" || searchCategory === "products") ? searchResults.products.length : 0;
+    
+    if (index < productCount) {
+      const product = searchResults.products[index];
+      router.push(`/admin/products?id=${product._id}`);
+    } else {
+      const sale = searchResults.sales[index - productCount];
+      router.push(`/admin/sales?id=${sale._id}`);
+    }
+    
+    setShowSearchResults(false);
+    setSearchQuery("");
+  };
+
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults({ products: [], sales: [] });
+    setShowSearchResults(false);
+    searchInputRef.current?.focus();
+  };
+
   // Get icon for notification type
   const getNotificationIcon = (type: AppNotification["type"]) => {
     const iconClass = "h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0";
@@ -207,20 +332,205 @@ export function AdminNavbar({
 
         {/* Search */}
         <div className="ml-auto flex items-center gap-3 w-full max-w-[600px]">
-          <div className="relative w-full">
+          <div className="relative w-full" ref={searchRef}>
             <Search
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none z-10"
             />
             <input
+              ref={searchInputRef}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              onFocus={() => searchQuery && setShowSearchResults(true)}
               className="w-full pl-12 pr-16 py-2.5 text-slate-700 rounded-lg border-2 border-white/80 bg-white/90 backdrop-blur-sm text-[15px] font-normal placeholder:text-slate-400 shadow-sm hover:border-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 focus:bg-white transition-all duration-200"
-              placeholder="Search sales, products, customers..."
+              placeholder="Search products, sales..."
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="p-1 hover:bg-slate-200 rounded transition-colors"
+                >
+                  <X size={14} className="text-slate-500" />
+                </button>
+              )}
               <kbd className="hidden sm:inline-block px-2 py-1 text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded shadow-sm">
                 ⌘K
               </kbd>
             </div>
+
+            {/* Search Results Dropdown */}
+            {showSearchResults && (searchQuery.trim() || isSearching) && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white backdrop-blur-xl rounded-xl shadow-xl border border-slate-200/60 z-50 animate-slideDown overflow-hidden max-h-[500px] flex flex-col">
+                {/* Category Selector */}
+                <div className="px-4 py-3 border-b border-slate-200/60 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center gap-2">
+                  <button
+                    onClick={() => setSearchCategory("all")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      searchCategory === "all"
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setSearchCategory("products")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      searchCategory === "products"
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Package size={12} />
+                    Products
+                  </button>
+                  <button
+                    onClick={() => setSearchCategory("sales")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      searchCategory === "sales"
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <ShoppingCart size={12} />
+                    Sales
+                  </button>
+                </div>
+
+                {/* Results */}
+                <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                  {isSearching && (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 size={24} className="text-blue-600 animate-spin" />
+                    </div>
+                  )}
+
+                  {!isSearching && searchResults.products.length === 0 && searchResults.sales.length === 0 && (
+                    <div className="px-4 py-12 text-center">
+                      <Search size={32} className="text-slate-300 mx-auto mb-2" />
+                      <p className="text-sm text-slate-500">No results found</p>
+                      <p className="text-xs text-slate-400 mt-1">Try adjusting your search query</p>
+                    </div>
+                  )}
+
+                  {/* Product Results */}
+                  {!isSearching && (searchCategory === "all" || searchCategory === "products") && searchResults.products.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-blue-50 border-b border-blue-100">
+                        <div className="flex items-center gap-2">
+                          <Package size={14} className="text-blue-600" />
+                          <h4 className="text-xs font-bold text-blue-800 uppercase tracking-wider">
+                            Products ({searchResults.products.length})
+                          </h4>
+                        </div>
+                      </div>
+                      {searchResults.products.map((product, idx) => {
+                        const globalIndex = idx;
+                        const isSelected = selectedResultIndex === globalIndex;
+                        return (
+                          <div
+                            key={product._id}
+                            onClick={() => handleSelectResult(globalIndex)}
+                            className={`px-4 py-3 hover:bg-blue-50/50 transition-colors border-b border-slate-100 cursor-pointer group ${
+                              isSelected ? "bg-blue-50" : ""
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <Package size={16} className="text-blue-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+                                  {product.name}
+                                </p>
+                                <p className="text-xs text-slate-600 mb-1">
+                                  SKU: <span className="font-mono">{product.sku}</span>
+                                </p>
+                                <div className="flex items-center gap-3 text-xs">
+                                  <span className="font-semibold text-green-600">
+                                    ${product.price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                  <span className="text-slate-400">•</span>
+                                  <span className="text-slate-500">
+                                    Stock: {product.stock}
+                                  </span>
+                                  {product.category && (
+                                    <>
+                                      <span className="text-slate-400">•</span>
+                                      <span className="text-slate-500">{product.category.name || product.category}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Sales Results */}
+                  {!isSearching && (searchCategory === "all" || searchCategory === "sales") && searchResults.sales.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 bg-green-50 border-b border-green-100">
+                        <div className="flex items-center gap-2">
+                          <ShoppingCart size={14} className="text-green-600" />
+                          <h4 className="text-xs font-bold text-green-800 uppercase tracking-wider">
+                            Sales ({searchResults.sales.length})
+                          </h4>
+                        </div>
+                      </div>
+                      {searchResults.sales.map((sale, idx) => {
+                        const globalIndex = searchResults.products.length + idx;
+                        const isSelected = selectedResultIndex === globalIndex;
+                        return (
+                          <div
+                            key={sale._id}
+                            onClick={() => handleSelectResult(globalIndex)}
+                            className={`px-4 py-3 hover:bg-green-50/50 transition-colors border-b border-slate-100 cursor-pointer group ${
+                              isSelected ? "bg-green-50" : ""
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                <ShoppingCart size={16} className="text-green-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-slate-800 group-hover:text-green-600 transition-colors">
+                                  Invoice #{sale.invoiceNumber || sale._id.slice(-6)}
+                                </p>
+                                <p className="text-xs text-slate-600 mb-1">
+                                  Customer: {sale.customerName || "Walk-in"}
+                                </p>
+                                <div className="flex items-center gap-3 text-xs">
+                                  <span className="font-semibold text-green-600">
+                                    ${sale.finalTotal?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                  <span className="text-slate-400">•</span>
+                                  <span className="text-slate-500">
+                                    {new Date(sale.createdAt).toLocaleDateString()}
+                                  </span>
+                                  <span className="text-slate-400">•</span>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                                    sale.status === "COMPLETED" ? "bg-green-100 text-green-700" :
+                                    sale.status === "PENDING" ? "bg-yellow-100 text-yellow-700" :
+                                    "bg-slate-100 text-slate-600"
+                                  }`}>
+                                    {sale.status}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quick action - hidden for technicians */}

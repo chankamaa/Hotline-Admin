@@ -66,8 +66,24 @@ export default function AdminDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
+      // Calculate today's date range
+      const today = new Date();
+      const startOfToday = new Date(today);
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(today);
+      endOfToday.setHours(23, 59, 59, 999);
+      
+      // Calculate yesterday's date range
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const startOfYesterday = new Date(yesterday);
+      startOfYesterday.setHours(0, 0, 0, 0);
+      const endOfYesterday = new Date(yesterday);
+      endOfYesterday.setHours(23, 59, 59, 999);
+
       const [
         todaysSalesRes,
+        yesterdaysSalesRes,
         recentSalesRes,
         lowStockRes,
         inProgressRepairsRes,
@@ -75,7 +91,8 @@ export default function AdminDashboard() {
         customerCountRes,
         repairDashboardRes,
       ] = await Promise.allSettled([
-        getTodaysSales(),
+        getRecentSales(1000), // Get all recent sales to filter today's
+        getRecentSales(1000), // Get sales to filter yesterday's
         getRecentSales(5),
         getLowStockItems(),
         getPendingRepairs(5),
@@ -84,29 +101,86 @@ export default function AdminDashboard() {
         repairApi.getDashboard(),
       ]);
 
-      // Process sales data
-      if (todaysSalesRes.status === "fulfilled") {
-        const salesData: any = todaysSalesRes.value;
-        const summary = salesData.data?.summary || {};
-        const totalSales = summary.totalAmount || 0;
-        const orderCount = summary.totalSales || 0;
-        const previousDaySales = summary.previousDayAmount || 0;
-        const previousOrderCount = summary.previousDayOrders || summary.previousDaySales || 0;
-
+      // Process sales data - Calculate from actual sales list
+      if (todaysSalesRes.status === "fulfilled" && yesterdaysSalesRes.status === "fulfilled") {
+        const todaySalesData: any = todaysSalesRes.value;
+        const yesterdaySalesData: any = yesterdaysSalesRes.value;
+        
+        const allSales = todaySalesData.data?.sales || [];
+        
+        // Filter today's completed sales
+        const todayCompletedSales = allSales.filter((sale: any) => {
+          if (sale.status !== 'COMPLETED') return false;
+          const saleDate = new Date(sale.createdAt);
+          return saleDate >= startOfToday && saleDate <= endOfToday;
+        });
+        
+        // Filter yesterday's completed sales
+        const yesterdayCompletedSales = allSales.filter((sale: any) => {
+          if (sale.status !== 'COMPLETED') return false;
+          const saleDate = new Date(sale.createdAt);
+          return saleDate >= startOfYesterday && saleDate <= endOfYesterday;
+        });
+        
+        // Calculate today's totals
+        let totalSales = 0;
+        let totalCost = 0;
+        
+        todayCompletedSales.forEach((sale: any) => {
+          totalSales += sale.grandTotal || 0;
+          
+          // Calculate cost from items (using 70% of selling price as estimate if no cost data)
+          if (sale.items && Array.isArray(sale.items)) {
+            sale.items.forEach((item: any) => {
+              const costPrice = item.costPrice || (item.unitPrice * 0.7);
+              totalCost += costPrice * item.quantity;
+            });
+          }
+        });
+        
+        const orderCount = todayCompletedSales.length;
+        const totalProfit = totalSales - totalCost;
+        
+        // Calculate yesterday's totals for comparison
+        let previousDaySales = 0;
+        let previousDayCost = 0;
+        
+        yesterdayCompletedSales.forEach((sale: any) => {
+          previousDaySales += sale.grandTotal || 0;
+          
+          if (sale.items && Array.isArray(sale.items)) {
+            sale.items.forEach((item: any) => {
+              const costPrice = item.costPrice || (item.unitPrice * 0.7);
+              previousDayCost += costPrice * item.quantity;
+            });
+          }
+        });
+        
+        const previousOrderCount = yesterdayCompletedSales.length;
+        const previousDayProfit = previousDaySales - previousDayCost;
+        
+        // Calculate changes
         const salesChange = previousDaySales > 0
           ? ((totalSales - previousDaySales) / previousDaySales * 100)
           : totalSales > 0 ? 100 : 0;
 
         const orderChange = orderCount - previousOrderCount;
-
-        // Calculate profit: selling price - cost price
-        const totalCost = summary.totalCost || 0;
-        const totalProfit = totalSales - totalCost;
-        const previousDayProfit = (summary.previousDayAmount || 0) - (summary.previousDayCost || 0);
         
         const profitChange = previousDayProfit > 0
           ? ((totalProfit - previousDayProfit) / previousDayProfit * 100)
           : totalProfit > 0 ? 100 : 0;
+        
+        // DEBUG: Log calculations
+        console.log("=== SALES CALCULATIONS ===");
+        console.log("Today's Completed Sales:", todayCompletedSales.length);
+        console.log("Total Sales Revenue:", totalSales);
+        console.log("Total Cost:", totalCost);
+        console.log("Total Profit:", totalProfit);
+        console.log("Yesterday's Sales:", previousDaySales);
+        console.log("Yesterday's Profit:", previousDayProfit);
+        console.log("Sales Change %:", salesChange.toFixed(1));
+        console.log("Profit Change %:", profitChange.toFixed(1));
+        console.log("==========================");
 
         setStats(prev => ({
           ...prev,
@@ -256,8 +330,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid - 5 cards for admin */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+      {/* Stats Grid - 4 cards for admin */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
         <StatsCard
           title="Today's Sales"
           value={stats.todaySales.value}
@@ -285,13 +359,6 @@ export default function AdminDashboard() {
           change={stats.lowStock.change}
           changeType="decrease"
           icon={<AlertTriangle size={20} />}
-        />
-        <StatsCard
-          title="Today's Profit"
-          value={stats.totalProfit.value}
-          change={stats.totalProfit.change}
-          changeType={stats.totalProfit.changeType}
-          icon={<TrendingUp size={20} />}
         />
       </div>
 
@@ -430,74 +497,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* System Analytics Section */}
-      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm p-4 sm:p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
-              <BarChart3 size={20} className="text-blue-600 sm:w-6 sm:h-6" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Performance</h3>
-              <p className="text-xs text-gray-500">System metrics</p>
-            </div>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Avg Response Time</span>
-              <span className="text-xs sm:text-sm font-medium">1.2s</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Uptime</span>
-              <span className="text-xs sm:text-sm font-medium text-green-600">99.9%</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm p-4 sm:p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
-              <TrendingUp size={20} className="text-green-600 sm:w-6 sm:h-6" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Revenue</h3>
-              <p className="text-xs text-gray-500">This month</p>
-            </div>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Sales Revenue</span>
-              <span className="text-xs sm:text-sm font-medium">45,230</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Repair Revenue</span>
-              <span className="text-xs sm:text-sm font-medium">12,450</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg sm:rounded-xl border shadow-sm p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 sm:p-3 bg-purple-100 rounded-lg">
-              <UserCog size={20} className="text-purple-600 sm:w-6 sm:h-6" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900">Team Activity</h3>
-              <p className="text-xs text-gray-500">Active now</p>
-            </div>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Online Users</span>
-              <span className="text-xs sm:text-sm font-medium">5</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Logged In Today</span>
-              <span className="text-xs sm:text-sm font-medium">12</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

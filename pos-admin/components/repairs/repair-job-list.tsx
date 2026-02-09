@@ -530,13 +530,47 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
                 <div className="flex justify-between items-center pb-2">
                   <span className="text-gray-700 font-medium">Parts Cost:</span>
                   <span className="text-lg font-bold text-gray-900">
-                    {selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0).toFixed(2) : '0.00'}
+                    {(() => {
+                      // Calculate inventory parts
+                      let partsCost = selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0;
+                      
+                      // Add manual parts from repair notes
+                      if (selectedJob.repairNotes && typeof selectedJob.repairNotes === 'string') {
+                        const manualPartsMatch = selectedJob.repairNotes.match(/\[Manual Parts Used\]([\s\S]*?)(?:\n\n|$)/);
+                        if (manualPartsMatch) {
+                          const manualPartsText = manualPartsMatch[1];
+                          const totalMatches = manualPartsText.matchAll(/Total:\s*\$?(\d+\.?\d*)/g);
+                          for (const match of totalMatches) {
+                            partsCost += parseFloat(match[1]) || 0;
+                          }
+                        }
+                      }
+                      
+                      return partsCost.toFixed(2);
+                    })()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-t pt-2">
                   <span className="text-gray-700 font-medium">Total Cost:</span>
                   <span className="text-xl font-bold text-blue-700">
-                    {((selectedJob.laborCost || 0) + (selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0)).toFixed(2)}
+                    {(() => {
+                      // Calculate inventory parts
+                      let partsCost = selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0;
+                      
+                      // Add manual parts from repair notes
+                      if (selectedJob.repairNotes && typeof selectedJob.repairNotes === 'string') {
+                        const manualPartsMatch = selectedJob.repairNotes.match(/\[Manual Parts Used\]([\s\S]*?)(?:\n\n|$)/);
+                        if (manualPartsMatch) {
+                          const manualPartsText = manualPartsMatch[1];
+                          const totalMatches = manualPartsText.matchAll(/Total:\s*\$?(\d+\.?\d*)/g);
+                          for (const match of totalMatches) {
+                            partsCost += parseFloat(match[1]) || 0;
+                          }
+                        }
+                      }
+                      
+                      return ((selectedJob.laborCost || 0) + partsCost).toFixed(2);
+                    })()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-2">
@@ -546,7 +580,26 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
                 <div className="flex justify-between items-center pt-3 border-t-2 border-blue-300">
                   <span className="text-gray-900 font-bold text-lg">Balance Due:</span>
                   <span className="text-2xl font-bold text-orange-600">
-                    {(((selectedJob.laborCost || 0) + (selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0)) - (selectedJob.advancePayment || 0)).toFixed(2)}
+                    {(() => {
+                      // Calculate inventory parts
+                      let partsCost = selectedJob.partsUsed ? selectedJob.partsUsed.reduce((sum: number, part: any) => sum + (part.quantity * (part.unitPrice || 0)), 0) : 0;
+                      
+                      // Add manual parts from repair notes
+                      if (selectedJob.repairNotes && typeof selectedJob.repairNotes === 'string') {
+                        const manualPartsMatch = selectedJob.repairNotes.match(/\[Manual Parts Used\]([\s\S]*?)(?:\n\n|$)/);
+                        if (manualPartsMatch) {
+                          const manualPartsText = manualPartsMatch[1];
+                          const totalMatches = manualPartsText.matchAll(/Total:\s*\$?(\d+\.?\d*)/g);
+                          for (const match of totalMatches) {
+                            partsCost += parseFloat(match[1]) || 0;
+                          }
+                        }
+                      }
+                      
+                      const totalCost = (selectedJob.laborCost || 0) + partsCost;
+                      const balanceDue = totalCost - (selectedJob.advancePayment || 0);
+                      return balanceDue.toFixed(2);
+                    })()}
                   </span>
                 </div>
                 {selectedJob.estimatedCost && (

@@ -372,7 +372,7 @@ export default function RepairDetailPage() {
                     <td className="px-4 py-3 text-center text-gray-900">{part.quantity}</td>
                     <td className="px-4 py-3 text-right text-gray-900">${part.unitPrice.toFixed(2)}</td>
                     <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                      ${(part.quantity * part.unitPrice).toFixed(2)}
+                      {(part.quantity * part.unitPrice).toFixed(2)}
                     </td>
                   </tr>
                 ))}

@@ -370,10 +370,10 @@ export default function SalesPage() {
       label: "Total",
       render: (s) => (
         <div>
-          <div className="font-semibold">Rs. {s.grandTotal.toFixed(2)}</div>
+          <div className="font-semibold">Rs. {s.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
           {s.discountTotal > 0 && (
             <div className="text-xs text-gray-500">
-              Disc: Rs. {s.discountTotal.toFixed(2)}
+              Disc: Rs. {s.discountTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           )}
         </div>
@@ -566,27 +566,27 @@ export default function SalesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
         <StatsCard
           title="Total Sales"
-          value={stats.totalSales.toFixed(2)}
+          value={stats.totalSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<ShoppingCart size={20} />}
         />
         <StatsCard
           title="Total Profit"
-          value={Math.abs(stats.totalProfit).toFixed(2)}
+          value={Math.abs(stats.totalProfit).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<TrendingUp size={20} />}
         />
         <StatsCard
           title="Cost Price"
-          value={stats.totalCost.toFixed(2)}
+          value={stats.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<Tag size={20} />}
         />
         <StatsCard
           title="Selling Price"
-          value={stats.totalSellingPrice.toFixed(2)}
+          value={stats.totalSellingPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<DollarSign size={20} />}
         />
         <StatsCard
           title="Total Discounts"
-          value={stats.totalDiscounts.toFixed(2)}
+          value={stats.totalDiscounts.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<Percent size={20} />}
         />
       </div>
@@ -652,15 +652,15 @@ export default function SalesPage() {
                         <div className="text-xs text-gray-500">SKU: {item.sku}</div>
                       )}
                       <div className="text-sm text-gray-600">
-                        {item.quantity} × Rs. {item.unitPrice.toFixed(2)}
-                        {item.discount > 0 && ` - Rs. ${item.discount.toFixed(2)} disc`}
+                        {item.quantity} × Rs. {item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {item.discount > 0 && ` - Rs. ${item.discount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} disc`}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">Rs. {item.total.toFixed(2)}</div>
+                      <div className="font-semibold">Rs. {item.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                       {item.taxAmount && item.taxAmount > 0 && (
                         <div className="text-xs text-gray-500">
-                          +Tax: Rs. {item.taxAmount.toFixed(2)}
+                          +Tax: Rs. {item.taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       )}
                     </div>

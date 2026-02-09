@@ -275,9 +275,6 @@ export default function DiscountsPage() {
       label: "Discount Rule",
       render: (promo) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white">
-            {getTypeIcon(promo.type)}
-          </div>
           <div>
             <div className="font-medium text-gray-900">{promo.name}</div>
             <div className="text-sm text-gray-500">{promo.description || "No description"}</div>

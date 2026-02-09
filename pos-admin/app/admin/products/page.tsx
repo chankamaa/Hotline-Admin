@@ -29,15 +29,9 @@ const getCategoryName = (category: string | Category) =>
 
 const UNITS = [
   "piece",
-  "kg",
-  "g",
-  "liter",
-  "ml",
-  "meter",
-  "cm",
   "box",
   "pack",
-  "dozen",
+  
 ];
 
 /* --------------------------------------------------

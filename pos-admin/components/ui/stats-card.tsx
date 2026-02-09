@@ -16,15 +16,15 @@ export function StatsCard({ title, value, change, changeType = "neutral", icon }
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-blue-600 p-6">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-gray-500">{title}</p>
+    <div className="bg-white rounded-2xl border-2 border-blue-500 p-6">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide">{title}</p>
         {icon && <div className="text-gray-400">{icon}</div>}
       </div>
-      <div className="flex items-end gap-2">
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
+      <div className="flex items-baseline gap-2">
+        <p className="text-1xl sm:text-1xl font-extrabold text-black">{value}</p>
         {change && (
-          <p className={`text-sm ${changeColors[changeType]} mb-1`}>
+          <p className={`text-xs sm:text-sm font-medium ${changeColors[changeType]}`}>
             {change}
           </p>
         )}

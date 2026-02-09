@@ -11,10 +11,8 @@ import {
   Calendar,
   RefreshCw,
   TrendingUp,
-  Download,
 } from "lucide-react";
 import { repairApi } from "@/lib/api/repairApi";
-import { generateRepairAnalyticsPDF, RepairAnalyticsData } from "@/lib/pdf-utils";
 import { useToast } from "@/providers/toast-provider";
 
 type TimeFilter = 'daily' | 'weekly' | 'monthly' | 'custom';
@@ -34,7 +32,6 @@ interface TechnicianStats {
 export default function RepairAnalyticsPage() {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
-  const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('daily');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -103,7 +100,22 @@ export default function RepairAnalyticsPage() {
         
         if (isCompletedJob) {
           const income = repair.totalCost || 0;
-          const parts = repair.partsTotal || 0;
+          let parts = repair.partsTotal || 0;
+          
+          // Parse manual parts from repair notes if they exist
+          if (repair.repairNotes && typeof repair.repairNotes === 'string') {
+            const manualPartsMatch = repair.repairNotes.match(/\[Manual Parts Used\]([\s\S]*?)(?:\n\n|$)/);
+            if (manualPartsMatch) {
+              const manualPartsText = manualPartsMatch[1];
+              // Extract total values from lines like: - Part Name (Qty: 1, Price: 10.00, Total: 10.00)
+              const totalMatches = manualPartsText.matchAll(/Total:\s*\$?(\d+\.?\d*)/g);
+              for (const match of totalMatches) {
+                const manualPartTotal = parseFloat(match[1]) || 0;
+                parts += manualPartTotal;
+              }
+            }
+          }
+          
           const labor = repair.laborCost || 0;
 
           totalIncome += income;
@@ -147,6 +159,15 @@ export default function RepairAnalyticsPage() {
         totalJobs: readyJobsCount,
       });
 
+      // Debug: Log the calculated stats
+      console.log('=== REPAIR ANALYTICS STATS ===');
+      console.log('Repair Income:', totalIncome);
+      console.log('Parts Cost (repairCost):', totalCost);
+      console.log('Labor Cost:', totalLabor);
+      console.log('Total Jobs:', readyJobsCount);
+      console.log('Net Profit:', totalIncome - totalCost - totalLabor);
+      console.log('==============================');
+
       setTechnicianStats(Array.from(technicianMap.values()).sort((a, b) => b.totalRevenue - a.totalRevenue));
 
     } catch (error) {
@@ -167,56 +188,6 @@ export default function RepairAnalyticsPage() {
         }
         return 'Custom Range';
       default: return '';
-    }
-  };
-
-  const handleDownloadPDF = async () => {
-    try {
-      setDownloadingPDF(true);
-
-      // Calculate date range based on filter
-      const now = new Date();
-      let startDate = new Date();
-      let endDate = now;
-
-      if (timeFilter === 'custom') {
-        if (!customStartDate || !customEndDate) {
-          toast.warning("Please select both start and end dates before downloading");
-          return;
-        }
-        startDate = new Date(customStartDate);
-        endDate = new Date(customEndDate + 'T23:59:59');
-      } else if (timeFilter === 'daily') {
-        startDate.setHours(0, 0, 0, 0);
-      } else if (timeFilter === 'weekly') {
-        startDate.setDate(now.getDate() - 7);
-        startDate.setHours(0, 0, 0, 0);
-      } else if (timeFilter === 'monthly') {
-        startDate.setDate(1);
-        startDate.setHours(0, 0, 0, 0);
-      }
-
-      // Prepare data for PDF
-      const pdfData: RepairAnalyticsData = {
-        repairIncome: stats.repairIncome,
-        repairCost: stats.repairCost,
-        laborCost: stats.laborCost,
-        totalJobs: stats.totalJobs,
-        technicianStats: technicianStats,
-        periodLabel: getFilterLabel(),
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-      };
-
-      // Generate PDF
-      generateRepairAnalyticsPDF(pdfData);
-
-      toast.success("PDF downloaded successfully!");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast.error("Failed to generate PDF. Please try again.");
-    } finally {
-      setDownloadingPDF(false);
     }
   };
 
@@ -275,16 +246,10 @@ export default function RepairAnalyticsPage() {
             </button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleDownloadPDF} disabled={downloadingPDF} variant="danger">
-            <Download size={16} className={`mr-2 ${downloadingPDF ? 'animate-pulse' : ''}`} />
-            {downloadingPDF ? 'Generating...' : 'Download PDF'}
-          </Button>
-          <Button onClick={loadAnalytics} disabled={loading} variant="danger">
-            <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+        <Button onClick={loadAnalytics} disabled={loading} variant="danger">
+          <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Custom Date Range Inputs */}
@@ -334,30 +299,25 @@ export default function RepairAnalyticsPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatsCard
           title="Repair Income"
-          value={`$${stats.repairIncome.toFixed(2)}`}
+          value={stats.repairIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<DollarSign size={20} />}
         />
         <StatsCard
           title="Parts Cost"
-          value={`$${stats.repairCost.toFixed(2)}`}
+          value={stats.repairCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<TrendingUp size={20} />}
         />
         <StatsCard
           title="Labor Cost"
-          value={`$${stats.laborCost.toFixed(2)}`}
+          value={stats.laborCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           icon={<Wrench size={20} />}
         />
         <StatsCard
-          title="Net Profit"
-          value={`$${(stats.repairIncome - stats.repairCost - stats.laborCost).toFixed(2)}`}
-          icon={<DollarSign size={20} className="text-green-600" />}
-        />
-        <StatsCard
           title="Total Jobs"
-          value={stats.totalJobs.toString()}
+          value={stats.totalJobs.toLocaleString('en-US')}
           icon={<Users size={20} />}
         />
       </div>
@@ -418,21 +378,21 @@ export default function RepairAnalyticsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 font-semibold">{tech.jobCount}</div>
+                        <div className="text-sm text-gray-900 font-semibold">{tech.jobCount.toLocaleString('en-US')}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 font-semibold">
-                          {tech.totalRevenue.toFixed(2)}
+                          {tech.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {tech.partsCost.toFixed(2)}
+                          {tech.partsCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {tech.laborCost.toFixed(2)}
+                          {tech.laborCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
                     </tr>
@@ -443,16 +403,16 @@ export default function RepairAnalyticsPage() {
                 <tr>
                   <td className="px-6 py-4 text-gray-900">TOTAL</td>
                   <td className="px-6 py-4 text-gray-900">
-                    {technicianStats.reduce((sum, tech) => sum + tech.jobCount, 0)}
+                    {technicianStats.reduce((sum, tech) => sum + tech.jobCount, 0).toLocaleString('en-US')}
                   </td>
                   <td className="px-6 py-4 text-gray-900">
-                    {technicianStats.reduce((sum, tech) => sum + tech.totalRevenue, 0).toFixed(2)}
+                    {technicianStats.reduce((sum, tech) => sum + tech.totalRevenue, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-gray-900">
-                    {technicianStats.reduce((sum, tech) => sum + tech.partsCost, 0).toFixed(2)}
+                    {technicianStats.reduce((sum, tech) => sum + tech.partsCost, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-gray-900">
-                    {technicianStats.reduce((sum, tech) => sum + tech.laborCost, 0).toFixed(2)}
+                    {technicianStats.reduce((sum, tech) => sum + tech.laborCost, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                 </tr>
               </tfoot>

@@ -325,16 +325,26 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
     setShowTechnicianSuggestions(false);
   };
 
+  // Block minus key on number inputs
+  const blockNegative = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '-' || e.key === 'e') {
+      e.preventDefault();
+    }
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    // Prevent negative values for number fields
+    if (type === 'number' && value !== '' && parseFloat(value) < 0) {
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
-        // No return value here
         return newErrors;
       });
     }
@@ -721,142 +731,6 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           </div>
         </div>
 
-        {/* Parts Used */}
-        <div>
-          <div className="flex items-center gap-2 mb-4 text-gray-700">
-            <PackageIcon className="w-5 h-5 text-gray-500" />
-            <h3 className="text-lg font-semibold">Parts Used</h3>
-          </div>
-          {errors.parts && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-700 text-sm">{errors.parts}</p>
-            </div>
-          )}
-
-          <div className="mb-4 relative" ref={suggestionRef}>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-              <div className="md:col-span-5 relative">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => handleProductSearch(e.target.value)}
-                  placeholder="Search product name..."
-                  onFocus={() => setShowSuggestions(true)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                {showSuggestions && productSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {productSuggestions.map((product) => (
-                      <button
-                        key={product._id}
-                        type="button"
-                        onClick={() => handleSelectProduct(product)}
-                        className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                      >
-                        <div className="font-medium">{product.name}</div>
-                        {product.sku && (
-                          <div className="text-sm text-gray-500">SKU: {product.sku}</div>
-                        )}
-                        <div className="text-sm text-gray-600">
-                          Price: ${product.sellingPrice?.toFixed(2)}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <input
-                  type="number"
-                  value={newPart.quantity}
-                  onChange={(e) =>
-                    setNewPart({ ...newPart, quantity: parseInt(e.target.value) || 1 })
-                  }
-                  placeholder="Qty"
-                  min={1}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div className="md:col-span-3">
-                <input
-                  type="number"
-                  value={newPart.unitPrice || ''}
-                  onChange={(e) =>
-                    setNewPart({ ...newPart, unitPrice: parseFloat(e.target.value) || 0 })
-                  }
-                  placeholder="Unit Price"
-                  step="0.01"
-                  min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Button
-                  type="button"
-                  onClick={handleAddPart}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {parts.length > 0 && (
-            <div className="border rounded-md overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Part Name
-                    </th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      SKU
-                    </th>
-                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">
-                      Qty
-                    </th>
-                    <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">
-                      Unit Price
-                    </th>
-                    <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">
-                      Total
-                    </th>
-                    <th className="px-4 py-2"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {parts.map((part, index) => (
-                    <tr key={index}>
-                      <td className="px-4 py-2 text-sm">{part.productName}</td>
-                      <td className="px-4 py-2 text-sm text-gray-500">{part.sku || '-'}</td>
-                      <td className="px-4 py-2 text-sm text-center">{part.quantity}</td>
-                      <td className="px-4 py-2 text-sm text-right">
-                        {part.unitPrice.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-right font-medium">
-                        {(part.quantity * part.unitPrice).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemovePart(index)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
         {/* Assignment & Priority */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Assignment & Priority</h3>
@@ -974,50 +848,18 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
         <div>
           <h3 className="text-lg font-semibold mb-4">Cost Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Labor Cost ($)
-              </label>
-              <input
-                type="number"
-                name="laborCost"
-                value={formData.laborCost}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                step="0.01"
-                min="0"
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.laborCost ? 'border-red-500' : 'border-gray-300'}`}
-              />
-              {errors.laborCost && (
-                <p className="text-red-500 text-sm mt-1">{errors.laborCost}</p>
-              )}
-            </div>
+            
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estimated Total Cost ($)
-              </label>
-              <input
-                type="number"
-                name="estimatedCost"
-                value={formData.estimatedCost}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                step="0.01"
-                min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Advance Payment ($)
+                Advance Payment 
               </label>
               <input
                 type="number"
                 name="advancePayment"
                 value={formData.advancePayment}
                 onChange={handleInputChange}
+                onKeyDown={blockNegative}
                 placeholder="0.00"
                 step="0.01"
                 min="0"
@@ -1026,22 +868,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
             </div>
           </div>
 
-          <div className="mt-4 p-4 bg-gray-50 rounded-md">
-            <div className="flex justify-between items-center text-sm mb-2">
-              <span className="text-gray-600">Parts Cost:</span>
-              <span className="font-medium">{partsCost.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm mb-2">
-              <span className="text-gray-600">Labor Cost:</span>
-              <span className="font-medium">
-                {(parseFloat(formData.laborCost) || 0).toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-lg font-semibold border-t pt-2">
-              <span>Total Estimate:</span>
-              <span className="text-blue-600">{totalEstimate.toFixed(2)}</span>
-            </div>
-          </div>
+     
         </div>
       </div>
 
