@@ -337,22 +337,22 @@ export default function RepairAnalyticsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <StatsCard
           title="Repair Income"
-          value={`$${stats.repairIncome.toFixed(2)}`}
+          value={stats.repairIncome.toFixed(2)}
           icon={<DollarSign size={20} />}
         />
         <StatsCard
           title="Parts Cost"
-          value={`$${stats.repairCost.toFixed(2)}`}
+          value={stats.repairCost.toFixed(2)}
           icon={<TrendingUp size={20} />}
         />
         <StatsCard
           title="Labor Cost"
-          value={`$${stats.laborCost.toFixed(2)}`}
+          value={stats.laborCost.toFixed(2)}
           icon={<Wrench size={20} />}
         />
         <StatsCard
           title="Net Profit"
-          value={`$${(stats.repairIncome - stats.repairCost - stats.laborCost).toFixed(2)}`}
+          value={(stats.repairIncome - stats.repairCost - stats.laborCost).toFixed(2)}
           icon={<DollarSign size={20} className="text-green-600" />}
         />
         <StatsCard
