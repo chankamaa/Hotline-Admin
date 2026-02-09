@@ -93,6 +93,10 @@ export default function WarrantyPage() {
     rejectionRate: 0
   });
 
+  // Search state
+  const [registrationSearchQuery, setRegistrationSearchQuery] = useState("");
+  const [claimsSearchQuery, setClaimsSearchQuery] = useState("");
+
   // Load warranty data from API
   useEffect(() => {
     loadWarrantyData();
@@ -223,6 +227,48 @@ export default function WarrantyPage() {
       case "REPAIR": return "Repair Warranty";
       default: return type;
     }
+  };
+
+  // Filter registrations based on search query
+  const filteredRegistrations = registrations.filter((warranty) => {
+    if (!registrationSearchQuery) return true;
+    
+    const query = registrationSearchQuery.toLowerCase();
+    return (
+      warranty.registrationNumber.toLowerCase().includes(query) ||
+      warranty.productName.toLowerCase().includes(query) ||
+      warranty.customerName.toLowerCase().includes(query) ||
+      warranty.customerPhone.toLowerCase().includes(query) ||
+      warranty.serialNumber.toLowerCase().includes(query) ||
+      (warranty.customerEmail?.toLowerCase().includes(query) || false) ||
+      warranty.status.toLowerCase().includes(query) ||
+      warranty.warrantyType.toLowerCase().includes(query)
+    );
+  });
+
+  // Filter claims based on search query
+  const filteredClaims = claims.filter((claim) => {
+    if (!claimsSearchQuery) return true;
+    
+    const query = claimsSearchQuery.toLowerCase();
+    return (
+      claim.claimNumber.toLowerCase().includes(query) ||
+      claim.productName.toLowerCase().includes(query) ||
+      claim.customerName.toLowerCase().includes(query) ||
+      claim.issue.toLowerCase().includes(query) ||
+      claim.status.toLowerCase().includes(query) ||
+      (claim.resolution?.toLowerCase().includes(query) || false)
+    );
+  });
+
+  // Handle search for registrations
+  const handleRegistrationSearch = (query: string) => {
+    setRegistrationSearchQuery(query);
+  };
+
+  // Handle search for claims
+  const handleClaimsSearch = (query: string) => {
+    setClaimsSearchQuery(query);
   };
 
   // Columns for Registrations (read-only)
@@ -414,21 +460,21 @@ export default function WarrantyPage() {
         <div className="space-y-4">
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-gray-600">Total Registrations</div>
                 <ShieldCheck size={20} className="text-blue-600" />
               </div>
               <div className="text-2xl font-bold text-black">{registrations.length}</div>
             </div>
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-gray-600">Active Warranties</div>
                 <CheckCircle size={20} className="text-green-600" />
               </div>
               <div className="text-2xl font-bold text-black">{analytics.totalActive}</div>
             </div>
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-gray-600">Expiring (30 Days)</div>
                 <Clock size={20} className="text-yellow-600" />
@@ -441,10 +487,10 @@ export default function WarrantyPage() {
           <div className="bg-white rounded-xl border p-4">
             <h3 className="text-lg font-semibold mb-4 text-black">All Warranty Registrations</h3>
             <DataTable
-              data={registrations}
+              data={filteredRegistrations}
               columns={registrationColumns}
               searchPlaceholder="Search by warranty #, product, customer..."
-              onSearch={() => { }}
+              onSearch={handleRegistrationSearch}
             />
           </div>
         </div>
@@ -455,14 +501,14 @@ export default function WarrantyPage() {
         <div className="space-y-4">
           {/* Claims Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-gray-600">Total Claims</div>
                 <FileText size={20} className="text-blue-600" />
               </div>
               <div className="text-2xl font-bold text-black">{claims.length}</div>
             </div>
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-gray-600">Approved</div>
                 <CheckCircle size={20} className="text-green-600" />
@@ -471,7 +517,7 @@ export default function WarrantyPage() {
                 {claims.filter(c => c.status === "Approved").length}
               </div>
             </div>
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-gray-600">Pending</div>
                 <Clock size={20} className="text-yellow-600" />
@@ -486,10 +532,10 @@ export default function WarrantyPage() {
           <div className="bg-white rounded-xl border p-4">
             <h3 className="text-lg font-semibold mb-4 text-black">All Warranty Claims</h3>
             <DataTable
-              data={claims}
+              data={filteredClaims}
               columns={claimColumns}
-              searchPlaceholder="Search claims..."
-              onSearch={() => { }}
+              searchPlaceholder="Search by claim #, product, customer, issue..."
+              onSearch={handleClaimsSearch}
             />
           </div>
         </div>
@@ -500,7 +546,7 @@ export default function WarrantyPage() {
         <div className="space-y-4">
           {/* Analytics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-black">Total Active Warranties</div>
                 <ShieldCheck size={20} className="text-green-600" />
@@ -508,7 +554,7 @@ export default function WarrantyPage() {
               <div className="text-2xl font-bold text-black">{analytics.totalActive}</div>
             </div>
 
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-black">Expiring (Next 30 Days)</div>
                 <Clock size={20} className="text-yellow-600" />
@@ -516,7 +562,7 @@ export default function WarrantyPage() {
               <div className="text-2xl font-bold text-black">{analytics.expiringNext30Days}</div>
             </div>
 
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-black">Total Claims</div>
                 <FileText size={20} className="text-blue-600" />
@@ -524,7 +570,7 @@ export default function WarrantyPage() {
               <div className="text-2xl font-bold text-black">{analytics.totalClaims}</div>
             </div>
 
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-black">Approval Rate</div>
                 <CheckCircle size={20} className="text-green-600" />
@@ -532,7 +578,7 @@ export default function WarrantyPage() {
               <div className="text-2xl font-bold text-black">{analytics.approvalRate}%</div>
             </div>
 
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-black">Rejection Rate</div>
                 <XCircle size={20} className="text-red-600" />
@@ -540,7 +586,7 @@ export default function WarrantyPage() {
               <div className="text-2xl font-bold text-black">{analytics.rejectionRate}%</div>
             </div>
 
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white rounded-xl border border-blue-600 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-black">Resolution Efficiency</div>
                 <TrendingUp size={20} className="text-purple-600" />

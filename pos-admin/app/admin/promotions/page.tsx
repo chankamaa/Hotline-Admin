@@ -258,14 +258,14 @@ export default function PromotionsPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-blue-600 p-4 rounded-lg">
                 <div
                     className={`p-4 rounded-lg border cursor-pointer transition ${filter === 'all' ? 'bg-blue-50 border-blue-300' : 'bg-white'
                         }`}
                     onClick={() => setFilter('all')}
                 >
                     <div className="text-sm text-gray-600">All Promotions</div>
-                    <div className="text-2xl font-bold">{promotions.length}</div>
+                    <div className="text-2xl font-bold text-gray-900">{promotions.length}</div>
                 </div>
                 <div
                     className={`p-4 rounded-lg border cursor-pointer transition ${filter === 'active' ? 'bg-green-50 border-green-300' : 'bg-white'
@@ -679,7 +679,7 @@ export default function PromotionsPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1">
-                                    Min Purchase Amount ($)
+                                    Min Purchase Amount 
                                 </label>
                                 <input
                                     type="number"
@@ -692,7 +692,7 @@ export default function PromotionsPage() {
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1">
-                                    Max Discount Amount ($)
+                                    Max Discount Amount 
                                 </label>
                                 <input
                                     type="number"

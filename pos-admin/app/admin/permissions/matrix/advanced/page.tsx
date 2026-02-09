@@ -40,73 +40,73 @@ const PERMISSION_CATEGORIES = {
     name: "Sales Operations",
     description: "Point of sale, transactions, and refunds",
     color: "blue",
-    icon: "💰"
+    icon: ""
   },
   RETURNS: {
     name: "Returns & Refunds",
     description: "Process returns and manage refunds",
     color: "purple",
-    icon: "↩️"
+    icon: "↩"
   },
   REPORTS: {
     name: "Reports & Analytics",
     description: "View business reports and analytics",
     color: "green",
-    icon: "📊"
+    icon: ""
   },
   USER_MANAGEMENT: {
     name: "User Management",
     description: "Manage user accounts and profiles",
     color: "orange",
-    icon: "👥"
+    icon: ""
   },
   ROLE_MANAGEMENT: {
     name: "Role & Permission Management",
     description: "Critical: Configure roles and permissions",
     color: "red",
-    icon: "🛡️"
+    icon: ""
   },
   PRODUCT_MANAGEMENT: {
     name: "Product Management",
     description: "Manage product catalog and pricing",
     color: "indigo",
-    icon: "📦"
+    icon: ""
   },
   CATEGORY_MANAGEMENT: {
     name: "Category Management",
     description: "Organize product categories",
     color: "teal",
-    icon: "📂"
+    icon: ""
   },
   INVENTORY: {
     name: "Inventory Control",
     description: "Stock management and tracking",
     color: "yellow",
-    icon: "📦"
+    icon: ""
   },
   REPAIR: {
     name: "Repair Management",
     description: "Device repairs and job tracking",
     color: "pink",
-    icon: "🔧"
+    icon: ""
   },
   WARRANTY: {
     name: "Warranty Management",
     description: "Warranty registration and claims",
     color: "cyan",
-    icon: "🛡️"
+    icon: ""
   },
   SETTINGS: {
     name: "System Settings",
     description: "Critical: System configuration",
     color: "gray",
-    icon: "⚙️"
+    icon: ""
   },
   PROMOTIONS: {
     name: "Promotions & Discounts",
     description: "Marketing and promotional campaigns",
     color: "amber",
-    icon: "🎁"
+    icon: ""
   }
 };
 

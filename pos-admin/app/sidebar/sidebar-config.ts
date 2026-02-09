@@ -142,7 +142,7 @@ export const adminNav = [
     items: [
       { title: "Sales", href: "/admin/sales", icon: ShoppingCart },
       { title: "Returns & Refunds", href: "/admin/returns", icon: RotateCcw },
-      { title: "Payments & Reconciliation", href: "/admin/payments", icon: CreditCard },
+     /* { title: "Payments & Reconciliation", href: "/admin/payments", icon: CreditCard },*/
     ],
     roles: ["admin", "manager", "cashier"],
   },
@@ -153,7 +153,7 @@ export const adminNav = [
     items: [
       { title: "Products", href: "/admin/products", icon: Package, },
       { title: "Categories & Brands", href: "/admin/categories", icon: Tags, },
-      { title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode, },
+      /*{ title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode, },*/
     ],
     roles: ["admin", "manager", "cashier"],
   },

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/page-header";
-import { UserPlus, Search, Edit, Trash2, Lock, Power, RefreshCw, ArrowLeft } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
+import { UserPlus, Search, Edit, Trash2, Lock, Power, RefreshCw, ArrowLeft, Users, UserCheck, Shield, Briefcase } from "lucide-react";
 import RequirePerm from "@/components/RequirePerm";
 import { PERMISSIONS } from "@/app/sidebar/sidebar-config";
 import { userApi, User as ApiUser } from "@/lib/api/userApi";
@@ -176,12 +177,39 @@ export default function UsersManagementPage() {
           <button
             onClick={() => fetchUsers(true)}
             disabled={refreshing}
+            variant="dananger"
             className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
         </div>
+
+        {/* Summary Stats Cards */}
+        {!loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <StatsCard
+              title="Total Users"
+              value={users.length}
+              icon={<Users size={24} className="text-blue-600" />}
+            />
+            <StatsCard
+              title="Active Users"
+              value={users.filter(u => u.isActive).length}
+              icon={<UserCheck size={24} className="text-green-600" />}
+            />
+            <StatsCard
+              title="Admins"
+              value={users.filter(u => u.roles.some(r => r.name.toLowerCase() === "admin")).length}
+              icon={<Shield size={24} className="text-purple-600" />}
+            />
+            <StatsCard
+              title="Managers"
+              value={users.filter(u => u.roles.some(r => r.name.toLowerCase() === "manager")).length}
+              icon={<Briefcase size={24} className="text-blue-600" />}
+            />
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -360,32 +388,6 @@ export default function UsersManagementPage() {
               <p className="text-gray-500">No users found matching your criteria.</p>
             </div>
           )}
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white rounded-lg border p-4">
-            <div className="text-sm text-gray-500">Total Users</div>
-            <div className="text-2xl font-bold text-gray-900">{users.length}</div>
-          </div>
-          <div className="bg-white rounded-lg border p-4">
-            <div className="text-sm text-gray-500">Active Users</div>
-            <div className="text-2xl font-bold text-green-600">
-              {users.filter(u => u.isActive).length}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg border p-4">
-            <div className="text-sm text-gray-500">Admins</div>
-            <div className="text-2xl font-bold text-purple-600">
-              {users.filter(u => u.roles.some(r => r.name.toLowerCase() === "admin")).length}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg border p-4">
-            <div className="text-sm text-gray-500">Managers</div>
-            <div className="text-2xl font-bold text-blue-600">
-              {users.filter(u => u.roles.some(r => r.name.toLowerCase() === "manager")).length}
-            </div>
-          </div>
         </div>
           </>
         )}
