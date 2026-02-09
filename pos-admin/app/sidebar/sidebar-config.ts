@@ -184,11 +184,11 @@ export const adminNav = [
     label: "Repairs & Service",
     icon: Wrench,
     items: [
-      { title: "Repair Jobs", href: "/admin/repairs", icon: Wrench },
+      { title: "Assign Jobs", href: "/admin/repairs", icon: Bell, badge: "new" },
       { title: "Repair History", href: "/admin/repairs/history", icon: ClipboardList },
       { title: "Repair Analytics", href: "/admin/repairs/analytics", icon: BarChart3 },
     ],
-    roles: ["admin", "manager", "cashier", "technician"],
+    roles: ["admin", "manager", "cashier"],
   },
 
   {
@@ -270,4 +270,14 @@ export const adminNav = [
     ],
     roles: ["admin"]
   },
+/* technician specific section - can be expanded in the future */
+   {
+    label: "Repairs & Service",
+    icon: Wrench,
+    items: [
+      { title: "Repair Jobs", href: "/admin/repairs", icon: Wrench },
+ 
+    ],
+    roles: [ "technician"],
+  }
 ];

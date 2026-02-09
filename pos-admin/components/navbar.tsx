@@ -223,14 +223,16 @@ export function AdminNavbar({
             </div>
           </div>
 
-          {/* Quick action */}
-          <button 
-            onClick={() => router.push("/admin/permissions/users")}
-            className="hidden sm:inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
-          >
-            <Plus size={16} />
-            New
-          </button>
+          {/* Quick action - hidden for technicians */}
+          {!(user?.role?.toLowerCase() === 'technician' || user?.roles?.some((r: any) => (typeof r === 'string' ? r : r.name)?.toLowerCase() === 'technician')) && (
+            <button 
+              onClick={() => router.push("/admin/permissions/users")}
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              <Plus size={16} />
+              New
+            </button>
+          )}
 
           {/* Notifications */}
           <div 
