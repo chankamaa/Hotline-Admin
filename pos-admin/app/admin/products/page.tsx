@@ -18,8 +18,10 @@ import {
 
 import { fetchCategories } from "@/lib/api/categoryApi";
 import type { Product, Category } from "@/types";
-import { Edit, Trash2, Package, RefreshCw, Barcode, Eye, Download } from "lucide-react";
+import { Edit, Trash2, Package, RefreshCw, Barcode, Eye, Download, Wand2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { generateBarcode } from "@/lib/barcode-utils";
 
 /* --------------------------------------------------
    Helpers
@@ -78,6 +80,7 @@ export default function ProductsPage() {
   });
 
   const toast = useToast();
+  const router = useRouter();
 
   // Barcode scanner detection refs
   const barcodeBufferRef = useRef<string>("");
@@ -272,8 +275,18 @@ export default function ProductsPage() {
         await updateProduct(currentProduct._id, payload);
         toast.success("Product updated successfully!");
       } else {
-        await createProduct(payload);
+        const res = await createProduct(payload);
         toast.success("Product added successfully!");
+
+        // Navigate to barcode print page if a barcode exists
+        const createdProduct = res.data.product;
+        if (createdProduct.barcode) {
+          const params = new URLSearchParams({
+            name: createdProduct.name,
+            barcode: createdProduct.barcode,
+          });
+          router.push(`/admin/products/barcode-print?${params.toString()}`);
+        }
       }
       await loadProducts();
       setIsModalOpen(false);
@@ -346,6 +359,15 @@ export default function ProductsPage() {
           >
             <Eye size={16} />
           </button>
+          {p.barcode && (
+            <Link
+              href={`/admin/products/barcode-print?name=${encodeURIComponent(p.name)}&barcode=${encodeURIComponent(p.barcode)}`}
+              className="p-1 hover:bg-green-100 text-green-600 rounded"
+              title="Print Barcode"
+            >
+              <Barcode size={16} />
+            </Link>
+          )}
           <button
             onClick={() => handleEdit(p)}
             className="p-1 hover:bg-gray-100 rounded"
@@ -433,9 +455,23 @@ export default function ProductsPage() {
             <Input label="Barcode (optional)" value={formData.barcode}
               placeholder="Scan barcode or enter manually"
               onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} />
-            <div className="flex items-center gap-1 text-xs text-gray-500 -mt-2 mb-2">
-              <Barcode size={12} />
-              <span>USB barcode scanner supported - just scan when this form is open</span>
+            <div className="flex items-center justify-between -mt-2 mb-2">
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Barcode size={12} />
+                <span>USB barcode scanner supported - just scan when this form is open</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const barcode = generateBarcode('EAN-13');
+                  setFormData((prev) => ({ ...prev, barcode }));
+                  toast.success(`Barcode generated: ${barcode}`);
+                }}
+                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50"
+              >
+                <Wand2 size={12} />
+                Auto-Generate
+              </button>
             </div>
           </div>
 

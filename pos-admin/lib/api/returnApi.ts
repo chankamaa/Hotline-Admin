@@ -11,7 +11,8 @@ import { api } from "./api";
 
 export const RETURN_TYPES = {
     REFUND: "REFUND",
-    EXCHANGE: "EXCHANGE"
+    EXCHANGE: "EXCHANGE",
+    WARRANTY_REFUND: "WARRANTY_REFUND"
 } as const;
 
 export const RETURN_STATUS = {
@@ -79,6 +80,8 @@ export interface ReturnItem {
     quantity: number;
     unitPrice: number;
     refundAmount: number;
+    restockable?: boolean;
+    condition?: "GOOD" | "DAMAGED" | "DEFECTIVE" | "USED";
 }
 
 export interface Return {
