@@ -153,7 +153,7 @@ export const adminNav = [
     items: [
       { title: "Products", href: "/admin/products", icon: Package, },
       { title: "Categories & Brands", href: "/admin/categories", icon: Tags, },
-     /* { title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode, },*/
+     { title: "Barcodes & Labels", href: "/admin/barcodes", icon: Barcode, },
     ],
     roles: ["admin", "manager", "cashier"],
   },
