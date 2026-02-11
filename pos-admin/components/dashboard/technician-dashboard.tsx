@@ -553,7 +553,7 @@ export default function TechnicianDashboard() {
             </span>
           )}
         </div>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
           {myRepairs.length === 0 ? (
             <div className="p-12 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
@@ -627,7 +627,7 @@ export default function TechnicianDashboard() {
             </span>
           )}
         </div>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
           {pendingRepairs.length === 0 ? (
             <div className="p-12 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
