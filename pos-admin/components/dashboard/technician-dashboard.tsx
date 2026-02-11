@@ -40,6 +40,19 @@ interface PartItem {
   isManual?: boolean; // Flag for manually entered parts
 }
 
+// Helper function to format job number as 5 digits
+const formatJobNumber = (jobId: string): string => {
+  // Extract numeric part from job numbers like "RJ-20260209-0008"
+  const match = jobId.match(/-?(\d+)$/);
+  if (match) {
+    const numericPart = match[1];
+    return numericPart.padStart(5, '0');
+  }
+  // Fallback: if no numeric part found, try to use the whole ID
+  const numericOnly = jobId.replace(/\D/g, '');
+  return numericOnly.slice(-5).padStart(5, '0');
+};
+
 export default function TechnicianDashboard() {
   const router = useRouter();
   const toast = useToast();
@@ -49,7 +62,7 @@ export default function TechnicianDashboard() {
   const [stats, setStats] = useState({
     assignedToMe: { value: "0", change: "Active jobs", changeType: "neutral" as ChangeType },
     inProgress: { value: "0", change: "In progress", changeType: "increase" as ChangeType },
-    completedToday: { value: "0", change: "Finished today", changeType: "increase" as ChangeType },
+    completedToday: { value: "0", change: "Ready today", changeType: "increase" as ChangeType },
     pending: { value: "0", change: "Awaiting assignment", changeType: "neutral" as ChangeType },
   });
 
@@ -98,10 +111,11 @@ export default function TechnicianDashboard() {
     setLoading(true);
     try {
       // Use getMyJobs for technician's own repairs - this uses VIEW_OWN_REPAIRS permission
-      const [inProgressRepairsRes, receivedRepairsRes] =
+      const [inProgressRepairsRes, receivedRepairsRes, readyRepairsRes] =
         await Promise.allSettled([
           repairApi.getMyJobs({ status: 'IN_PROGRESS', limit: 20 }),
           repairApi.getMyJobs({ status: 'RECEIVED', limit: 10 }),
+          repairApi.getMyJobs({ status: 'READY', limit: 50 }),
         ]);
 
       // Process in-progress repairs (assigned to technician)
@@ -143,6 +157,14 @@ export default function TechnicianDashboard() {
         })));
       }
 
+      // Process ready repairs (completed jobs ready for pickup)
+      let readyCount = 0;
+      if (readyRepairsRes.status === "fulfilled") {
+        const repairsData: any = readyRepairsRes.value;
+        const repairs = repairsData.data?.repairs || [];
+        readyCount = repairs.length;
+      }
+
       // Update stats based on fetched data
       setStats({
         assignedToMe: {
@@ -156,9 +178,9 @@ export default function TechnicianDashboard() {
           changeType: inProgressCount > 0 ? "increase" : "neutral",
         },
         completedToday: {
-          value: "0", // Would need a separate API call with completedAt filter
-          change: "Finished today",
-          changeType: "neutral",
+          value: readyCount.toString(),
+          change: "Ready",
+          changeType: readyCount > 0 ? "increase" : "neutral",
         },
         pending: {
           value: receivedCount.toString(),
@@ -508,7 +530,7 @@ export default function TechnicianDashboard() {
           icon={<Settings size={20} />}
         />
         <StatsCard
-          title="Completed Today"
+          title="Ready Today"
           value={stats.completedToday.value}
           change={stats.completedToday.change}
           changeType={stats.completedToday.changeType}
@@ -517,7 +539,7 @@ export default function TechnicianDashboard() {
       </div>
 
       {/* My Active Repairs - Mobile-friendly card layout */}
-      <div ref={myActiveRepairsRef} className="mb-4 sm:mb-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div ref={myActiveRepairsRef} className="mb-4 sm:mb-6 bg-white rounded-xl border border-blue-600 shadow-sm">
         <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-50 rounded-lg">
@@ -546,7 +568,7 @@ export default function TechnicianDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
-                      <div className="font-medium text-sm text-black">{repair.id}</div>
+                      <div className="font-medium text-sm text-black">{formatJobNumber(repair.id)}</div>
                       <span className={`text-xs px-2 py-1 rounded-full ${repair.priority === "urgent"
                         ? "bg-red-100 text-red-700"
                         : repair.priority === "high"
@@ -591,7 +613,7 @@ export default function TechnicianDashboard() {
       </div>
 
       {/* Pending Repairs - Awaiting Assignment - Responsive card */}
-      <div className="mb-4 sm:mb-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div className="mb-4 sm:mb-6 bg-white rounded-xl border border-blue-600 shadow-sm">
         <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-orange-50 rounded-lg">
@@ -620,7 +642,7 @@ export default function TechnicianDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <div className="font-medium text-sm text-black">{repair.id}</div>
+                      <div className="font-medium text-sm text-black">{formatJobNumber(repair.id)}</div>
                       <span className={`text-xs px-2 py-1 rounded-full ${repair.priority === "urgent"
                         ? "bg-red-100 text-red-700"
                         : repair.priority === "high"
@@ -702,7 +724,7 @@ export default function TechnicianDashboard() {
             <div className="flex items-center justify-between p-4 border-b">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Complete Repair Job</h3>
-                <p className="text-sm text-gray-500">{selectedRepair.id}</p>
+                <p className="text-sm text-gray-500">{formatJobNumber(selectedRepair.id)}</p>
               </div>
               <button
                 onClick={handleCloseCompleteModal}
@@ -729,10 +751,7 @@ export default function TechnicianDashboard() {
                     <span className="text-gray-500">Issue:</span>
                     <p className="font-medium text-gray-900">{selectedRepair.issue}</p>
                   </div>
-                  <div>
-                    <span className="text-gray-500">Estimated Cost:</span>
-                    <p className="font-medium text-gray-900">{selectedRepair.estimatedCost}</p>
-                  </div>
+                 
                 </div>
               </div>
 
@@ -743,12 +762,11 @@ export default function TechnicianDashboard() {
                 </label>
                 <input
                   type="number"
-                  value={completeFormData.laborCost}
+                  value={completeFormData.laborCost === 0 ? '' : completeFormData.laborCost}
                   onChange={(e) => setCompleteFormData(prev => ({
                     ...prev,
-                    laborCost: parseFloat(e.target.value) 
+                    laborCost: e.target.value === '' ? 0 : parseFloat(e.target.value)
                   }))}
-                
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   placeholder="Enter labor cost..."
                 />
@@ -975,10 +993,17 @@ export default function TechnicianDashboard() {
                 )}
               </div>
 
-              {/* Diagnosis Notes */}
+              {/* 
+                DIAGNOSIS NOTES SECTION
+                - Required field for completing a repair job
+                - Technician documents their findings during the diagnostic phase
+                - Explains what was wrong with the device
+                - Helps justify the repair cost and parts used
+                - Stored in the database for future reference and warranty claims
+             
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Diagnosis Notes <span className="text-red-500">*</span>
+                 Diagnosis Notes <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={completeFormData.diagnosisNotes}
@@ -990,9 +1015,17 @@ export default function TechnicianDashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   placeholder="Describe the diagnosis findings..."
                 />
-              </div>
+              </div>  */}
 
-              {/* Repair Notes */}
+              {/* 
+                REPAIR NOTES SECTION
+                - Required field documenting actual repair work performed
+                - Records specific actions taken to fix the device
+                - Documents any complications or special procedures used
+                - Manual parts (not in inventory) are automatically appended to these notes
+                - Important for quality control and future service history
+                - Used for warranty documentation and customer communication
+             }
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Repair Notes <span className="text-red-500">*</span>
@@ -1007,7 +1040,7 @@ export default function TechnicianDashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   placeholder="Describe the repair work performed..."
                 />
-              </div>
+              </div>  */}
 
               {/* Info Note */}
               <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">

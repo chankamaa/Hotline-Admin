@@ -113,6 +113,192 @@ export default function SalesPage() {
   ]);
 
   /* ======================================================
+     PRINT FUNCTIONS
+  ===================================================== */
+  
+  // Print individual sale receipt
+  const handlePrintReceipt = (sale: Sale) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const receiptHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Sale Receipt - ${sale.saleNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .receipt { max-width: 400px; margin: 0 auto; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            .items { margin: 20px 0; }
+            .item { display: flex; justify-content: space-between; margin: 5px 0; }
+            .totals { border-top: 1px solid #000; padding-top: 10px; }
+            .total-row { display: flex; justify-content: space-between; margin: 5px 0; }
+            .grand-total { font-weight: bold; font-size: 1.2em; border-top: 2px solid #000; padding-top: 5px; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="receipt">
+            <div class="header">
+              <h2>SALES RECEIPT</h2>
+              <p>Receipt #: ${sale.saleNumber}</p>
+              <p>Date: ${new Date(sale.createdAt).toLocaleString()}</p>
+              ${sale.customer?.name ? `<p>Customer: ${sale.customer.name}</p>` : ''}
+              ${sale.customer?.phone ? `<p>Phone: ${sale.customer.phone}</p>` : ''}
+            </div>
+            
+            <div class="items">
+              <h3>Items:</h3>
+              ${sale.items.map(item => `
+                <div class="item">
+                  <span>${item.productName} x${item.quantity}</span>
+                  <span>$${(item.unitPrice * item.quantity - item.discount).toFixed(2)}</span>
+                </div>
+              `).join('')}
+            </div>
+            
+            <div class="totals">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <span>$${sale.subtotal.toFixed(2)}</span>
+              </div>
+              ${sale.discountTotal > 0 ? `
+                <div class="total-row">
+                  <span>Discount:</span>
+                  <span>-$${sale.discountTotal.toFixed(2)}</span>
+                </div>
+              ` : ''}
+              ${sale.taxTotal > 0 ? `
+                <div class="total-row">
+                  <span>Tax:</span>
+                  <span>$${sale.taxTotal.toFixed(2)}</span>
+                </div>
+              ` : ''}
+              <div class="total-row grand-total">
+                <span>Total:</span>
+                <span>$${sale.grandTotal.toFixed(2)}</span>
+              </div>
+              ${sale.amountPaid ? `
+                <div class="total-row">
+                  <span>Amount Paid:</span>
+                  <span>$${sale.amountPaid.toFixed(2)}</span>
+                </div>
+              ` : ''}
+              ${sale.changeGiven ? `
+                <div class="total-row">
+                  <span>Change:</span>
+                  <span>$${sale.changeGiven.toFixed(2)}</span>
+                </div>
+              ` : ''}
+            </div>
+            
+            ${sale.notes ? `<p><strong>Notes:</strong> ${sale.notes}</p>` : ''}
+            <div style="text-align: center; margin-top: 30px; font-size: 12px;">
+              <p>Thank you for your business!</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(receiptHtml);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  // Print sales report
+  const handlePrintSalesReport = () => {
+    const filteredSales = getFilteredSales();
+    const completedSales = filteredSales.filter(sale => sale.status === 'COMPLETED');
+    
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const reportHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Sales Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+            .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+            .stat-card { border: 1px solid #ccc; padding: 15px; text-align: center; }
+            .stat-value { font-size: 1.5em; font-weight: bold; color: #2563eb; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            .status-completed { color: #16a34a; }
+            .status-voided { color: #dc2626; }
+            @media print { body { margin: 0; } .no-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>SALES REPORT</h1>
+            <p>Generated on: ${new Date().toLocaleString()}</p>
+            <p>Filter: ${timeFilter.charAt(0).toUpperCase() + timeFilter.slice(1)} ${timeFilter === 'custom' && customStartDate && customEndDate ? `(${customStartDate} to ${customEndDate})` : ''}</p>
+            <p>Total Sales: ${filteredSales.length} | Completed: ${completedSales.length}</p>
+          </div>
+          
+          <div class="stats">
+            <div class="stat-card">
+              <div>Total Sales</div>
+              <div class="stat-value">$${stats.totalSales.toFixed(2)}</div>
+            </div>
+            <div class="stat-card">
+              <div>Total Profit</div>
+              <div class="stat-value">$${stats.totalProfit.toFixed(2)}</div>
+            </div>
+            <div class="stat-card">
+              <div>Total Discounts</div>
+              <div class="stat-value">$${stats.totalDiscounts.toFixed(2)}</div>
+            </div>
+            <div class="stat-card">
+              <div>Number of Sales</div>
+              <div class="stat-value">${completedSales.length}</div>
+            </div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Sale #</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredSales.map(sale => `
+                <tr>
+                  <td>${sale.saleNumber}</td>
+                  <td>${new Date(sale.createdAt).toLocaleDateString()}</td>
+                  <td>${sale.customer?.name || 'Walk-in'}</td>
+                  <td>${sale.items.length}</td>
+                  <td>$${sale.grandTotal.toFixed(2)}</td>
+                  <td class="status-${sale.status.toLowerCase()}">${sale.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(reportHtml);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  /* ======================================================
      DATA FETCH
   ===================================================== */
 
@@ -446,6 +632,7 @@ export default function SalesPage() {
             </button>
           )}
           <button 
+            onClick={() => handlePrintReceipt(s)}
             className="p-1 hover:bg-gray-100 rounded"
             title="Print Receipt"
           >
@@ -465,6 +652,18 @@ export default function SalesPage() {
       <PageHeader
         title="Sales"
         description="Manage all sales transactions"
+        action={
+          <div className="flex gap-2">
+            <Button 
+              onClick={handlePrintSalesReport}
+              variant="secondary"
+              disabled={loading}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print Report
+            </Button>
+          </div>
+        }
       />
 
       {/* Time Filter Buttons */}
