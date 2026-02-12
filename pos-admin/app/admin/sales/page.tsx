@@ -153,7 +153,7 @@ export default function SalesPage() {
               ${sale.items.map(item => `
                 <div class="item">
                   <span>${item.productName} x${item.quantity}</span>
-                  <span>$${(item.unitPrice * item.quantity - item.discount).toFixed(2)}</span>
+                  <span>Rs. ${(item.unitPrice * item.quantity - item.discount).toFixed(2)}</span>
                 </div>
               `).join('')}
             </div>
@@ -161,34 +161,34 @@ export default function SalesPage() {
             <div class="totals">
               <div class="total-row">
                 <span>Subtotal:</span>
-                <span>$${sale.subtotal.toFixed(2)}</span>
+                <span>Rs. ${sale.subtotal.toFixed(2)}</span>
               </div>
               ${sale.discountTotal > 0 ? `
                 <div class="total-row">
                   <span>Discount:</span>
-                  <span>-$${sale.discountTotal.toFixed(2)}</span>
+                  <span>-Rs. ${sale.discountTotal.toFixed(2)}</span>
                 </div>
               ` : ''}
               ${sale.taxTotal > 0 ? `
                 <div class="total-row">
                   <span>Tax:</span>
-                  <span>$${sale.taxTotal.toFixed(2)}</span>
+                  <span>Rs. ${sale.taxTotal.toFixed(2)}</span>
                 </div>
               ` : ''}
               <div class="total-row grand-total">
                 <span>Total:</span>
-                <span>$${sale.grandTotal.toFixed(2)}</span>
+                <span>Rs. ${sale.grandTotal.toFixed(2)}</span>
               </div>
               ${sale.amountPaid ? `
                 <div class="total-row">
                   <span>Amount Paid:</span>
-                  <span>$${sale.amountPaid.toFixed(2)}</span>
+                  <span>Rs. ${sale.amountPaid.toFixed(2)}</span>
                 </div>
               ` : ''}
               ${sale.changeGiven ? `
                 <div class="total-row">
                   <span>Change:</span>
-                  <span>$${sale.changeGiven.toFixed(2)}</span>
+                  <span>Rs. ${sale.changeGiven.toFixed(2)}</span>
                 </div>
               ` : ''}
             </div>
@@ -211,7 +211,6 @@ export default function SalesPage() {
 
   // Print sales report
   const handlePrintSalesReport = () => {
-    const filteredSales = getFilteredSales();
     const completedSales = filteredSales.filter(sale => sale.status === 'COMPLETED');
     
     const printWindow = window.open("", "_blank");
@@ -247,15 +246,15 @@ export default function SalesPage() {
           <div class="stats">
             <div class="stat-card">
               <div>Total Sales</div>
-              <div class="stat-value">$${stats.totalSales.toFixed(2)}</div>
+              <div class="stat-value">Rs. ${stats.totalSales.toFixed(2)}</div>
             </div>
             <div class="stat-card">
               <div>Total Profit</div>
-              <div class="stat-value">$${stats.totalProfit.toFixed(2)}</div>
+              <div class="stat-value">Rs. ${stats.totalProfit.toFixed(2)}</div>
             </div>
             <div class="stat-card">
               <div>Total Discounts</div>
-              <div class="stat-value">$${stats.totalDiscounts.toFixed(2)}</div>
+              <div class="stat-value">Rs. ${stats.totalDiscounts.toFixed(2)}</div>
             </div>
             <div class="stat-card">
               <div>Number of Sales</div>
@@ -281,7 +280,7 @@ export default function SalesPage() {
                   <td>${new Date(sale.createdAt).toLocaleDateString()}</td>
                   <td>${sale.customer?.name || 'Walk-in'}</td>
                   <td>${sale.items.length}</td>
-                  <td>$${sale.grandTotal.toFixed(2)}</td>
+                  <td>Rs. ${sale.grandTotal.toFixed(2)}</td>
                   <td class="status-${sale.status.toLowerCase()}">${sale.status}</td>
                 </tr>
               `).join('')}
@@ -654,14 +653,7 @@ export default function SalesPage() {
         description="Manage all sales transactions"
         action={
           <div className="flex gap-2">
-            <Button 
-              onClick={handlePrintSalesReport}
-              variant="secondary"
-              disabled={loading}
-            >
-              <Printer className="w-4 h-4 mr-2" />
-              Print Report
-            </Button>
+         
           </div>
         }
       />
@@ -851,15 +843,15 @@ export default function SalesPage() {
                         <div className="text-xs text-gray-500">SKU: {item.sku}</div>
                       )}
                       <div className="text-sm text-gray-600">
-                        {item.quantity} × Rs. {item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        {item.discount > 0 && ` - Rs. ${item.discount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} disc`}
+                        {item.quantity || 0} × Rs. {(item.unitPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {(item.discount || 0) > 0 && ` - Rs. ${(item.discount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} disc`}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">Rs. {item.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                      <div className="font-semibold">Rs. {(item.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                       {item.taxAmount && item.taxAmount > 0 && (
                         <div className="text-xs text-gray-500">
-                          +Tax: Rs. {item.taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          +Tax: Rs. {(item.taxAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       )}
                     </div>
@@ -872,21 +864,21 @@ export default function SalesPage() {
             <div className="space-y-2 pt-2 border-t">
               <div className="flex justify-between text-sm">
                 <span>Subtotal:</span>
-                <span>Rs. {viewSale.subtotal.toFixed(2)}</span>
+                <span>Rs. {(viewSale.subtotal || 0).toFixed(2)}</span>
               </div>
-              {viewSale.discountTotal > 0 && (
+              {(viewSale.discountTotal || 0) > 0 && (
                 <div className="flex justify-between text-sm text-red-600">
                   <span>Discount:</span>
-                  <span>- Rs. {viewSale.discountTotal.toFixed(2)}</span>
+                  <span>- Rs. {(viewSale.discountTotal || 0).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
                 <span>Tax:</span>
-                <span>Rs. {viewSale.taxTotal.toFixed(2)}</span>
+                <span>Rs. {(viewSale.taxTotal || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-bold text-lg pt-2 border-t">
                 <span>Grand Total:</span>
-                <span>Rs. {viewSale.grandTotal.toFixed(2)}</span>
+                <span>Rs. {(viewSale.grandTotal || 0).toFixed(2)}</span>
               </div>
             </div>
 
@@ -901,7 +893,7 @@ export default function SalesPage() {
                         {payment.method}
                         {payment.reference && ` (${payment.reference})`}
                       </span>
-                      <span>Rs. {payment.amount.toFixed(2)}</span>
+                      <span>Rs. {(payment.amount || 0).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>

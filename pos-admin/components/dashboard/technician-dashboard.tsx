@@ -407,16 +407,6 @@ export default function TechnicianDashboard() {
   const handleCompleteJob = async () => {
     if (!selectedRepair) return;
 
-    // Validate form
-    if (!completeFormData.diagnosisNotes.trim()) {
-      toast.error("Please enter diagnosis notes");
-      return;
-    }
-    if (!completeFormData.repairNotes.trim()) {
-      toast.error("Please enter repair notes");
-      return;
-    }
-
     setSubmittingComplete(true);
     try {
       // Separate inventory parts from manual parts
@@ -1003,7 +993,7 @@ export default function TechnicianDashboard() {
               */
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                 Diagnosis Notes <span className="text-red-500">*</span>
+                 Diagnosis Notes (Optional)
                 </label>
                 <textarea
                   value={completeFormData.diagnosisNotes}
@@ -1028,7 +1018,7 @@ export default function TechnicianDashboard() {
              }
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Repair Notes <span className="text-red-500">*</span>
+                  Repair Notes (Optional)
                 </label>
                 <textarea
                   value={completeFormData.repairNotes}
@@ -1062,8 +1052,8 @@ export default function TechnicianDashboard() {
               </button>
               <button
                 onClick={handleCompleteJob}
-                disabled={submittingComplete || !completeFormData.diagnosisNotes.trim() || !completeFormData.repairNotes.trim()}
-                className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 ${submittingComplete || !completeFormData.diagnosisNotes.trim() || !completeFormData.repairNotes.trim()
+                disabled={submittingComplete}
+                className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 ${submittingComplete
                   ? 'opacity-60 cursor-not-allowed'
                   : ''
                   }`}

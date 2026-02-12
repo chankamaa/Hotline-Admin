@@ -52,6 +52,21 @@ export default function RepairHistoryPage() {
   const [jobs, setJobs] = useState<RepairHistoryItem[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<RepairHistoryItem[]>([]);
 
+  // Format job number to remove date portion (RJ-20260212-0001 -> RJ-00001)
+  const formatJobNumber = (jobNumber: string): string => {
+    if (!jobNumber) return '';
+    
+    // Match pattern RJ-YYYYMMDD-##### and extract just the number part
+    const match = jobNumber.match(/RJ-\d{8}-(\d+)$/);
+    if (match) {
+      const numberPart = match[1];
+      return `RJ-${numberPart}`;
+    }
+    
+    // If no match, return as-is
+    return jobNumber;
+  };
+
   const loadJobs = async (status: 'READY' | 'RECEIVED') => {
     try {
       setLoading(true);
@@ -287,7 +302,7 @@ export default function RepairHistoryPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h4 className="text-lg font-bold text-blue-600">{repair.jobNumber}</h4>
+                          <h4 className="text-lg font-bold text-blue-600">{formatJobNumber(repair.jobNumber)}</h4>
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(repair.status)}`}>
                             {repair.status}
                           </span>

@@ -24,7 +24,7 @@ interface TechnicianStats {
     email?: string;
   };
   jobCount: number;
-  totalRevenue: number;
+  totalincome: number;
   partsCost: number;
   laborCost: number;
 }
@@ -99,7 +99,6 @@ export default function RepairAnalyticsPage() {
         const isCompletedJob = ['READY', 'COMPLETED', 'DELIVERED'].includes(repair.status);
         
         if (isCompletedJob) {
-          const income = repair.totalCost || 0;
           let parts = repair.partsTotal || 0;
           
           // Parse manual parts from repair notes if they exist
@@ -117,6 +116,7 @@ export default function RepairAnalyticsPage() {
           }
           
           const labor = repair.laborCost || 0;
+          const income = parts + labor; // Total Income = Parts Cost + Labor Cost
 
           totalIncome += income;
           totalCost += parts;
@@ -137,7 +137,7 @@ export default function RepairAnalyticsPage() {
                   email: techEmail,
                 },
                 jobCount: 0,
-                totalRevenue: 0,
+                totalincome: 0,
                 partsCost: 0,
                 laborCost: 0,
               });
@@ -145,7 +145,7 @@ export default function RepairAnalyticsPage() {
 
             const techStats = technicianMap.get(techId)!;
             techStats.jobCount += 1;
-            techStats.totalRevenue += income;
+            techStats.totalincome += income;
             techStats.partsCost += parts;
             techStats.laborCost += labor;
           }
@@ -168,7 +168,7 @@ export default function RepairAnalyticsPage() {
       console.log('Net Profit:', totalIncome - totalCost - totalLabor);
       console.log('==============================');
 
-      setTechnicianStats(Array.from(technicianMap.values()).sort((a, b) => b.totalRevenue - a.totalRevenue));
+      setTechnicianStats(Array.from(technicianMap.values()).sort((a, b) => b.totalincome - a.totalincome));
 
     } catch (error) {
       console.error("Error loading analytics:", error);
@@ -299,7 +299,7 @@ export default function RepairAnalyticsPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatsCard
           title="Repair Income"
           value={stats.repairIncome.toFixed(2)}
@@ -315,11 +315,7 @@ export default function RepairAnalyticsPage() {
           value={stats.laborCost.toFixed(2)}
           icon={<Wrench size={20} />}
         />
-        <StatsCard
-          title="Net Profit"
-          value={(stats.repairIncome - stats.repairCost - stats.laborCost).toFixed(2)}
-          icon={<DollarSign size={20} className="text-green-600" />}
-        />
+      
         <StatsCard
           title="Total Jobs"
           value={stats.totalJobs.toLocaleString('en-US')}
@@ -328,7 +324,7 @@ export default function RepairAnalyticsPage() {
       </div>
 
       {/* Technician Performance Table */}
-      <div className="bg-white rounded-lg border shadow-sm">
+      <div className="bg-white rounded-lg border shadow-sm border-blue-00">
         <div className="p-4 border-b">
           <h3 className="font-semibold text-lg text-gray-900">
             Technician Performance - {getFilterLabel()}
@@ -360,7 +356,7 @@ export default function RepairAnalyticsPage() {
                     Jobs Completed
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Revenue
+                    Total Income
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Parts Cost
@@ -387,7 +383,7 @@ export default function RepairAnalyticsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 font-semibold">
-                          {tech.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {tech.totalincome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -411,7 +407,7 @@ export default function RepairAnalyticsPage() {
                     {technicianStats.reduce((sum, tech) => sum + tech.jobCount, 0).toLocaleString('en-US')}
                   </td>
                   <td className="px-6 py-4 text-gray-900">
-                    {technicianStats.reduce((sum, tech) => sum + tech.totalRevenue, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {technicianStats.reduce((sum, tech) => sum + tech.totalincome, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-gray-900">
                     {technicianStats.reduce((sum, tech) => sum + tech.partsCost, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

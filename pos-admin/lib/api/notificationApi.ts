@@ -7,7 +7,7 @@ export const getNotifications = async (limit: number, skip: number) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching notifications:", error);
+    // Silently handle notification fetch errors (endpoint may not be implemented)
     return { notifications: [], unreadCount: 0 };
   }
 };

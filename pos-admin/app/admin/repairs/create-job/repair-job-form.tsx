@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Save, X, Plus, Trash2, User, Smartphone, Package as PackageIcon } from 'lucide-react';
+import { Save, X, Plus, Trash2, User, Smartphone, Package as PackageIcon, ScanLine, QrCode, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { repairApi } from '@/lib/api/repairApi';
 import { fetchProducts } from '@/lib/api/productApi';
 import { userApi } from '@/lib/api/userApi';
@@ -101,6 +101,13 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
   const suggestionRef = useRef<HTMLDivElement>(null);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Barcode Scanner States
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [scanningField, setScanningField] = useState<'serialNumber' | 'imei' | null>(null);
+  
+  // Scanner References
+  const usbInputRef = useRef<HTMLInputElement>(null);
 
   // Load current user
   useEffect(() => {
@@ -332,14 +339,109 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
     }
   };
 
+  // IMEI Validation with Luhn Algorithm
+  const validateIMEI = (imei: string): boolean => {
+    // Remove any non-digit characters
+    const cleanIMEI = imei.replace(/\D/g, '');
+    
+    // IMEI must be exactly 15 digits
+    if (cleanIMEI.length !== 15) return false;
+    
+    // Apply Luhn algorithm for checksum validation
+    let sum = 0;
+    for (let i = 0; i < 14; i++) {
+      let digit = parseInt(cleanIMEI[i]);
+      if (i % 2 === 1) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+    }
+    
+    const checkDigit = (10 - (sum % 10)) % 10;
+    return checkDigit === parseInt(cleanIMEI[14]);
+  };
+
+  // Serial Number Validation
+  const validateSerialNumber = (serial: string): boolean => {
+    // Must be alphanumeric and at least 4 characters
+    const cleanSerial = serial.trim();
+    return /^[A-Z0-9]{4,}$/i.test(cleanSerial);
+  };
+
+  // Format IMEI for display (add spaces for readability)
+  const formatIMEI = (imei: string): string => {
+    const cleanIMEI = imei.replace(/\D/g, '');
+    return cleanIMEI.replace(/(\d{2})(\d{6})(\d{6})(\d)/, '$1 $2 $3 $4');
+  };
+
+  // Handle USB Scanner Input (Keyboard Wedge)
+  const handleUSBScannerInput = (value: string) => {
+    if (!scanningField || !value.trim()) return;
+    
+    const cleanValue = value.trim();
+    let isValid = true;
+    let errorMsg = '';
+    
+    // Validate based on field type
+    if (scanningField === 'imei') {
+      isValid = validateIMEI(cleanValue);
+      errorMsg = 'Invalid IMEI format or checksum. Must be 15 digits.';
+    } else {
+      isValid = validateSerialNumber(cleanValue);
+      errorMsg = 'Invalid serial number. Must be alphanumeric, min 4 characters.';
+    }
+    
+    if (isValid) {
+      setFormData(prev => ({ ...prev, [scanningField]: cleanValue }));
+      toast.success(`${scanningField === 'imei' ? 'IMEI' : 'Serial Number'} scanned successfully!`);
+      closeScannerModal();
+    } else {
+      toast.error(errorMsg);
+    }
+  };
+
+  // Open Scanner Modal
+  const openScannerModal = (field: 'serialNumber' | 'imei') => {
+    setScanningField(field);
+    setShowScannerModal(true);
+    
+    // Focus USB input after modal opens
+    setTimeout(() => {
+      usbInputRef.current?.focus();
+    }, 300);
+  };
+
+  // Close Scanner Modal
+  const closeScannerModal = () => {
+    setShowScannerModal(false);
+    setScanningField(null);
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
+    
+    // Phone number validation - only allow numeric input, max 10 digits
+    if (name === 'customerPhone') {
+      if (value !== '' && (!/^\d*$/.test(value) || value.length > 10)) {
+        return;
+      }
+    }
+    
+    // Advance payment validation - only allow numeric input, max 6 digits
+    if (name === 'advancePayment') {
+      if (value !== '' && (!/^\d*$/.test(value) || value.length > 6)) {
+        return;
+      }
+    }
+    
     // Prevent negative values for number fields
     if (type === 'number' && value !== '' && parseFloat(value) < 0) {
       return;
     }
+    
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -389,11 +491,37 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.customerName.trim()) newErrors.customerName = 'Customer name is required';
-    if (!formData.customerPhone.trim()) newErrors.customerPhone = 'Customer phone is required';
+    // Customer name validation
+    if (!formData.customerName.trim()) {
+      newErrors.customerName = 'Enter customer name';
+    }
+    
+    // Phone number validation - must be exactly 10 digits
+    if (!formData.customerPhone.trim()) {
+      newErrors.customerPhone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.customerPhone.trim())) {
+      newErrors.customerPhone = 'Phone number must be 10 digits only';
+    }
+    
+    // Advance payment validation - must be exactly 6 digits
+    if (formData.advancePayment && formData.advancePayment.trim()) {
+      if (!/^\d{6}$/.test(formData.advancePayment.trim())) {
+        newErrors.advancePayment = 'Advance payment must be 6 digits only';
+      }
+    }
+    
     if (!formData.brand.trim()) newErrors.brand = 'Device brand is required';
     if (!formData.model.trim()) newErrors.model = 'Device model is required';
     if (!formData.problemDescription.trim()) newErrors.problemDescription = 'Problem description is required';
+
+    // Enhanced Device Identification Validation
+    if (formData.serialNumber.trim() && !validateSerialNumber(formData.serialNumber)) {
+      newErrors.serialNumber = 'Invalid serial number format';
+    }
+    
+    if (formData.imei.trim() && !validateIMEI(formData.imei)) {
+      newErrors.imei = 'Invalid IMEI format or checksum';
+    }
 
     // Validation for COMPLETED status - require labor cost and parts
     if (formData.status === 'COMPLETED') {
@@ -488,6 +616,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
   const totalEstimate = partsCost + (parseFloat(formData.laborCost) || 0);
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="bg-white rounded-lg border  text-gray-500">
       <div className="p-6 space-y-6">
         
@@ -520,9 +649,11 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
               </label>
               <Input
                 name="customerPhone"
+                type="number"
                 value={formData.customerPhone}
                 onChange={handleInputChange}
-                placeholder="Enter phone number"
+                placeholder="Enter 10 digit phone number"
+                maxLength={10}
                 error={errors.customerPhone}
               />
               {errors.customerPhone && (
@@ -614,30 +745,110 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Serial Number
-              </label>
-              <Input
-                name="serialNumber"
-                value={formData.serialNumber}
-                onChange={handleInputChange}
-                placeholder="Enter serial number"
-              />
+            {/* Enhanced Device Identification Section */}
+            <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-center gap-2 mb-4">
+                <QrCode className="w-5 h-5 text-blue-600" />
+                <h4 className="text-md font-semibold text-gray-800">Device Identification</h4>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Scannable</span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Serial Number with Barcode Scanning */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Serial Number
+                    </label>
+                    <span className="text-xs text-gray-500">Min 4 chars, alphanumeric</span>
+                  </div>
+                  
+                  <div className="relative">
+                    <Input
+                      name="serialNumber"
+                      value={formData.serialNumber}
+                      onChange={handleInputChange}
+                      placeholder="Enter or scan serial number"
+                    />
+                    
+                    {/* Scan Button */}
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => openScannerModal('serialNumber')}
+                        className="p-1.5 text-gray-400 hover:text-green-600 transition-colors rounded hover:bg-green-100"
+                        title="USB/Barcode Scanner"
+                      >
+                        <ScanLine className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Validation Feedback */}
+                  {formData.serialNumber && (
+                    <div className="flex items-center gap-2 text-xs">
+                      {validateSerialNumber(formData.serialNumber) ? (
+                        <><CheckCircle2 className="w-3 h-3 text-green-600" /><span className="text-green-600">Valid format</span></>
+                      ) : (
+                        <><AlertTriangle className="w-3 h-3 text-orange-600" /><span className="text-orange-600">Invalid format - check length/characters</span></>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* IMEI with Advanced Validation */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      IMEI Number
+                    </label>
+                    <span className="text-xs text-gray-500">15 digits with checksum</span>
+                  </div>
+                  
+                  <div className="relative">
+                    <Input
+                      name="imei"
+                      value={formData.imei}
+                      onChange={handleInputChange}
+                      placeholder="Enter or scan IMEI"
+                      maxLength={15}
+                    />
+                    
+                    {/* Scan Button */}
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => openScannerModal('imei')}
+                        className="p-1.5 text-gray-400 hover:text-green-600 transition-colors rounded hover:bg-green-100"
+                        title="USB/Barcode Scanner"
+                      >
+                        <ScanLine className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* IMEI Validation with Checksum */}
+                  {formData.imei && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-xs">
+                        {validateIMEI(formData.imei) ? (
+                          <><CheckCircle2 className="w-3 h-3 text-green-600" /><span className="text-green-600">Valid IMEI checksum ✓</span></>
+                        ) : (
+                          <><AlertTriangle className="w-3 h-3 text-red-600" /><span className="text-red-600">Invalid IMEI or checksum ✗</span></>
+                        )}
+                      </div>
+                      {formData.imei.length === 15 && validateIMEI(formData.imei) && (
+                        <div className="text-xs text-gray-500 font-mono">
+                          Formatted: {formatIMEI(formData.imei)}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                IMEI
-              </label>
-              <Input
-                name="imei"
-                value={formData.imei}
-                onChange={handleInputChange}
-                placeholder="Enter IMEI number"
-              />
-            </div>
-
+            {/* Color Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Color
@@ -855,16 +1066,20 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
                 Advance Payment 
               </label>
               <input
+               
                 type="number"
                 name="advancePayment"
                 value={formData.advancePayment}
                 onChange={handleInputChange}
-                onKeyDown={blockNegative}
-                placeholder="0.00"
-                step="0.01"
-                min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="00.00"
+                maxLength={6}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.advancePayment ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
+              {errors.advancePayment && (
+                <p className="text-red-500 text-sm mt-1">{errors.advancePayment}</p>
+              )}
             </div>
           </div>
 
@@ -879,6 +1094,7 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
           variant="secondary"
           onClick={onCancel}
           disabled={loading}
+          className='hover:bg-red-500'
         >
           <X className="w-4 h-4 mr-1" />
           Cancel
@@ -889,5 +1105,112 @@ export default function RepairJobForm({ jobId, onSuccess, onCancel }: RepairJobF
         </Button>
       </div>
     </form>
+
+    {/* Advanced Barcode Scanner Modal */}
+    {showScannerModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-lg w-full mx-auto shadow-2xl max-h-[90vh] overflow-y-auto">
+          {/* Modal Header */}
+          <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-50 to-green-50">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <QrCode className="w-6 h-6 text-blue-600" />
+                Barcode Scanner
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Scanning {scanningField === 'serialNumber' ? 'Serial Number' : 'IMEI Number'}
+                {scanningField === 'imei' && ' (15-digit with checksum validation)'}
+              </p>
+            </div>
+            <button
+              onClick={closeScannerModal}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+
+
+          {/* USB Scanner Interface */}
+          <div className="p-6">
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ScanLine className="w-10 h-10 text-green-600" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">USB Barcode Scanner</h4>
+                <p className="text-gray-600 mb-4">
+                  Connect your USB barcode scanner and scan the {scanningField === 'serialNumber' ? 'serial number' : 'IMEI'} barcode.
+                </p>
+              </div>
+
+              {/* USB Scanner Input Field */}
+              <div className="space-y-3 text-gray-500">
+                <label className="block text-sm font-medium text-gray-700 text-center">
+                  {scanningField === 'serialNumber' ? 'Serial Number' : 'IMEI Number'} Input
+                </label>
+                <input
+                  ref={usbInputRef}
+                  type="text"
+                  placeholder={`Scan ${scanningField === 'serialNumber' ? 'serial number' : 'IMEI'} here...`}
+                  className="w-full p-4 text-center text-lg font-mono border-2 border-dashed border-green-300 rounded-lg focus:border-green-500 focus:outline-none bg-green-50"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                      handleUSBScannerInput(e.currentTarget.value);
+                      e.currentTarget.value = '';
+                    }
+                  }}
+                  autoFocus
+                />
+                
+                <div className="text-center space-y-2">
+                  <div className="text-xs text-gray-500">
+                    🔍 Most USB scanners automatically press Enter after scanning
+                  </div>
+                  <button
+                    onClick={() => {
+                      const value = usbInputRef.current?.value;
+                      if (value) handleUSBScannerInput(value);
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Manual Submit
+                  </button>
+                </div>
+              </div>
+
+              {/* Scanner Instructions */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h5 className="font-medium text-blue-900 mb-2">How to use USB Scanner:</h5>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Connect your USB barcode scanner</li>
+                  <li>• Point scanner at the barcode</li>
+                  <li>• Press the scanner trigger</li>
+                  <li>• Data will auto-populate and validate</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="px-6 py-4 bg-gray-50 rounded-b-2xl border-t">
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center gap-2 text-gray-500">
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <span>Auto-validation enabled</span>
+              </div>
+              <button
+                onClick={closeScannerModal}
+                className="text-gray-600 hover:text-gray-800 font-medium"
+              >
+                Close Scanner
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

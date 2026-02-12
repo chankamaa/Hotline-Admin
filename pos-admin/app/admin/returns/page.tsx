@@ -337,10 +337,10 @@ export default function ReturnsPage() {
             </div>
 
             {/* ---- Returns Table ---- */}
-            <div className="bg-white rounded-xl border overflow-hidden">
+            <div className="bg-white rounded-xl border overflow-hidden ">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-gray-200 ">
+                        <thead className="bg-gray-50 border-gray-600">
                             <tr>
                                 <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return #</th>
                                 <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original Sale</th>
@@ -354,7 +354,7 @@ export default function ReturnsPage() {
                                 <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-100 ">
                             {loading ? (
                                 <tr>
                                     <td colSpan={10} className="px-5 py-12 text-center text-gray-500">

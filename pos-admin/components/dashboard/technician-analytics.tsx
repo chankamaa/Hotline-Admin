@@ -202,6 +202,45 @@ export default function TechnicianAnalytics() {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
+    // Format job number to show only last 5 digits (RJ-#####)
+    const formatJobNumber = (jobNumber: string) => {
+        // Extract the last 5 digits from job number like RJ-YYYYMMDD-##### -> RJ-#####
+        const match = jobNumber.match(/RJ-(\d{8})-(\d+)$/);
+        if (match) {
+            const lastPart = match[2].padStart(5, '0');
+            return `RJ-${lastPart}`;
+        }
+        return jobNumber;
+    };
+
+    // Calculate actual parts total including manual parts from repair notes
+    const calculatePartsCost = (job: any) => {
+        let jobPartsTotal = job.partsTotal || 0;
+        
+        // Calculate from partsUsed array if partsTotal is not available
+        if (!jobPartsTotal && job.partsUsed && Array.isArray(job.partsUsed)) {
+            jobPartsTotal = job.partsUsed.reduce((sum: number, part: any) => {
+                return sum + ((part.quantity || 0) * (part.unitPrice || 0));
+            }, 0);
+        }
+        
+        // Parse manual parts from repair notes if they exist
+        if (job.repairNotes && typeof job.repairNotes === 'string') {
+            const manualPartsMatch = job.repairNotes.match(/\[Manual Parts Used\]([\s\S]*?)(?:\n\n|$)/);
+            if (manualPartsMatch) {
+                const manualPartsText = manualPartsMatch[1];
+                // Extract total values from lines like: - Part Name (Qty: 1, Price: 10.00, Total: 10.00)
+                const totalMatches = manualPartsText.matchAll(/Total:\s*\$?(\d+\.?\d*)/g);
+                for (const match of totalMatches) {
+                    const manualPartTotal = parseFloat(match[1]) || 0;
+                    jobPartsTotal += manualPartTotal;
+                }
+            }
+        }
+        
+        return jobPartsTotal;
+    };
+
     return (
         <div className="p-6">
             <PageHeader
@@ -236,7 +275,7 @@ export default function TechnicianAnalytics() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                
                 <StatsCard
                     title="Parts Cost"
@@ -264,7 +303,7 @@ export default function TechnicianAnalytics() {
             {/* Performance Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Earnings Breakdown */}
-                <div className="bg-white rounded-lg border shadow-sm p-6">
+                <div className="bg-white rounded-lg border shadow-sm p-6  border-blue-600">
                     <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
                         <TrendingUp size={18} className="text-blue-600" />
                         Earnings Breakdown
@@ -317,7 +356,7 @@ export default function TechnicianAnalytics() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="bg-white rounded-lg border shadow-sm p-6">
+                <div className="bg-white rounded-lg border shadow-sm p-6  border-blue-600">
                     <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
                         <Clock size={18} className="text-blue-600" />
                         Performance Summary
@@ -362,9 +401,9 @@ export default function TechnicianAnalytics() {
                         <p>No completed jobs for this period</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
+                    <div className="overflow-x-auto text-gray-900">
+                        <table className="w-full ">
+                            <thead className="bg-gray-50 border-b ">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Job #
@@ -390,37 +429,43 @@ export default function TechnicianAnalytics() {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {recentJobs.map((job) => (
-                                    <tr key={job._id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="font-mono text-sm text-blue-600">{job.jobNumber}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">
-                                                {job.device?.brand} {job.device?.model}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{job.customer?.name || '-'}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="text-sm text-gray-600">{(job.partsTotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="text-sm text-gray-600">{(job.laborCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="text-sm font-semibold text-gray-900">
-                                                {(job.totalCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            <span className="text-sm text-gray-500">
-                                                {formatDate(job.actualCompletionDate)}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {recentJobs.map((job) => {
+                                    const partsCost = calculatePartsCost(job);
+                                    const laborCost = job.laborCost || 0;
+                                    const totalCost = partsCost + laborCost;
+                                    
+                                    return (
+                                        <tr key={job._id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="font-mono text-sm text-blue-600">{formatJobNumber(job.jobNumber)}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">
+                                                    {job.device?.brand} {job.device?.model}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">{job.customer?.name || '-'}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <span className="text-sm text-gray-600">{partsCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <span className="text-sm text-gray-600">{laborCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <span className="text-sm font-semibold text-gray-900">
+                                                    {totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                <span className="text-sm text-gray-500">
+                                                    {formatDate(job.actualCompletionDate)}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
