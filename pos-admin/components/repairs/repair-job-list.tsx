@@ -13,8 +13,21 @@ interface RepairJobListProps {
   onEditJob: (jobId: string) => void;
 }
 
-type RepairStatus = 'all' | 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'WAITING_PARTS' | 'READY' | 'COMPLETED' | 'CANCELLED';
+type RepairStatus = 'all' | 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' |  'READY' | 'COMPLETED' | 'CANCELLED';
 type RepairPriority = 'all' | 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+// Helper function to format job number as 5 digits
+const formatJobNumber = (jobId: string): string => {
+  // Extract RJ prefix and numeric part from job numbers like "RJ-20260209-0008" to "RJ-00008"
+  const match = jobId.match(/^([A-Z]+).*-(\d+)$/);
+  if (match) {
+    const prefix = match[1]; // Just "RJ"
+    const numericPart = match[2];
+    return `${prefix}-${numericPart.padStart(5, '0')}`;
+  }
+  // Fallback: if pattern doesn't match, return original
+  return jobId;
+};
 
 export default function RepairJobList({ onEditJob }: RepairJobListProps) {
   const toast = useToast();
@@ -80,11 +93,13 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
 
   const getStatusBadge = (status: string) => {
     const badges = {
+      PENDING: 'bg-orange-100 text-orange-700',
       RECEIVED: 'bg-gray-100 text-gray-700',
       ASSIGNED: 'bg-yellow-100 text-yellow-700',
       IN_PROGRESS: 'bg-blue-100 text-blue-700',
+   
       READY: 'bg-green-100 text-green-700',
-      COMPLETED: 'bg-purple-100 text-purple-700',
+      COMPLETED: 'bg-emerald-100 text-emerald-700',
       CANCELLED: 'bg-red-100 text-red-700',
     };
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-700';
@@ -134,27 +149,32 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
   // Calculate stats based on actual backend status values
   const stats = {
     total: jobs.length,
+    pending: jobs.filter((j) => j.status === 'PENDING').length,
     received: jobs.filter((j) => j.status === 'RECEIVED').length,
-    cancelled: jobs.filter((j) => j.status === 'CANCELLED').length,
+    assigned: jobs.filter((j) => j.status === 'ASSIGNED').length,
     inProgress: jobs.filter((j) => j.status === 'IN_PROGRESS').length,
+  
     ready: jobs.filter((j) => j.status === 'READY').length,
+    completed: jobs.filter((j) => j.status === 'COMPLETED').length,
+    cancelled: jobs.filter((j) => j.status === 'CANCELLED').length,
   };
 
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <div className="bg-white rounded-lg border p-4">
           <div className="text-sm text-gray-600 mb-1">Total Jobs</div>
           <div className="text-2xl font-bold text-gray-500">{stats.total}</div>
         </div>
-        <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-4">
-          <div className="text-sm text-yellow-600 mb-1 flex items-center gap-1">
+        <div className="bg-orange-50 rounded-lg border border-orange-200 p-4">
+          <div className="text-sm text-orange-600 mb-1 flex items-center gap-1">
             <Clock className="w-4 h-4" />
-            Received
+            Pending
           </div>
-          <div className="text-2xl font-bold text-yellow-700">{stats.received}</div>
+          <div className="text-2xl font-bold text-orange-700">{stats.received}</div>
         </div>
+       
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
           <div className="text-sm text-blue-600 mb-1 flex items-center gap-1">
             <Clock className="w-4 h-4" />
@@ -162,7 +182,6 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
           </div>
           <div className="text-2xl font-bold text-blue-700">{stats.inProgress}</div>
         </div>
-
         <div className="bg-green-50 rounded-lg border border-green-200 p-4">
           <div className="text-sm text-green-600 mb-1 flex items-center gap-1">
             <CheckCircle className="w-4 h-4" />
@@ -171,8 +190,8 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
           <div className="text-2xl font-bold text-green-700">{stats.ready}</div>
         </div>
         <div className="bg-gray-50 rounded-lg border p-4">
-          <div className="text-sm text-gray-600 mb-1">Cancelled</div>
-          <div className="text-2xl font-bold text-gray-700">{stats.cancelled}</div>
+          <div className="text-sm text-gray-600 mb-1">Completed</div>
+          <div className="text-2xl font-bold text-gray-700">{stats.completed}</div>
         </div>
       </div>
 
@@ -200,7 +219,6 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
             >
               <option value="all">All Statuses</option>
               <option value="RECEIVED">Received</option>
-              <option value="ASSIGNED">Assigned</option>
               <option value="IN_PROGRESS">In Progress</option>
               <option value="READY">Ready</option>
               <option value="COMPLETED">Completed</option>
@@ -260,7 +278,7 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
               {filteredJobs.map((job) => (
                 <tr key={job._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-blue-600">{job.jobNumber}</div>
+                    <div className="text-sm font-medium text-blue-600">{formatJobNumber(job.jobNumber)}</div>
                     <div className="text-xs text-gray-500">
                       {new Date(job.createdAt).toLocaleDateString()}
                     </div>
@@ -362,7 +380,7 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
       <Modal
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
-        title={`Repair Job Details - ${selectedJob?.jobNumber || ''}`}
+        title={`Repair Job Details - ${selectedJob?.jobNumber ? formatJobNumber(selectedJob.jobNumber) : ''}`}
         size="xl"
       >
         {selectedJob && (
@@ -421,7 +439,7 @@ export default function RepairJobList({ onEditJob }: RepairJobListProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600 font-medium">Job Number</p>
-                  <p className="text-gray-900 font-semibold">{selectedJob.jobNumber}</p>
+                  <p className="text-gray-900 font-semibold">{formatJobNumber(selectedJob.jobNumber)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-medium">Status</p>

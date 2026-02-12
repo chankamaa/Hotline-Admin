@@ -27,6 +27,19 @@ const REPAIR_STATUS_FILTERS = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
+// Helper function to format job number as 5 digits
+const formatJobNumber = (jobId: string): string => {
+  // Extract RJ prefix and numeric part from job numbers like "RJ-20260209-0008" to "RJ-00008"
+  const match = jobId.match(/^([A-Z]+).*-(\d+)$/);
+  if (match) {
+    const prefix = match[1]; // Just "RJ"
+    const numericPart = match[2];
+    return `${prefix}-${numericPart.padStart(5, '0')}`;
+  }
+  // Fallback: if pattern doesn't match, return original
+  return jobId;
+};
+
 export function RepairPDFDownload({
   variant = "panel",
   initialStatus,
@@ -321,7 +334,7 @@ export function SingleRepairJobPDFButton({
       ) : (
         <Download className="w-4 h-4" />
       )}
-      {jobNumber ? `Download ${jobNumber}` : "Download PDF"}
+      {jobNumber ? `Download ${formatJobNumber(jobNumber)}` : "Download PDF"}
     </Button>
   );
 }

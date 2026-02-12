@@ -42,15 +42,15 @@ interface PartItem {
 
 // Helper function to format job number as 5 digits
 const formatJobNumber = (jobId: string): string => {
-  // Extract numeric part from job numbers like "RJ-20260209-0008"
-  const match = jobId.match(/-?(\d+)$/);
+  // Extract RJ prefix and numeric part from job numbers like "RJ-20260209-0008" to "RJ-00008"
+  const match = jobId.match(/^([A-Z]+).*-(\d+)$/);
   if (match) {
-    const numericPart = match[1];
-    return numericPart.padStart(5, '0');
+    const prefix = match[1]; // Just "RJ"
+    const numericPart = match[2];
+    return `${prefix}-${numericPart.padStart(5, '0')}`;
   }
-  // Fallback: if no numeric part found, try to use the whole ID
-  const numericOnly = jobId.replace(/\D/g, '');
-  return numericOnly.slice(-5).padStart(5, '0');
+  // Fallback: if pattern doesn't match, return original
+  return jobId;
 };
 
 export default function TechnicianDashboard() {
@@ -208,7 +208,7 @@ export default function TechnicianDashboard() {
       await repairApi.start(repairId);
 
       // Show success message
-      toast.success(`Started working on ${jobNumber}. Status updated to IN_PROGRESS.`);
+      toast.success(`Started working on ${formatJobNumber(jobNumber)}. Status updated to IN_PROGRESS.`);
 
       // Reload dashboard data to reflect changes
       await loadDashboardData();
@@ -447,7 +447,7 @@ export default function TechnicianDashboard() {
       });
 
       // Show success message
-      toast.success(`${selectedRepair.id} marked as complete. Status updated to READY.`);
+      toast.success(`${formatJobNumber(selectedRepair.id)} marked as complete. Status updated to READY.`);
 
       // Close modal and reload dashboard
       handleCloseCompleteModal();
@@ -993,14 +993,14 @@ export default function TechnicianDashboard() {
                 )}
               </div>
 
-              {/* 
+              {/*
                 DIAGNOSIS NOTES SECTION
                 - Required field for completing a repair job
                 - Technician documents their findings during the diagnostic phase
                 - Explains what was wrong with the device
                 - Helps justify the repair cost and parts used
                 - Stored in the database for future reference and warranty claims
-             
+              */
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                  Diagnosis Notes <span className="text-red-500">*</span>
@@ -1015,7 +1015,7 @@ export default function TechnicianDashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   placeholder="Describe the diagnosis findings..."
                 />
-              </div>  */}
+              </div> }
 
               {/* 
                 REPAIR NOTES SECTION
@@ -1024,7 +1024,7 @@ export default function TechnicianDashboard() {
                 - Documents any complications or special procedures used
                 - Manual parts (not in inventory) are automatically appended to these notes
                 - Important for quality control and future service history
-                - Used for warranty documentation and customer communication
+                - Used for warranty documentation and customer communication*/
              }
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1040,7 +1040,7 @@ export default function TechnicianDashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   placeholder="Describe the repair work performed..."
                 />
-              </div>  */}
+              </div>  
 
               {/* Info Note */}
               <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
